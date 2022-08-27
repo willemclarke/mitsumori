@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "declarationMap": true,
+    "declaration": true,
+    "module": "es2022",
+    "moduleResolution": "node",
+    "target": "es2017",
+    "jsx": "react",
+    "lib": ["dom", "esnext", "esnext.asynciterable"],
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noEmit": true,
+    "removeComments": false,
+    "preserveConstEnums": true,
+    "pretty": true,
+    "esModuleInterop": true,
+    "skipLibCheck": false,
+    "baseUrl": "./"
+  }
+}

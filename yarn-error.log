@@ -1,5 +1,5 @@
 Arguments: 
-  /Users/willemclarke/.nvm/versions/node/v14.19.1/bin/node /Users/willemclarke/.nvm/versions/node/v14.19.1/bin/yarn add @types/elm-debug-transformer -D
+  /Users/willemclarke/.nvm/versions/node/v14.19.1/bin/node /Users/willemclarke/.nvm/versions/node/v14.19.1/bin/yarn add @types/idb
 
 PATH: 
   /opt/homebrew/opt/libpq/bin:/Users/willemclarke/.nvm/versions/node/v14.19.1/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/opt/libpq/bin:/Users/willemclarke/.nvm/versions/node/v14.19.1/bin:/opt/homebrew/bin:/opt/homebrew/sbin
@@ -14,7 +14,7 @@ Platform:
   darwin x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@types%2felm-debug-transformer: Not found
+  Error: https://registry.yarnpkg.com/@types%2fidb: Not found
       at Request.params.callback [as _callback] (/Users/willemclarke/.nvm/versions/node/v14.19.1/lib/node_modules/yarn/lib/cli.js:66138:18)
       at Request.self.callback (/Users/willemclarke/.nvm/versions/node/v14.19.1/lib/node_modules/yarn/lib/cli.js:140883:22)
       at Request.emit (events.js:400:28)
@@ -45,13 +45,14 @@ npm manifest:
     "devDependencies": {
       "elm-review": "^2.7.4",
       "elm-tooling": "^1.8.0",
+      "typescript": "^4.8.2",
       "vite": "^3.0.9",
-      "vite-plugin-elm": "^2.7.2",
-      "typescript": "^4.8.2"
+      "vite-plugin-elm": "^2.7.2"
     },
     "dependencies": {
       "devcert": "^1.2.2",
-      "elm-debug-transformer": "^1.1.2"
+      "elm-debug-transformer": "^1.1.2",
+      "idb": "^7.0.2"
     }
   }
 
@@ -798,6 +799,11 @@ Lockfile:
     dependencies:
       quick-lru "^5.1.1"
       resolve-alpn "^1.0.0"
+  
+  idb@^7.0.2:
+    version "7.0.2"
+    resolved "https://registry.yarnpkg.com/idb/-/idb-7.0.2.tgz#7a067e20dd16539938e456814b7d714ba8db3892"
+    integrity sha512-jjKrT1EnyZewQ/gCBb/eyiYrhGzws2FeY92Yx8qT9S9GeQAmo4JFVIiWRIfKW/6Ob9A+UDAOW9j9jn58fy2HIg==
   
   ieee754@^1.1.13:
     version "1.2.1"

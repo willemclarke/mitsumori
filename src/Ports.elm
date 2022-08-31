@@ -1,4 +1,4 @@
-port module Ports exposing (get, set)
+port module Ports exposing (Key, getQuotes, getQuotesResponse, setQuote)
 
 import Json.Encode as JE
 
@@ -7,17 +7,25 @@ type alias Key =
     String
 
 
-get : Key -> Cmd msg
-get =
-    localStorageGet
+getQuotes : Key -> Cmd msg
+getQuotes =
+    indexedDbGetQuotes
 
 
-set : ( Key, JE.Value ) -> Cmd msg
-set =
-    localStorageSet
+getQuotesResponse : (( Key, JE.Value ) -> msg) -> Sub msg
+getQuotesResponse =
+    indexedDbGetQuotesResponse
 
 
-port localStorageSet : ( Key, JE.Value ) -> Cmd msg
+setQuote : ( Key, JE.Value ) -> Cmd msg
+setQuote =
+    indexedDbSetQuote
 
 
-port localStorageGet : Key -> Cmd msg
+port indexedDbSetQuote : ( Key, JE.Value ) -> Cmd msg
+
+
+port indexedDbGetQuotes : Key -> Cmd msg
+
+
+port indexedDbGetQuotesResponse : (( Key, JE.Value ) -> msg) -> Sub msg

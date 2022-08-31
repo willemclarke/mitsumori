@@ -30,7 +30,7 @@ view : Model -> Html Msg
 view model =
     div [ class "flex justify-center h-full w-full" ]
         [ div [ class "w-full flex-col text-center" ]
-            [ div [ class "text-2xl my-28" ] [ text "mitsumori" ]
+            [ div [ class "text-4xl my-12" ] [ text "mitsumori" ]
             ]
         ]
 

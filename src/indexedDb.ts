@@ -20,16 +20,16 @@ const openDbConnection = () => {
 };
 
 export const getQuotes = async (key: string) => {
-  console.log("inside here");
   const db = await openDbConnection();
   return db.get(objectStoreName, key);
 };
 
 export const setQuotes = async (key: string, value: Quote): Promise<void> => {
-  console.log("inside here setQuotes");
   const db = await openDbConnection();
   const existingQuotes = await getQuotes(key);
+
   if (!existingQuotes) {
+    await db.put(objectStoreName, [value], key);
     return;
   }
   await db.put(objectStoreName, [...existingQuotes, value], key);

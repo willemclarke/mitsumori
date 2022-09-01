@@ -16,14 +16,13 @@ if (process.env.NODE_ENV === "development") {
 const root = document.getElementById("elm");
 const app = Elm.Main.init({ node: root });
 
-app.ports.getQuotes.subscribe((key) => {
-  console.log("dwdwdwd");
+app.ports.dataStoreGetQuotes.subscribe((key) => {
   return getQuotes(key).then((value) =>
-    app.ports.getQuotesResponse.send([key, value])
+    app.ports.dataStoreGetQuoteResponse.send([key, value])
   );
 });
 
-app.ports.setQuote.subscribe(([key, value]) => {
-  console.log("dwkdwdwd");
+app.ports.dataStoreSetQuote.subscribe(([key, value]) => {
+  console.log({ key, value });
   return setQuotes(key, value);
 });

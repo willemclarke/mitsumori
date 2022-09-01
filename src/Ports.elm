@@ -9,23 +9,23 @@ type alias Key =
 
 getQuotes : Key -> Cmd msg
 getQuotes =
-    indexedDbGetQuotes
+    dataStoreGetQuotes
 
 
 getQuotesResponse : (( Key, JE.Value ) -> msg) -> Sub msg
 getQuotesResponse =
-    indexedDbGetQuotesResponse
+    dataStoreGetQuoteResponse
 
 
 setQuote : ( Key, JE.Value ) -> Cmd msg
 setQuote =
-    indexedDbSetQuote
+    dataStoreSetQuote
 
 
-port indexedDbSetQuote : ( Key, JE.Value ) -> Cmd msg
+port dataStoreSetQuote : ( Key, JE.Value ) -> Cmd msg
 
 
-port indexedDbGetQuotes : Key -> Cmd msg
+port dataStoreGetQuotes : Key -> Cmd msg
 
 
-port indexedDbGetQuotesResponse : (( Key, JE.Value ) -> msg) -> Sub msg
+port dataStoreGetQuoteResponse : (( Key, JE.Value ) -> msg) -> Sub msg

@@ -4,14 +4,16 @@ export namespace Elm {
   export namespace Main {
     export interface App {
       ports: {
-        getQuotes: {
+        dataStoreGetQuotes: {
           subscribe(callback: (key: string) => Promise<void>): void;
         };
-        getQuotesResponse: {
-          send(data: [string, Quote[] | undefined]): Promise<void>;
+        dataStoreGetQuoteResponse: {
+          send(data: [key: string, value: Quote[] | undefined]): Promise<void>;
         };
-        setQuote: {
-          subscribe(callback: (data: [string, Quote]) => Promise<void>): void;
+        dataStoreSetQuote: {
+          subscribe(
+            callback: (data: [key: string, value: Quote]) => Promise<void>
+          ): void;
         };
       };
     }

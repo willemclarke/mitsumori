@@ -23,6 +23,5 @@ app.ports.dataStoreGetQuotes.subscribe((key) => {
 });
 
 app.ports.dataStoreSetQuote.subscribe(([key, value]) => {
-  console.log({ key, value });
   return setQuotes(key, value);
 });

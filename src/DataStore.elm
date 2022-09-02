@@ -7,7 +7,7 @@ type alias Key =
     String
 
 
-getQuotes : Key -> Cmd msg
+getQuotes : () -> Cmd msg
 getQuotes =
     dataStoreGetQuotes
 
@@ -25,7 +25,7 @@ setQuote =
 port dataStoreSetQuote : JE.Value -> Cmd msg
 
 
-port dataStoreGetQuotes : Key -> Cmd msg
+port dataStoreGetQuotes : () -> Cmd msg
 
 
 port dataStoreGetQuoteResponse : (JE.Value -> msg) -> Sub msg

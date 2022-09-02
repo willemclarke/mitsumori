@@ -60,11 +60,6 @@ step =
     Tuple.second << Random.step (Random.int Random.minInt Random.maxInt)
 
 
-quoteKey : String
-quoteKey =
-    "quotes"
-
-
 init : JE.Value -> ( Model, Cmd Msg )
 init flagsValue =
     let
@@ -75,7 +70,7 @@ init flagsValue =
         Ok flags ->
             ( { inputQuote = "", quotes = [], seed = Random.initialSeed flags.seed }
             , Cmd.batch
-                [ DataStore.getQuotes quoteKey
+                [ DataStore.getQuotes ()
                 , Dom.focus "quote-input" |> Task.attempt (always NoOp)
                 ]
             )

@@ -22,6 +22,9 @@ app.ports.dataStoreGetQuotes.subscribe((key) => {
   );
 });
 
-app.ports.dataStoreSetQuote.subscribe(([key, value]) => {
-  return setQuotes(key, value);
+app.ports.dataStoreSetQuote.subscribe(async ([key, value]) => {
+  await setQuotes(key, value);
+  return getQuotes(key).then((value) =>
+    app.ports.dataStoreGetQuoteResponse.send([key, value])
+  );
 });

@@ -19,7 +19,7 @@ const openDbConnection = () => {
   });
 };
 
-export const getQuotes = async (key: string) => {
+export const getQuotes = async (key: string): Promise<Quote[] | undefined> => {
   const db = await openDbConnection();
   return db.get(objectStoreName, key);
 };

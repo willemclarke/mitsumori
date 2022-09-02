@@ -3,6 +3,7 @@ import { Elm } from "./Main.elm";
 
 export interface Quote {
   quote: string;
+  id: number;
 }
 
 if (process.env.NODE_ENV === "development") {
@@ -14,17 +15,20 @@ if (process.env.NODE_ENV === "development") {
 }
 
 const root = document.getElementById("elm");
-const app = Elm.Main.init({ node: root });
+const app = Elm.Main.init({
+  node: root,
+  flags: { seed: Math.floor(Math.random() * 0x0fffffff) },
+});
 
-app.ports.dataStoreGetQuotes.subscribe((key) => {
-  return getQuotes(key).then((value) =>
-    app.ports.dataStoreGetQuoteResponse.send([key, value])
+app.ports.dataStoreGetQuotes.subscribe(() => {
+  return getQuotes().then((value) =>
+    app.ports.dataStoreGetQuoteResponse.send(value)
   );
 });
 
-app.ports.dataStoreSetQuote.subscribe(async ([key, value]) => {
-  await setQuotes(key, value);
-  return getQuotes(key).then((value) =>
-    app.ports.dataStoreGetQuoteResponse.send([key, value])
+app.ports.dataStoreSetQuote.subscribe(async (value) => {
+  await setQuotes(value);
+  return getQuotes().then((value) =>
+    app.ports.dataStoreGetQuoteResponse.send(value)
   );
 });

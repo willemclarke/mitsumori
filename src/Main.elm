@@ -8,25 +8,56 @@ import Html.Attributes exposing (class, cols, id, placeholder, rows, src, style,
 import Html.Events exposing (onInput, onSubmit)
 import Json.Decode as JD
 import Json.Encode as JE
+import Random exposing (Seed)
 import Task
 import Time exposing (Posix)
+import Uuid exposing (Uuid)
 
 
 type alias Model =
     { inputQuote : String
     , quotes : List Quote
+    , seed : Seed
+    }
+
+
+type alias Flags =
+    { seed : Int
     }
 
 
 type alias Quote =
     { quote : String
+    , id : Uuid
     }
 
 
 quoteDecoder : JD.Decoder Quote
 quoteDecoder =
-    JD.map Quote
+    JD.map2 Quote
         (JD.field "quote" JD.string)
+        (JD.field "id" Uuid.decoder)
+
+
+quoteEncoder : { quote : String, id : Uuid } -> JE.Value
+quoteEncoder { quote, id } =
+    JE.object [ ( "quote", JE.string quote ), ( "id", Uuid.encode id ) ]
+
+
+flagsDecoder : JD.Decoder Flags
+flagsDecoder =
+    JD.map Flags
+        (JD.field "seed" JD.int)
+
+
+generateUuid : Seed -> Uuid
+generateUuid seed =
+    Tuple.first <| Random.step Uuid.uuidGenerator seed
+
+
+step : Seed -> Seed
+step =
+    Tuple.second << Random.step (Random.int Random.minInt Random.maxInt)
 
 
 quoteKey : String
@@ -34,20 +65,29 @@ quoteKey =
     "quotes"
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( { inputQuote = "", quotes = [] }
-    , Cmd.batch
-        [ DataStore.getQuotes quoteKey
-        , Dom.focus "quote-input" |> Task.attempt (always NoOp)
-        ]
-    )
+init : JE.Value -> ( Model, Cmd Msg )
+init flagsValue =
+    let
+        decodedFlags =
+            JD.decodeValue flagsDecoder flagsValue
+    in
+    case decodedFlags of
+        Ok flags ->
+            ( { inputQuote = "", quotes = [], seed = Random.initialSeed flags.seed }
+            , Cmd.batch
+                [ DataStore.getQuotes quoteKey
+                , Dom.focus "quote-input" |> Task.attempt (always NoOp)
+                ]
+            )
+
+        Err _ ->
+            ( { inputQuote = "", quotes = [], seed = Random.initialSeed 0 }, Cmd.none )
 
 
 type Msg
     = OnInput String
     | OnSubmit
-    | RecievedQuotes ( DataStore.Key, JD.Value )
+    | RecievedQuotes JD.Value
     | NoOp
 
 
@@ -59,23 +99,25 @@ update msg model =
 
         OnSubmit ->
             let
-                encodedQuote =
-                    JE.object [ ( "quote", JE.string model.inputQuote ) ]
+                uuid =
+                    generateUuid model.seed
+
+                -- here I need to generate a UUID and encode it
             in
             if String.isEmpty model.inputQuote then
                 ( model, Cmd.none )
 
             else
-                ( { model | inputQuote = "" }, Cmd.batch [ DataStore.setQuote ( quoteKey, encodedQuote ) ] )
+                ( { model | inputQuote = "", seed = step model.seed }, Cmd.batch [ DataStore.setQuote <| quoteEncoder { quote = model.inputQuote, id = uuid } ] )
 
-        RecievedQuotes ( _, value ) ->
+        RecievedQuotes value ->
             let
                 decodedQuotes =
                     JD.decodeValue (quoteDecoder |> JD.list) value
             in
             case decodedQuotes of
                 Ok quotes ->
-                    ( { model | quotes = List.reverse quotes }, Cmd.none )
+                    ( { model | quotes = quotes }, Cmd.none )
 
                 Err _ ->
                     ( model, Cmd.none )
@@ -140,7 +182,7 @@ subscriptions _ =
     DataStore.getQuotesResponse RecievedQuotes
 
 
-main : Program () Model Msg
+main : Program JE.Value Model Msg
 main =
     Browser.element
         { init = init

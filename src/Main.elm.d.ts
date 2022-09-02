@@ -5,19 +5,20 @@ export namespace Elm {
     export interface App {
       ports: {
         dataStoreGetQuotes: {
-          subscribe(callback: (key: string) => Promise<void>): void;
+          subscribe(callback: () => Promise<void>): void;
         };
         dataStoreGetQuoteResponse: {
-          send(data: [key: string, value: Quote[] | undefined]): Promise<void>;
+          send(data: Quote[] | undefined): Promise<void>;
         };
         dataStoreSetQuote: {
-          subscribe(
-            callback: (data: [key: string, value: Quote]) => Promise<void>
-          ): void;
+          subscribe(callback: (data: Quote) => Promise<void>): void;
         };
       };
     }
 
-    export function init(options: { node?: HTMLElement | null }): Elm.Main.App;
+    export function init(options: {
+      node?: HTMLElement | null;
+      flags: { seed: number };
+    }): Elm.Main.App;
   }
 }

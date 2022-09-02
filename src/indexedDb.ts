@@ -6,31 +6,25 @@ const objectStoreName = "MitsumoriStore";
 
 interface MitsumoriDB extends DBSchema {
   MitsumoriStore: {
-    key: string;
-    value: Quote[];
+    key: number;
+    value: Quote;
   };
 }
 
 const openDbConnection = () => {
   return openDB<MitsumoriDB>(databaseName, 1, {
     upgrade: (db) => {
-      db.createObjectStore(objectStoreName);
+      db.createObjectStore(objectStoreName, { keyPath: "id" });
     },
   });
 };
 
-export const getQuotes = async (key: string): Promise<Quote[] | undefined> => {
+export const getQuotes = async (): Promise<Quote[] | undefined> => {
   const db = await openDbConnection();
-  return db.get(objectStoreName, key);
+  return db.getAll(objectStoreName);
 };
 
-export const setQuotes = async (key: string, value: Quote): Promise<void> => {
+export const setQuotes = async (value: Quote): Promise<void> => {
   const db = await openDbConnection();
-  const existingQuotes = await getQuotes(key);
-
-  if (!existingQuotes) {
-    await db.put(objectStoreName, [value], key);
-    return;
-  }
-  await db.put(objectStoreName, [...existingQuotes, value], key);
+  await db.put(objectStoreName, value, value.id);
 };

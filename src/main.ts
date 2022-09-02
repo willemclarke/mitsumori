@@ -21,14 +21,15 @@ const app = Elm.Main.init({
 });
 
 app.ports.dataStoreGetQuotes.subscribe(() => {
-  return getQuotes().then((value) =>
-    app.ports.dataStoreGetQuoteResponse.send(value)
+  return getQuotes().then((quotes) =>
+    app.ports.dataStoreGetQuoteResponse.send(quotes)
   );
 });
 
 app.ports.dataStoreSetQuote.subscribe(async (value) => {
-  await setQuotes(value);
-  return getQuotes().then((value) =>
-    app.ports.dataStoreGetQuoteResponse.send(value)
+  return setQuotes(value).then(() =>
+    getQuotes().then((quotes) =>
+      app.ports.dataStoreGetQuoteResponse.send(quotes)
+    )
   );
 });

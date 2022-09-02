@@ -14,7 +14,10 @@ interface MitsumoriDB extends DBSchema {
 const openDbConnection = () => {
   return openDB<MitsumoriDB>(databaseName, 1, {
     upgrade: (db) => {
-      db.createObjectStore(objectStoreName, { keyPath: "id" });
+      db.createObjectStore(objectStoreName, {
+        keyPath: "id",
+        autoIncrement: true,
+      });
     },
   });
 };

@@ -14,6 +14,10 @@ import Time exposing (Posix)
 import Uuid exposing (Uuid)
 
 
+
+-- MODEL
+
+
 type alias Model =
     { inputQuote : String
     , quotes : List Quote
@@ -30,34 +34,6 @@ type alias Quote =
     { quote : String
     , id : Uuid
     }
-
-
-quoteDecoder : JD.Decoder Quote
-quoteDecoder =
-    JD.map2 Quote
-        (JD.field "quote" JD.string)
-        (JD.field "id" Uuid.decoder)
-
-
-quoteEncoder : { quote : String, id : Uuid } -> JE.Value
-quoteEncoder { quote, id } =
-    JE.object [ ( "quote", JE.string quote ), ( "id", Uuid.encode id ) ]
-
-
-flagsDecoder : JD.Decoder Flags
-flagsDecoder =
-    JD.map Flags
-        (JD.field "seed" JD.int)
-
-
-generateUuid : Seed -> Uuid
-generateUuid seed =
-    Tuple.first <| Random.step Uuid.uuidGenerator seed
-
-
-step : Seed -> Seed
-step =
-    Tuple.second << Random.step (Random.int Random.minInt Random.maxInt)
 
 
 init : JE.Value -> ( Model, Cmd Msg )
@@ -79,6 +55,28 @@ init flagsValue =
             ( { inputQuote = "", quotes = [], seed = Random.initialSeed 0 }, Cmd.none )
 
 
+quoteDecoder : JD.Decoder Quote
+quoteDecoder =
+    JD.map2 Quote
+        (JD.field "quote" JD.string)
+        (JD.field "id" Uuid.decoder)
+
+
+quoteEncoder : { quote : String, id : Uuid } -> JE.Value
+quoteEncoder { quote, id } =
+    JE.object [ ( "quote", JE.string quote ), ( "id", Uuid.encode id ) ]
+
+
+flagsDecoder : JD.Decoder Flags
+flagsDecoder =
+    JD.map Flags
+        (JD.field "seed" JD.int)
+
+
+
+-- UPDATE
+
+
 type Msg
     = OnInput String
     | OnSubmit
@@ -96,14 +94,14 @@ update msg model =
             let
                 uuid =
                     generateUuid model.seed
-
-                -- here I need to generate a UUID and encode it
             in
             if String.isEmpty model.inputQuote then
                 ( model, Cmd.none )
 
             else
-                ( { model | inputQuote = "", seed = step model.seed }, Cmd.batch [ DataStore.setQuote <| quoteEncoder { quote = model.inputQuote, id = uuid } ] )
+                ( { model | inputQuote = "", seed = step model.seed }
+                , DataStore.setQuote <| quoteEncoder { quote = model.inputQuote, id = uuid }
+                )
 
         RecievedQuotes value ->
             let
@@ -119,6 +117,20 @@ update msg model =
 
         NoOp ->
             ( model, Cmd.none )
+
+
+generateUuid : Seed -> Uuid
+generateUuid seed =
+    Tuple.first <| Random.step Uuid.uuidGenerator seed
+
+
+step : Seed -> Seed
+step =
+    Tuple.second << Random.step (Random.int Random.minInt Random.maxInt)
+
+
+
+-- VIEW
 
 
 view : Model -> Html Msg

@@ -164,7 +164,7 @@ viewForm inputtedQuote =
 
 viewQuotes : List Quote -> Html msg
 viewQuotes quotes =
-    div [ class "mx-6 max-w-3xl text-start" ]
+    div [ class "mx-6 w-11/12 max-w-3xl text-start" ]
         [ ul [] (List.map viewQuote quotes)
         ]
 

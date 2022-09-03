@@ -2,12 +2,12 @@ module Main exposing (main)
 
 import Browser
 import Browser.Dom as Dom
-import DataStore
 import Html exposing (Html, div, form, img, input, li, p, span, text, textarea, ul)
 import Html.Attributes exposing (class, cols, id, placeholder, rows, src, style, value)
 import Html.Events exposing (onInput, onSubmit)
 import Json.Decode as JD
 import Json.Encode as JE
+import Ports
 import Random exposing (Seed)
 import Task
 import Time exposing (Posix)
@@ -46,7 +46,7 @@ init flagsValue =
         Ok flags ->
             ( { inputQuote = "", quotes = [], seed = Random.initialSeed flags.seed }
             , Cmd.batch
-                [ DataStore.getQuotes ()
+                [ Ports.getQuotes ()
                 , Dom.focus "quote-input" |> Task.attempt (always NoOp)
                 ]
             )
@@ -100,7 +100,7 @@ update msg model =
 
             else
                 ( { model | inputQuote = "", seed = step model.seed }
-                , DataStore.setQuote <| quoteEncoder { quote = model.inputQuote, id = uuid }
+                , Ports.setQuote <| quoteEncoder { quote = model.inputQuote, id = uuid }
                 )
 
         RecievedQuotes value ->
@@ -186,7 +186,7 @@ viewQuote quote =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    DataStore.getQuotesResponse RecievedQuotes
+    Ports.getQuotesResponse RecievedQuotes
 
 
 main : Program JE.Value Model Msg

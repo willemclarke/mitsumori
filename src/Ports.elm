@@ -1,4 +1,4 @@
-port module DataStore exposing (Key, getQuotes, getQuotesResponse, setQuote)
+port module Ports exposing (Key, getQuotes, getQuotesResponse, setQuote)
 
 import Json.Encode as JE
 

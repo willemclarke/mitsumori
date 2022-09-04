@@ -1,6 +1,6 @@
-module Modal exposing (..)
+module Components.Modal exposing (acceptAndDiscardActions, basicAction, create, view)
 
-import Html exposing (Html, button, div, form, h3, img, input, li, p, span, text, textarea, ul)
+import Html exposing (Html, button, div, h3, p, span, text)
 import Html.Attributes exposing (attribute, class, id)
 import Html.Events exposing (onClick)
 
@@ -44,14 +44,14 @@ pickCancelAction (Actions { cancel }) =
     cancel
 
 
-init :
-    { title : String
-    , body : Html msg
-    , actions : Actions msg
-    }
-    -> Modal msg
-init { title, body, actions } =
+create : Options msg -> Modal msg
+create { title, body, actions } =
     Modal { title = title, body = body, actions = actions }
+
+
+basicAction : String -> msg -> Action msg
+basicAction label onClick =
+    Action { label = label, onClick_ = onClick }
 
 
 acceptAndDiscardActions : Action msg -> Action msg -> Actions msg

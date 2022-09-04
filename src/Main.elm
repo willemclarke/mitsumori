@@ -2,15 +2,17 @@ module Main exposing (main)
 
 import Browser
 import Browser.Dom as Dom
-import Html exposing (Html, div, form, img, input, li, p, span, text, textarea, ul)
-import Html.Attributes exposing (class, cols, id, placeholder, rows, src, style, value)
-import Html.Events exposing (onInput, onSubmit)
+import Components.Button as Button
+import Components.Modal as Modal
+import Html exposing (Html, button, div, form, input, label, p, text, ul)
+import Html.Attributes exposing (class, id, placeholder, value)
+import Html.Events exposing (onClick, onInput, onSubmit)
+import Html.Extra as HE
 import Json.Decode as JD
 import Json.Encode as JE
 import Ports
 import Random exposing (Seed)
 import Task
-import Time exposing (Posix)
 import Uuid exposing (Uuid)
 
 
@@ -22,6 +24,7 @@ type alias Model =
     { inputQuote : String
     , quotes : List Quote
     , seed : Seed
+    , modalState : ModalState
     }
 
 
@@ -36,6 +39,11 @@ type alias Quote =
     }
 
 
+type ModalState
+    = Visible
+    | Hidden
+
+
 init : JE.Value -> ( Model, Cmd Msg )
 init flagsValue =
     let
@@ -44,7 +52,7 @@ init flagsValue =
     in
     case decodedFlags of
         Ok flags ->
-            ( { inputQuote = "", quotes = [], seed = Random.initialSeed flags.seed }
+            ( { inputQuote = "", quotes = [], seed = Random.initialSeed flags.seed, modalState = Hidden }
             , Cmd.batch
                 [ Ports.getQuotes ()
                 , Dom.focus "quote-input" |> Task.attempt (always NoOp)
@@ -52,7 +60,7 @@ init flagsValue =
             )
 
         Err _ ->
-            ( { inputQuote = "", quotes = [], seed = Random.initialSeed 0 }, Cmd.none )
+            ( { inputQuote = "", quotes = [], seed = Random.initialSeed 0, modalState = Hidden }, Cmd.none )
 
 
 quoteDecoder : JD.Decoder Quote
@@ -81,6 +89,8 @@ type Msg
     = OnInput String
     | OnSubmit
     | RecievedQuotes JD.Value
+    | AddQuoteOnClick
+    | CloseModal
     | NoOp
 
 
@@ -89,6 +99,12 @@ update msg model =
     case msg of
         OnInput str ->
             ( { model | inputQuote = str }, Cmd.none )
+
+        AddQuoteOnClick ->
+            ( { model | modalState = Visible }, Cmd.none )
+
+        CloseModal ->
+            ( { model | modalState = Hidden }, Cmd.none )
 
         OnSubmit ->
             let
@@ -139,27 +155,49 @@ view model =
         [ div [ class "flex-col text-center justify-center" ]
             [ div [ class "text-5xl mt-8" ] [ text "mitsumori" ]
             , div [ class "flex flex-col justify-center" ]
-                [ viewForm model.inputQuote
+                [ viewForm model.inputQuote model.modalState
                 , viewQuotes model.quotes
                 ]
             ]
         ]
 
 
-viewForm : String -> Html Msg
-viewForm inputtedQuote =
+viewForm : String -> ModalState -> Html Msg
+viewForm inputtedQuote modalState =
     div [ class "my-4" ]
         [ form [ onSubmit OnSubmit ]
-            [ input
-                [ class "mt-1 p-2 rounded shadow-l w-6/12"
-                , placeholder "Type quote here"
-                , onInput OnInput
-                , value inputtedQuote
-                , id "quote-input"
-                ]
-                [ text inputtedQuote ]
+            [ Button.view { label = "Add Quote", onClick = AddQuoteOnClick }
+            , viewAddQuoteModal modalState
             ]
         ]
+
+
+viewAddQuoteModal : ModalState -> Html Msg
+viewAddQuoteModal modalState =
+    case modalState of
+        Visible ->
+            Modal.create
+                { title = "Add quote"
+                , body = div [] [ text "modal body" ]
+                , actions =
+                    Modal.acceptAndDiscardActions (Modal.basicAction "Add quote" NoOp) (Modal.basicAction "Cancel" CloseModal)
+                }
+                |> Modal.view
+
+        Hidden ->
+            HE.nothing
+
+
+
+-- [ input
+--     [ class "mt-1 p-2 rounded shadow-l w-6/12"
+--     , placeholder "Type quote here"
+--     , onInput OnInput
+--     , value inputtedQuote
+--     , id "quote-input"
+--     ]
+--     [ text inputtedQuote ]
+-- ]
 
 
 viewQuotes : List Quote -> Html msg

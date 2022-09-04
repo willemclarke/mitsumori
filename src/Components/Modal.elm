@@ -1,6 +1,7 @@
 module Components.Modal exposing (acceptAndDiscardActions, basicAction, create, view)
 
-import Html exposing (Html, button, div, h3, p, span, text)
+import Components.Button as Button
+import Html exposing (Html, div, h3, p, span, text)
 import Html.Attributes exposing (attribute, class, id)
 import Html.Events exposing (onClick)
 
@@ -17,21 +18,11 @@ type alias Options msg =
 
 
 type Action msg
-    = Action { label : String, onClick_ : msg }
+    = Action { label : String, onClick : msg }
 
 
 type Actions msg
     = Actions { accept : Action msg, cancel : Action msg }
-
-
-buttonLabel : Action msg -> String
-buttonLabel (Action { label }) =
-    label
-
-
-buttonOnClick : Action msg -> msg
-buttonOnClick (Action { onClick_ }) =
-    onClick_
 
 
 pickAcceptAction : Actions msg -> Action msg
@@ -51,7 +42,7 @@ create { title, body, actions } =
 
 basicAction : String -> msg -> Action msg
 basicAction label onClick =
-    Action { label = label, onClick_ = onClick }
+    Action { label = label, onClick = onClick }
 
 
 acceptAndDiscardActions : Action msg -> Action msg -> Actions msg
@@ -60,13 +51,17 @@ acceptAndDiscardActions accept cancel =
 
 
 acceptButton : Action msg -> Html msg
-acceptButton (Action { label, onClick_ }) =
-    button [ onClick onClick_ ] [ text label ]
+acceptButton (Action { label, onClick }) =
+    Button.create { label = label, onClick = onClick }
+        |> Button.withAdditionalStyles "my-2 sm:mx-2"
+        |> Button.view
 
 
 cancelButton : Action msg -> Html msg
-cancelButton (Action { label, onClick_ }) =
-    button [ onClick onClick_ ] [ text label ]
+cancelButton (Action { label, onClick }) =
+    Button.create { label = label, onClick = onClick }
+        |> Button.withAdditionalStyles "sm:my-2"
+        |> Button.view
 
 
 view : Modal msg -> Html msg
@@ -115,7 +110,7 @@ view (Modal options) =
                         [ class "mt-3 text-center sm:mt-0 sm:text-left flex flex-col grow"
                         ]
                         [ h3
-                            [ class "text-lg font-medium text-gray-900 leading-6"
+                            [ class "text-xl font-medium text-gray-900 leading-6"
                             , id "modal-title"
                             ]
                             [ text options.title ]
@@ -130,7 +125,7 @@ view (Modal options) =
                         ]
                     ]
                 , div
-                    [ class "mt-5 sm:mt-4 sm:flex sm:flex-row-reverse"
+                    [ class "flex flex-col my-2 sm:flex-row-reverse"
                     ]
                     [ acceptButton_
                     , cancelButton_

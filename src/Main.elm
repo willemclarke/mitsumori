@@ -5,14 +5,13 @@ import Browser.Dom as Dom
 import Components.Button as Button
 import Components.Modal as Modal
 import Html exposing (Html, button, div, form, input, label, p, text, ul)
-import Html.Attributes exposing (class, id, placeholder, value)
+import Html.Attributes exposing (class, for, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Html.Extra as HE
 import Json.Decode as JD
 import Json.Encode as JE
 import Ports
 import Random exposing (Seed)
-import Task
 import Uuid exposing (Uuid)
 
 
@@ -52,12 +51,7 @@ init flagsValue =
     in
     case decodedFlags of
         Ok flags ->
-            ( { inputQuote = "", quotes = [], seed = Random.initialSeed flags.seed, modalState = Hidden }
-            , Cmd.batch
-                [ Ports.getQuotes ()
-                , Dom.focus "quote-input" |> Task.attempt (always NoOp)
-                ]
-            )
+            ( { inputQuote = "", quotes = [], seed = Random.initialSeed flags.seed, modalState = Hidden }, Ports.getQuotes () )
 
         Err _ ->
             ( { inputQuote = "", quotes = [], seed = Random.initialSeed 0, modalState = Hidden }, Cmd.none )
@@ -155,30 +149,28 @@ view model =
         [ div [ class "flex-col text-center justify-center" ]
             [ div [ class "text-5xl mt-8" ] [ text "mitsumori" ]
             , div [ class "flex flex-col justify-center" ]
-                [ viewForm model.inputQuote model.modalState
+                [ addQuoteButton model.inputQuote model.modalState
                 , viewQuotes model.quotes
                 ]
             ]
         ]
 
 
-viewForm : String -> ModalState -> Html Msg
-viewForm inputtedQuote modalState =
+addQuoteButton : String -> ModalState -> Html Msg
+addQuoteButton inputtedQuote modalState =
     div [ class "my-4" ]
-        [ form [ onSubmit OnSubmit ]
-            [ Button.view { label = "Add Quote", onClick = AddQuoteOnClick }
-            , viewAddQuoteModal modalState
-            ]
+        [ Button.create { label = "Add Quote", onClick = AddQuoteOnClick } |> Button.view
+        , viewAddQuoteModal inputtedQuote modalState
         ]
 
 
-viewAddQuoteModal : ModalState -> Html Msg
-viewAddQuoteModal modalState =
+viewAddQuoteModal : String -> ModalState -> Html Msg
+viewAddQuoteModal inputtedQuote modalState =
     case modalState of
         Visible ->
             Modal.create
                 { title = "Add quote"
-                , body = div [] [ text "modal body" ]
+                , body = modalBody inputtedQuote
                 , actions =
                     Modal.acceptAndDiscardActions (Modal.basicAction "Add quote" NoOp) (Modal.basicAction "Cancel" CloseModal)
                 }
@@ -188,16 +180,36 @@ viewAddQuoteModal modalState =
             HE.nothing
 
 
-
--- [ input
---     [ class "mt-1 p-2 rounded shadow-l w-6/12"
---     , placeholder "Type quote here"
---     , onInput OnInput
---     , value inputtedQuote
---     , id "quote-input"
---     ]
---     [ text inputtedQuote ]
--- ]
+modalBody : String -> Html Msg
+modalBody inputtedQuote =
+    div [ class "flex flex-col text-black" ]
+        [ form [ id "add-quote-form" ]
+            [ div [ class "flex flex-col my-2" ]
+                [ label [ for "quote" ]
+                    [ text "Quote body" ]
+                , input
+                    [ class "mt-2 p-2 border-2 border-black rounded shadow-l"
+                    , id "quote"
+                    , placeholder "Type quote here"
+                    , type_ "text"
+                    , onInput OnInput
+                    ]
+                    [ text inputtedQuote ]
+                ]
+            , div [ class "flex flex-col mt-3" ]
+                [ label [ for "author" ]
+                    [ text "Author" ]
+                , input
+                    [ class "mt-2 p-2 border-2 border-black rounded shadow-l"
+                    , id "author"
+                    , placeholder "Author"
+                    , type_ "text"
+                    , onInput OnInput
+                    ]
+                    [ text inputtedQuote ]
+                ]
+            ]
+        ]
 
 
 viewQuotes : List Quote -> Html msg

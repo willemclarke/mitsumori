@@ -3,6 +3,7 @@ import { Elm } from "./Main.elm";
 
 export interface Quote {
   quote: string;
+  author: string;
   id: number;
 }
 

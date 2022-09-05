@@ -21,6 +21,7 @@ import Uuid exposing (Uuid)
 
 type alias Model =
     { inputQuote : String
+    , inputAuthor : String
     , quotes : List Quote
     , seed : Seed
     , modalState : ModalState
@@ -34,6 +35,7 @@ type alias Flags =
 
 type alias Quote =
     { quote : String
+    , author : String
     , id : Uuid
     }
 
@@ -51,22 +53,27 @@ init flagsValue =
     in
     case decodedFlags of
         Ok flags ->
-            ( { inputQuote = "", quotes = [], seed = Random.initialSeed flags.seed, modalState = Hidden }, Ports.getQuotes () )
+            ( { inputQuote = "", inputAuthor = "", quotes = [], seed = Random.initialSeed flags.seed, modalState = Hidden }, Ports.getQuotes () )
 
         Err _ ->
-            ( { inputQuote = "", quotes = [], seed = Random.initialSeed 0, modalState = Hidden }, Cmd.none )
+            ( { inputQuote = "", inputAuthor = "", quotes = [], seed = Random.initialSeed 0, modalState = Hidden }, Cmd.none )
 
 
 quoteDecoder : JD.Decoder Quote
 quoteDecoder =
-    JD.map2 Quote
+    JD.map3 Quote
         (JD.field "quote" JD.string)
+        (JD.field "author" JD.string)
         (JD.field "id" Uuid.decoder)
 
 
-quoteEncoder : { quote : String, id : Uuid } -> JE.Value
-quoteEncoder { quote, id } =
-    JE.object [ ( "quote", JE.string quote ), ( "id", Uuid.encode id ) ]
+quoteEncoder : Quote -> JE.Value
+quoteEncoder { quote, author, id } =
+    JE.object
+        [ ( "quote", JE.string quote )
+        , ( "author", JE.string author )
+        , ( "id", Uuid.encode id )
+        ]
 
 
 flagsDecoder : JD.Decoder Flags
@@ -80,7 +87,8 @@ flagsDecoder =
 
 
 type Msg
-    = OnInput String
+    = OnQuoteChange String
+    | OnAuthorChange String
     | OnSubmit
     | RecievedQuotes JD.Value
     | AddQuoteOnClick
@@ -91,8 +99,11 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
-        OnInput str ->
+        OnQuoteChange str ->
             ( { model | inputQuote = str }, Cmd.none )
+
+        OnAuthorChange str ->
+            ( { model | inputAuthor = str }, Cmd.none )
 
         AddQuoteOnClick ->
             ( { model | modalState = Visible }, Cmd.none )
@@ -105,12 +116,12 @@ update msg model =
                 uuid =
                     generateUuid model.seed
             in
-            if String.isEmpty model.inputQuote then
+            if String.isEmpty model.inputQuote && String.isEmpty model.inputAuthor then
                 ( model, Cmd.none )
 
             else
-                ( { model | inputQuote = "", seed = step model.seed }
-                , Ports.setQuote <| quoteEncoder { quote = model.inputQuote, id = uuid }
+                ( { model | inputQuote = "", modalState = Hidden, seed = step model.seed }
+                , Ports.setQuote <| quoteEncoder { quote = model.inputQuote, author = model.inputAuthor, id = uuid }
                 )
 
         RecievedQuotes value ->
@@ -172,7 +183,7 @@ viewAddQuoteModal inputtedQuote modalState =
                 { title = "Add quote"
                 , body = modalBody inputtedQuote
                 , actions =
-                    Modal.acceptAndDiscardActions (Modal.basicAction "Add quote" NoOp) (Modal.basicAction "Cancel" CloseModal)
+                    Modal.acceptAndDiscardActions (Modal.basicAction "Add quote" OnSubmit) (Modal.basicAction "Cancel" CloseModal)
                 }
                 |> Modal.view
 
@@ -192,7 +203,7 @@ modalBody inputtedQuote =
                     , id "quote"
                     , placeholder "Type quote here"
                     , type_ "text"
-                    , onInput OnInput
+                    , onInput OnQuoteChange
                     ]
                     [ text inputtedQuote ]
                 ]
@@ -204,7 +215,7 @@ modalBody inputtedQuote =
                     , id "author"
                     , placeholder "Author"
                     , type_ "text"
-                    , onInput OnInput
+                    , onInput OnAuthorChange
                     ]
                     [ text inputtedQuote ]
                 ]
@@ -225,7 +236,7 @@ viewQuote quote =
         [ p [ class "text-lg font-medium" ] [ text quote.quote ]
         , div [ class "flex justify-between" ]
             [ p [ class "text-gray-600 text-sm" ]
-                [ text "--- Marcus Aurelius (Roman Philosopher)" ]
+                [ text <| "---" ++ quote.author ]
             ]
         ]
 

@@ -1,8 +1,5 @@
 module Home exposing (..)
 
-import Browser
-import Browser.Dom as Dom
-import Browser.Navigation as Nav
 import Components.Button as Button
 import Components.Modal as Modal
 import Html exposing (Html, button, div, form, input, label, p, text, ul)
@@ -13,7 +10,7 @@ import Json.Decode as JD
 import Json.Encode as JE
 import Ports
 import Random exposing (Seed)
-import Url
+import Session exposing (Session)
 import Uuid exposing (Uuid)
 
 
@@ -42,9 +39,9 @@ type ModalState
     | Hidden
 
 
-init : Nav.Key -> ( Model, Cmd Msg )
-init key =
-    ( { inputQuote = "", inputAuthor = "", quotes = [], seed = Random.initialSeed 2, modalState = Hidden }, Ports.getQuotes () )
+init : Session -> ( Model, Cmd Msg )
+init { seed } =
+    ( { inputQuote = "", inputAuthor = "", quotes = [], seed = seed, modalState = Hidden }, Ports.getQuotes () )
 
 
 quoteDecoder : JD.Decoder Quote
@@ -136,21 +133,12 @@ step =
 -- VIEW
 
 
-view : Model -> Html msg
+view : Model -> Html Msg
 view model =
-    div [] [ text "This is the home page" ]
-
-
-
--- div [ class "flex justify-center h-full w-full" ]
---     [ div [ class "flex-col text-center justify-center" ]
---         [ div [ class "text-5xl mt-8" ] [ text "mitsumori" ]
---         , div [ class "flex flex-col justify-center" ]
---             [ addQuoteButton model.inputQuote model.modalState
---             , viewQuotes model.quotes
---             ]
---         ]
---     ]
+    div [ class "flex flex-col justify-center" ]
+        [ addQuoteButton model.inputQuote model.modalState
+        , viewQuotes model.quotes
+        ]
 
 
 addQuoteButton : String -> ModalState -> Html Msg

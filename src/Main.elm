@@ -1,10 +1,10 @@
-module Main exposing (main)
+module Main exposing (Session, main)
 
 import Browser
 import Browser.Navigation as Nav
 import Home
-import Html exposing (Html, div, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html, a, div, p, text)
+import Html.Attributes exposing (class, href)
 import Json.Decode as JD
 import Json.Encode as JE
 import Random exposing (Seed)
@@ -35,6 +35,12 @@ main =
 type alias Model =
     { page : Page
     , key : Nav.Key
+    , session : Session
+    }
+
+
+type alias Session =
+    { key : Nav.Key
     , seed : Seed
     }
 
@@ -57,10 +63,10 @@ init flagsValue url key =
     in
     case decodedFlags of
         Ok flags ->
-            updateUrl url { page = NotFound, key = key, seed = Random.initialSeed flags.seed }
+            updateUrl url { page = NotFound, key = key, session = { key = key, seed = Random.initialSeed flags.seed } }
 
         Err _ ->
-            updateUrl url { page = NotFound, key = key, seed = Random.initialSeed 0 }
+            updateUrl url { page = NotFound, key = key, session = { key = key, seed = Random.initialSeed 0 } }
 
 
 flagsDecoder : JD.Decoder Flags
@@ -77,7 +83,6 @@ type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
     | HomeMsg Home.Msg
-    | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -102,9 +107,6 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        NoOp ->
-            ( model, Cmd.none )
-
 
 toHome : Model -> ( Home.Model, Cmd Home.Msg ) -> ( Model, Cmd Msg )
 toHome model ( home, cmds ) =
@@ -115,7 +117,7 @@ updateUrl : Url.Url -> Model -> ( Model, Cmd Msg )
 updateUrl url model =
     case Route.fromUrl url of
         Just Route.Home ->
-            Home.init model.key
+            Home.init model.session
                 |> toHome model
 
         Nothing ->
@@ -130,23 +132,32 @@ view : Model -> Browser.Document Msg
 view model =
     case model.page of
         HomePage homeModel ->
-            { title = "Home"
-            , body = [ pageFrame (Home.view homeModel) ]
-            }
+            pageFrame { title = "Home", children = Home.view homeModel |> Html.map HomeMsg }
 
         NotFound ->
-            { title = "NotFound"
-            , body = [ viewNotFoundPage ]
-            }
+            pageFrame { title = "NotFound", children = viewNotFoundPage }
 
 
-pageFrame : Html Msg -> Html Msg
-pageFrame children =
-    div [ class "flex justify-center h-full w-full" ]
-        [ div [ class "flex-col text-center justify-center" ]
-            [ div [ class "text-5xl mt-8" ] [ text "mitsumori" ]
-            , div [ class "flex flex-col justify-center" ] [ children ]
+pageFrame : { title : String, children : Html Msg } -> Browser.Document Msg
+pageFrame { title, children } =
+    { title = title
+    , body =
+        [ div [ class "flex justify-center h-full w-full" ]
+            [ div [ class "flex-col text-center justify-center" ]
+                [ viewNav
+                , div [ class "flex flex-col justify-center mt-8" ] [ children ]
+                ]
             ]
+        ]
+    }
+
+
+viewNav : Html msg
+viewNav =
+    div [ class "flex mt-8 items-center" ]
+        [ p [ class "text-5xl mr-3" ] [ text "mitsumori" ]
+        , a [ href "/signup", class "text 3xl mr-2" ] [ text "signup" ]
+        , a [ href "/signin", class "text 3xl" ] [ text "signin" ]
         ]
 
 

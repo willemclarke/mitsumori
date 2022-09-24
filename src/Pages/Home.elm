@@ -1,4 +1,4 @@
-module Home exposing (..)
+module Pages.Home exposing (..)
 
 import Components.Button as Button
 import Components.Modal as Modal
@@ -133,12 +133,16 @@ step =
 -- VIEW
 
 
-view : Model -> Html Msg
+view : Model -> { title : String, content : Html Msg }
 view model =
-    div [ class "flex flex-col justify-center" ]
-        [ addQuoteButton model.inputQuote model.modalState
-        , viewQuotes model.quotes
-        ]
+    { title = "Home"
+    , content =
+        div
+            [ class "flex flex-col justify-center" ]
+            [ addQuoteButton model.inputQuote model.modalState
+            , viewQuotes model.quotes
+            ]
+    }
 
 
 addQuoteButton : String -> ModalState -> Html Msg

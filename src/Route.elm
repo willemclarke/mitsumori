@@ -6,11 +6,17 @@ import Url.Parser as Parser
 
 type Route
     = Home
+    | Signup
+    | Login
 
 
 parser : Parser.Parser (Route -> a) a
 parser =
-    Parser.map Home Parser.top
+    Parser.oneOf
+        [ Parser.map Home Parser.top
+        , Parser.map Signup (Parser.s "signup")
+        , Parser.map Login (Parser.s "login")
+        ]
 
 
 fromUrl : Url.Url -> Maybe Route

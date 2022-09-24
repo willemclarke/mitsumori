@@ -7,7 +7,7 @@ import Html.Attributes exposing (class, href)
 import Json.Decode as JD
 import Json.Encode as JE
 import Pages.Home as Home
-import Pages.Login as Login
+import Pages.Signin as Signin
 import Pages.Signup as Signup
 import Random exposing (Seed)
 import Route
@@ -50,7 +50,7 @@ type alias Session =
 type Page
     = HomePage Home.Model
     | Signup Signup.Model
-    | Login Login.Model
+    | Signin Signin.Model
     | NotFound
 
 
@@ -88,7 +88,7 @@ type Msg
     | UrlChanged Url.Url
     | HomeMsg Home.Msg
     | SignupMsg Signup.Msg
-    | LoginMsg Login.Msg
+    | SigninMsg Signin.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -121,10 +121,10 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        LoginMsg loginMsg ->
+        SigninMsg loginMsg ->
             case model.page of
-                Login loginModel ->
-                    toLogin model (Login.update loginMsg loginModel)
+                Signin loginModel ->
+                    toSignin model (Signin.update loginMsg loginModel)
 
                 _ ->
                     ( model, Cmd.none )
@@ -144,9 +144,9 @@ toSignup model ( signupModel, cmds ) =
     ( { model | page = Signup signupModel }, Cmd.map SignupMsg cmds )
 
 
-toLogin : Model -> ( Login.Model, Cmd Login.Msg ) -> ( Model, Cmd Msg )
-toLogin model ( loginModel, cmds ) =
-    ( { model | page = Login loginModel }, Cmd.map LoginMsg cmds )
+toSignin : Model -> ( Signin.Model, Cmd Signin.Msg ) -> ( Model, Cmd Msg )
+toSignin model ( loginModel, cmds ) =
+    ( { model | page = Signin loginModel }, Cmd.map SigninMsg cmds )
 
 
 updateUrl : Url.Url -> Model -> ( Model, Cmd Msg )
@@ -160,9 +160,9 @@ updateUrl url model =
             Signup.init ()
                 |> toSignup model
 
-        Just Route.Login ->
-            Login.init ()
-                |> toLogin model
+        Just Route.Signin ->
+            Signin.init ()
+                |> toSignin model
 
         Nothing ->
             ( { model | page = NotFound }, Cmd.none )
@@ -188,8 +188,8 @@ view model =
         Signup signupModel ->
             viewPage SignupMsg (Signup.view signupModel)
 
-        Login loginModel ->
-            viewPage LoginMsg (Login.view loginModel)
+        Signin signinModel ->
+            viewPage SigninMsg (Signin.view signinModel)
 
         NotFound ->
             pageFrame { title = "NotFound", content = viewNotFoundPage }
@@ -199,10 +199,10 @@ pageFrame : { title : String, content : Html Msg } -> Browser.Document Msg
 pageFrame { title, content } =
     { title = title ++ " - Mitsumori"
     , body =
-        [ div [ class "flex justify-center h-full w-full" ]
-            [ div [ class "flex-col text-center justify-center" ]
-                [ viewNav
-                , div [ class "flex flex-col justify-center mt-8" ] [ content ]
+        [ div [ class "flex flex-col h-full w-full" ]
+            [ viewNav
+            , div [ class "flex flex-col items-center h-full" ]
+                [ div [ class "flex flex-col justify-center mt-8 ml-4" ] [ content ]
                 ]
             ]
         ]
@@ -211,10 +211,12 @@ pageFrame { title, content } =
 
 viewNav : Html msg
 viewNav =
-    div [ class "flex mt-8 items-center" ]
-        [ a [ href "/", class "text-5xl mr-3" ] [ text "mitsumori" ]
-        , a [ href "/signup", class "text 3xl mr-2" ] [ text "signup" ]
-        , a [ href "/login", class "text 3xl" ] [ text "login" ]
+    div [ class "flex mt-4 mx-6 justify-between items-end" ]
+        [ a [ href "/", class "text-3xl font-serif" ] [ text "mitsumori" ]
+        , div []
+            [ a [ href "/signup", class "text-lg mr-4" ] [ text "signup" ]
+            , a [ href "/signin", class "text-lg" ] [ text "signin" ]
+            ]
         ]
 
 
@@ -234,7 +236,3 @@ viewNotFoundPage =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.none
-
-
-
--- Ports.getQuotesResponse RecievedQuotes

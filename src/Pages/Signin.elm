@@ -1,4 +1,4 @@
-module Pages.Signup exposing (..)
+module Pages.Signin exposing (..)
 
 import Components.Button as Button
 import Html exposing (Html, a, div, form, header, input, label, text)
@@ -50,15 +50,15 @@ update msg model =
 
 view : Model -> { title : String, content : Html Msg }
 view model =
-    { title = "Signup"
-    , content = div [ class "mt-52" ] [ viewSignupForm model ]
+    { title = "Login"
+    , content = div [ class "mt-52" ] [ viewSigninForm model ]
     }
 
 
-viewSignupForm : Model -> Html Msg
-viewSignupForm model =
+viewSigninForm : Model -> Html Msg
+viewSigninForm model =
     div [ class "flex flex-col font-light text-black text-start lg:w-96 md:w-96 sm:w-40" ]
-        [ header [ class "text-2xl mb-6 font-medium font-serif" ] [ text "Join mitsumori" ]
+        [ header [ class "text-2xl mb-6 font-medium font-serif" ] [ text "Welcome back" ]
         , form [ id "signup-form" ]
             [ div [ class "flex flex-col my-2" ]
                 [ label [ class "text-gray-900", for "email" ]
@@ -86,7 +86,7 @@ viewSignupForm model =
                 ]
             ]
         , div [ class "flex mt-6 justify-between items-center" ]
-            [ Button.create { label = "Create account", onClick = OnSubmit } |> Button.view
-            , a [ href "signin", class "text-gray-900 underline underline-offset-2" ] [ text "Or sign in" ]
+            [ Button.create { label = "Sign in", onClick = OnSubmit } |> Button.view
+            , a [ href "signup", class "text-gray-900 underline underline-offset-2" ] [ text "Or sign up" ]
             ]
         ]

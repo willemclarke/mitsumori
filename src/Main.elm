@@ -1,18 +1,33 @@
-module Main exposing (main)
+module Main exposing (Session, main)
 
 import Browser
-import Browser.Dom as Dom
-import Components.Button as Button
-import Components.Modal as Modal
-import Html exposing (Html, button, div, form, input, label, p, text, ul)
-import Html.Attributes exposing (class, for, id, placeholder, type_, value)
-import Html.Events exposing (onClick, onInput, onSubmit)
-import Html.Extra as HE
+import Browser.Navigation as Nav
+import Html exposing (Html, a, div, p, text)
+import Html.Attributes exposing (class, href)
 import Json.Decode as JD
 import Json.Encode as JE
-import Ports
+import Pages.Home as Home
+import Pages.Signin as Signin
+import Pages.Signup as Signup
 import Random exposing (Seed)
-import Uuid exposing (Uuid)
+import Route
+import Url
+
+
+
+-- MAIN
+
+
+main : Program JE.Value Model Msg
+main =
+    Browser.application
+        { init = init
+        , view = view
+        , update = update
+        , onUrlChange = UrlChanged
+        , onUrlRequest = LinkClicked
+        , subscriptions = subscriptions
+        }
 
 
 
@@ -20,12 +35,23 @@ import Uuid exposing (Uuid)
 
 
 type alias Model =
-    { inputQuote : String
-    , inputAuthor : String
-    , quotes : List Quote
-    , seed : Seed
-    , modalState : ModalState
+    { page : Page
+    , key : Nav.Key
+    , session : Session
     }
+
+
+type alias Session =
+    { key : Nav.Key
+    , seed : Seed
+    }
+
+
+type Page
+    = HomePage Home.Model
+    | Signup Signup.Model
+    | Signin Signin.Model
+    | NotFound
 
 
 type alias Flags =
@@ -33,47 +59,18 @@ type alias Flags =
     }
 
 
-type alias Quote =
-    { quote : String
-    , author : String
-    , id : Uuid
-    }
-
-
-type ModalState
-    = Visible
-    | Hidden
-
-
-init : JE.Value -> ( Model, Cmd Msg )
-init flagsValue =
+init : JE.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init flagsValue url key =
     let
         decodedFlags =
             JD.decodeValue flagsDecoder flagsValue
     in
     case decodedFlags of
         Ok flags ->
-            ( { inputQuote = "", inputAuthor = "", quotes = [], seed = Random.initialSeed flags.seed, modalState = Hidden }, Ports.getQuotes () )
+            updateUrl url { page = NotFound, key = key, session = { key = key, seed = Random.initialSeed flags.seed } }
 
         Err _ ->
-            ( { inputQuote = "", inputAuthor = "", quotes = [], seed = Random.initialSeed 0, modalState = Hidden }, Cmd.none )
-
-
-quoteDecoder : JD.Decoder Quote
-quoteDecoder =
-    JD.map3 Quote
-        (JD.field "quote" JD.string)
-        (JD.field "author" JD.string)
-        (JD.field "id" Uuid.decoder)
-
-
-quoteEncoder : Quote -> JE.Value
-quoteEncoder { quote, author, id } =
-    JE.object
-        [ ( "quote", JE.string quote )
-        , ( "author", JE.string author )
-        , ( "id", Uuid.encode id )
-        ]
+            updateUrl url { page = NotFound, key = key, session = { key = key, seed = Random.initialSeed 0 } }
 
 
 flagsDecoder : JD.Decoder Flags
@@ -87,156 +84,147 @@ flagsDecoder =
 
 
 type Msg
-    = OnQuoteChange String
-    | OnAuthorChange String
-    | OnSubmit
-    | RecievedQuotes JD.Value
-    | AddQuoteOnClick
-    | CloseModal
-    | NoOp
+    = LinkClicked Browser.UrlRequest
+    | UrlChanged Url.Url
+    | HomeMsg Home.Msg
+    | SignupMsg Signup.Msg
+    | SigninMsg Signin.Msg
 
 
-update : Msg -> Model -> ( Model, Cmd msg )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        OnQuoteChange str ->
-            ( { model | inputQuote = str }, Cmd.none )
+        UrlChanged url ->
+            updateUrl url model
 
-        OnAuthorChange str ->
-            ( { model | inputAuthor = str }, Cmd.none )
+        LinkClicked urlRequest ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model, Nav.pushUrl model.key <| Url.toString url )
 
-        AddQuoteOnClick ->
-            ( { model | modalState = Visible }, Cmd.none )
+                Browser.External href ->
+                    ( model, Nav.load href )
 
-        CloseModal ->
-            ( { model | modalState = Hidden }, Cmd.none )
+        HomeMsg homeMsg ->
+            case model.page of
+                HomePage homeModel ->
+                    toHome model (Home.update homeMsg homeModel)
 
-        OnSubmit ->
-            let
-                uuid =
-                    generateUuid model.seed
-            in
-            if String.isEmpty model.inputQuote && String.isEmpty model.inputAuthor then
-                ( model, Cmd.none )
-
-            else
-                ( { model | inputQuote = "", modalState = Hidden, seed = step model.seed }
-                , Ports.setQuote <| quoteEncoder { quote = model.inputQuote, author = model.inputAuthor, id = uuid }
-                )
-
-        RecievedQuotes value ->
-            let
-                decodedQuotes =
-                    JD.decodeValue (quoteDecoder |> JD.list) value
-            in
-            case decodedQuotes of
-                Ok quotes ->
-                    ( { model | quotes = quotes }, Cmd.none )
-
-                Err _ ->
+                _ ->
                     ( model, Cmd.none )
 
-        NoOp ->
-            ( model, Cmd.none )
+        SignupMsg signupMsg ->
+            case model.page of
+                Signup signupModel ->
+                    toSignup model (Signup.update signupMsg signupModel)
+
+                _ ->
+                    ( model, Cmd.none )
+
+        SigninMsg loginMsg ->
+            case model.page of
+                Signin loginModel ->
+                    toSignin model (Signin.update loginMsg loginModel)
+
+                _ ->
+                    ( model, Cmd.none )
 
 
-generateUuid : Seed -> Uuid
-generateUuid seed =
-    Tuple.first <| Random.step Uuid.uuidGenerator seed
+
+-- TODO : toSignup, toLogin
 
 
-step : Seed -> Seed
-step =
-    Tuple.second << Random.step (Random.int Random.minInt Random.maxInt)
+toHome : Model -> ( Home.Model, Cmd Home.Msg ) -> ( Model, Cmd Msg )
+toHome model ( homeModel, cmds ) =
+    ( { model | page = HomePage homeModel }, Cmd.map HomeMsg cmds )
+
+
+toSignup : Model -> ( Signup.Model, Cmd Signup.Msg ) -> ( Model, Cmd Msg )
+toSignup model ( signupModel, cmds ) =
+    ( { model | page = Signup signupModel }, Cmd.map SignupMsg cmds )
+
+
+toSignin : Model -> ( Signin.Model, Cmd Signin.Msg ) -> ( Model, Cmd Msg )
+toSignin model ( loginModel, cmds ) =
+    ( { model | page = Signin loginModel }, Cmd.map SigninMsg cmds )
+
+
+updateUrl : Url.Url -> Model -> ( Model, Cmd Msg )
+updateUrl url model =
+    case Route.fromUrl url of
+        Just Route.Home ->
+            Home.init model.session
+                |> toHome model
+
+        Just Route.Signup ->
+            Signup.init ()
+                |> toSignup model
+
+        Just Route.Signin ->
+            Signin.init ()
+                |> toSignin model
+
+        Nothing ->
+            ( { model | page = NotFound }, Cmd.none )
 
 
 
 -- VIEW
 
 
-view : Model -> Html Msg
+view : Model -> Browser.Document Msg
 view model =
+    let
+        viewPage toMsg config =
+            pageFrame
+                { title = config.title
+                , content = Html.map toMsg config.content
+                }
+    in
+    case model.page of
+        HomePage homeModel ->
+            viewPage HomeMsg (Home.view homeModel)
+
+        Signup signupModel ->
+            viewPage SignupMsg (Signup.view signupModel)
+
+        Signin signinModel ->
+            viewPage SigninMsg (Signin.view signinModel)
+
+        NotFound ->
+            pageFrame { title = "NotFound", content = viewNotFoundPage }
+
+
+pageFrame : { title : String, content : Html Msg } -> Browser.Document Msg
+pageFrame { title, content } =
+    { title = title ++ " - Mitsumori"
+    , body =
+        [ div [ class "flex flex-col h-full w-full" ]
+            [ viewNav
+            , div [ class "flex flex-col items-center h-full" ]
+                [ div [ class "flex flex-col justify-center mt-8 ml-4" ] [ content ]
+                ]
+            ]
+        ]
+    }
+
+
+viewNav : Html msg
+viewNav =
+    div [ class "flex mt-4 mx-6 justify-between items-end" ]
+        [ a [ href "/", class "text-3xl font-serif" ] [ text "mitsumori" ]
+        , div []
+            [ a [ href "/signup", class "text-lg mr-4" ] [ text "signup" ]
+            , a [ href "/signin", class "text-lg" ] [ text "signin" ]
+            ]
+        ]
+
+
+viewNotFoundPage : Html msg
+viewNotFoundPage =
     div [ class "flex justify-center h-full w-full" ]
         [ div [ class "flex-col text-center justify-center" ]
-            [ div [ class "text-5xl mt-8" ] [ text "mitsumori" ]
-            , div [ class "flex flex-col justify-center" ]
-                [ addQuoteButton model.inputQuote model.modalState
-                , viewQuotes model.quotes
-                ]
-            ]
-        ]
-
-
-addQuoteButton : String -> ModalState -> Html Msg
-addQuoteButton inputtedQuote modalState =
-    div [ class "my-4" ]
-        [ Button.create { label = "Add Quote", onClick = AddQuoteOnClick } |> Button.view
-        , viewAddQuoteModal inputtedQuote modalState
-        ]
-
-
-viewAddQuoteModal : String -> ModalState -> Html Msg
-viewAddQuoteModal inputtedQuote modalState =
-    case modalState of
-        Visible ->
-            Modal.create
-                { title = "Add quote"
-                , body = modalBody inputtedQuote
-                , actions =
-                    Modal.acceptAndDiscardActions (Modal.basicAction "Add quote" OnSubmit) (Modal.basicAction "Cancel" CloseModal)
-                }
-                |> Modal.view
-
-        Hidden ->
-            HE.nothing
-
-
-modalBody : String -> Html Msg
-modalBody inputtedQuote =
-    div [ class "flex flex-col text-black" ]
-        [ form [ id "add-quote-form" ]
-            [ div [ class "flex flex-col my-2" ]
-                [ label [ for "quote" ]
-                    [ text "Quote body" ]
-                , input
-                    [ class "mt-2 p-2 border-2 border-black rounded shadow-l"
-                    , id "quote"
-                    , placeholder "Type quote here"
-                    , type_ "text"
-                    , onInput OnQuoteChange
-                    ]
-                    [ text inputtedQuote ]
-                ]
-            , div [ class "flex flex-col mt-3" ]
-                [ label [ for "author" ]
-                    [ text "Author" ]
-                , input
-                    [ class "mt-2 p-2 border-2 border-black rounded shadow-l"
-                    , id "author"
-                    , placeholder "Author"
-                    , type_ "text"
-                    , onInput OnAuthorChange
-                    ]
-                    [ text inputtedQuote ]
-                ]
-            ]
-        ]
-
-
-viewQuotes : List Quote -> Html msg
-viewQuotes quotes =
-    div [ class "mx-6 w-11/12 max-w-3xl text-start" ]
-        [ ul [] (List.map viewQuote quotes)
-        ]
-
-
-viewQuote : Quote -> Html msg
-viewQuote quote =
-    div [ class "items-center my-6 cursor-default" ]
-        [ p [ class "text-lg font-medium" ] [ text quote.quote ]
-        , div [ class "flex justify-between" ]
-            [ p [ class "text-gray-600 text-sm" ]
-                [ text <| "---" ++ quote.author ]
+            [ div [ class "text-5xl mt-8" ] [ text "Page not found :(" ]
             ]
         ]
 
@@ -247,14 +235,4 @@ viewQuote quote =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Ports.getQuotesResponse RecievedQuotes
-
-
-main : Program JE.Value Model Msg
-main =
-    Browser.element
-        { init = init
-        , update = update
-        , subscriptions = subscriptions
-        , view = view
-        }
+    Sub.none

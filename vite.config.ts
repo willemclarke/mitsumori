@@ -7,7 +7,7 @@ export default defineConfig(async () => {
     plugins: [elmPlugin()],
     server: {
       host: true,
-      port: 1234,
+      port: 3000,
       https: await certificateFor("localhost"),
     },
   };

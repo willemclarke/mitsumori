@@ -12,13 +12,14 @@ import Html.Events exposing (onInput)
 
 type alias Model =
     { email : String
+    , username : String
     , password : String
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { email = "", password = "" }, Cmd.none )
+    ( { email = "", username = "", password = "" }, Cmd.none )
 
 
 
@@ -26,7 +27,8 @@ init _ =
 
 
 type Msg
-    = OnUsernameChange String
+    = OnEmailChange String
+    | OnUsernameChange String
     | OnPasswordChange String
     | OnSubmit
 
@@ -34,8 +36,11 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        OnUsernameChange email ->
+        OnEmailChange email ->
             ( { model | email = email }, Cmd.none )
+
+        OnUsernameChange username ->
+            ( { model | username = username }, Cmd.none )
 
         OnPasswordChange password ->
             ( { model | password = password }, Cmd.none )
@@ -67,6 +72,18 @@ viewSignupForm model =
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline focus:outline-offset-1 focus:outline-2 focus:outline-gray-500"
                     , id "email"
                     , placeholder "your.email@address.com"
+                    , type_ "text"
+                    , onInput OnEmailChange
+                    ]
+                    [ text model.email ]
+                ]
+            , div [ class "flex flex-col mt-6" ]
+                [ label [ class "text-gray-900", for "username" ]
+                    [ text "Username" ]
+                , input
+                    [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline focus:outline-offset-1 focus:outline-2 focus:outline-gray-500"
+                    , id "username"
+                    , placeholder "johndoe"
                     , type_ "text"
                     , onInput OnUsernameChange
                     ]

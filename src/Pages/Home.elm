@@ -2,9 +2,9 @@ module Pages.Home exposing (..)
 
 import Components.Button as Button
 import Components.Modal as Modal
-import Html exposing (Html, button, div, form, input, label, p, text, ul)
+import Html exposing (Html, div, form, input, label, p, text, ul)
 import Html.Attributes exposing (class, for, id, placeholder, type_, value)
-import Html.Events exposing (onClick, onInput, onSubmit)
+import Html.Events exposing (onInput)
 import Html.Extra as HE
 import Json.Decode as JD
 import Json.Encode as JE

@@ -26,7 +26,7 @@ init _ =
 
 
 type Msg
-    = OnUsernameChange String
+    = OnEmailChange String
     | OnPasswordChange String
     | OnSubmit
 
@@ -34,7 +34,7 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        OnUsernameChange email ->
+        OnEmailChange email ->
             ( { model | email = email }, Cmd.none )
 
         OnPasswordChange password ->
@@ -68,7 +68,7 @@ viewSigninForm model =
                     , id "email"
                     , placeholder "your.email@address.com"
                     , type_ "text"
-                    , onInput OnUsernameChange
+                    , onInput OnEmailChange
                     ]
                     [ text model.email ]
                 ]

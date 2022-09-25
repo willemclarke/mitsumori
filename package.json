@@ -21,6 +21,7 @@
     "vite-plugin-elm": "^2.7.2"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^1.35.7",
     "devcert": "^1.2.2",
     "elm-debug-transformer": "^1.1.2",
     "idb": "^7.0.2"

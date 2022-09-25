@@ -40,8 +40,8 @@ type ModalState
 
 
 init : Session -> ( Model, Cmd Msg )
-init { seed } =
-    ( { inputQuote = "", inputAuthor = "", quotes = [], seed = seed, modalState = Hidden }, Ports.getQuotes () )
+init session =
+    ( { inputQuote = "", inputAuthor = "", quotes = [], seed = session.seed, modalState = Hidden }, Ports.getQuotes () )
 
 
 quoteDecoder : JD.Decoder Quote

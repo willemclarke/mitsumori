@@ -1,24 +1,21 @@
-import { Quote } from "./main";
+import { User } from "./supabase";
 
 export namespace Elm {
   export namespace Main {
     export interface App {
       ports: {
-        dataStoreGetQuotes: {
-          subscribe(callback: () => Promise<void>): void;
+        signUp: {
+          subscribe(callback: (user: User) => Promise<void>): void;
         };
-        dataStoreGetQuoteResponse: {
-          send(data: Quote[] | undefined): Promise<void>;
-        };
-        dataStoreSetQuote: {
-          subscribe(callback: (data: Quote) => Promise<void>): void;
+        signUpResonse: {
+          send(data: unknown): Promise<void>;
         };
       };
     }
 
     export function init(options: {
       node?: HTMLElement | null;
-      flags: { seed: number };
+      flags: { seed: number; supabaseUrl: string; supabaseKey: string };
     }): Elm.Main.App;
   }
 }

@@ -2,8 +2,9 @@ module Pages.Signin exposing (..)
 
 import Components.Button as Button
 import Html exposing (Html, a, div, form, header, input, label, text)
-import Html.Attributes exposing (class, for, href, id, placeholder, type_)
+import Html.Attributes exposing (class, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onInput)
+import Route
 
 
 
@@ -64,10 +65,11 @@ viewSigninForm model =
                 [ label [ class "text-gray-900", for "email" ]
                     [ text "Email address" ]
                 , input
-                    [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline focus:outline-offset-1 focus:outline-2 focus:outline-gray-500"
+                    [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
                     , id "email"
                     , placeholder "your.email@address.com"
                     , type_ "text"
+                    , value model.email
                     , onInput OnEmailChange
                     ]
                     [ text model.email ]
@@ -76,10 +78,11 @@ viewSigninForm model =
                 [ label [ class "text-gray-700", for "password" ]
                     [ text "Password (8+ chars)" ]
                 , input
-                    [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline focus:outline-offset-1 focus:outline-2 focus:outline-gray-500"
+                    [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
                     , id "password"
                     , placeholder "Choose your password"
                     , type_ "password"
+                    , value model.password
                     , onInput OnPasswordChange
                     ]
                     [ text model.password ]
@@ -87,6 +90,6 @@ viewSigninForm model =
             ]
         , div [ class "flex mt-6 justify-between items-center" ]
             [ Button.create { label = "Sign in", onClick = OnSubmit } |> Button.view
-            , a [ href "signup", class "text-gray-900 underline underline-offset-2" ] [ text "Or sign up" ]
+            , a [ href <| Route.toString Route.Signup, class "text-gray-700 underline underline-offset-2" ] [ text "Or sign up" ]
             ]
         ]

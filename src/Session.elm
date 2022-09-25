@@ -7,4 +7,6 @@ import Random exposing (Seed)
 type alias Session =
     { key : Nav.Key
     , seed : Seed
+    , supabaseUrl : String
+    , supabaseKey : String
     }

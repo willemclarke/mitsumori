@@ -1,4 +1,4 @@
-module Route exposing (Route(..), fromUrl)
+module Route exposing (Route(..), fromUrl, toString)
 
 import Url
 import Url.Parser as Parser
@@ -8,6 +8,19 @@ type Route
     = Home
     | Signup
     | Signin
+
+
+toString : Route -> String
+toString route =
+    case route of
+        Home ->
+            "/"
+
+        Signup ->
+            "signup"
+
+        Signin ->
+            "signin"
 
 
 parser : Parser.Parser (Route -> a) a

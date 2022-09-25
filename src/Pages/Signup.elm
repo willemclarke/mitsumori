@@ -2,8 +2,11 @@ module Pages.Signup exposing (..)
 
 import Components.Button as Button
 import Html exposing (Html, a, div, form, header, input, label, text)
-import Html.Attributes exposing (class, for, href, id, placeholder, type_)
+import Html.Attributes exposing (class, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onInput)
+import Json.Encode as JE
+import Ports
+import Route
 
 
 
@@ -46,7 +49,7 @@ update msg model =
             ( { model | password = password }, Cmd.none )
 
         OnSubmit ->
-            ( model, Cmd.none )
+            ( { model | email = "", username = "", password = "" }, Cmd.none )
 
 
 
@@ -69,10 +72,11 @@ viewSignupForm model =
                 [ label [ class "text-gray-900", for "email" ]
                     [ text "Email address" ]
                 , input
-                    [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline focus:outline-offset-1 focus:outline-2 focus:outline-gray-500"
+                    [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
                     , id "email"
                     , placeholder "your.email@address.com"
                     , type_ "text"
+                    , value model.email
                     , onInput OnEmailChange
                     ]
                     [ text model.email ]
@@ -81,10 +85,11 @@ viewSignupForm model =
                 [ label [ class "text-gray-900", for "username" ]
                     [ text "Username" ]
                 , input
-                    [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline focus:outline-offset-1 focus:outline-2 focus:outline-gray-500"
+                    [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
                     , id "username"
                     , placeholder "johndoe"
                     , type_ "text"
+                    , value model.username
                     , onInput OnUsernameChange
                     ]
                     [ text model.email ]
@@ -93,10 +98,11 @@ viewSignupForm model =
                 [ label [ class "text-gray-700", for "password" ]
                     [ text "Password (8+ chars)" ]
                 , input
-                    [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline focus:outline-offset-1 focus:outline-2 focus:outline-gray-500"
+                    [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
                     , id "password"
                     , placeholder "Choose your password"
                     , type_ "password"
+                    , value model.password
                     , onInput OnPasswordChange
                     ]
                     [ text model.password ]
@@ -104,6 +110,11 @@ viewSignupForm model =
             ]
         , div [ class "flex mt-6 justify-between items-center" ]
             [ Button.create { label = "Create account", onClick = OnSubmit } |> Button.view
-            , a [ href "signin", class "text-gray-900 underline underline-offset-2" ] [ text "Or sign in" ]
+            , a [ href <| Route.toString Route.Signin, class "ml-2 text-gray-700 underline underline-offset-2" ] [ text "Or sign in" ]
             ]
         ]
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none

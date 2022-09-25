@@ -4,3 +4,5 @@ elm-stuff
 dist
 dist-ssr
 *.local
+.env
+.env.d.ts

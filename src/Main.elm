@@ -1,4 +1,4 @@
-module Main exposing (Session, main)
+module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
@@ -11,6 +11,7 @@ import Pages.Signin as Signin
 import Pages.Signup as Signup
 import Random exposing (Seed)
 import Route
+import Session exposing (Session)
 import Url
 
 
@@ -41,12 +42,6 @@ type alias Model =
     }
 
 
-type alias Session =
-    { key : Nav.Key
-    , seed : Seed
-    }
-
-
 type Page
     = HomePage Home.Model
     | Signup Signup.Model
@@ -55,7 +50,9 @@ type Page
 
 
 type alias Flags =
-    { seed : Int
+    { supabaseUrl : String
+    , supabaseKey : String
+    , seed : Int
     }
 
 
@@ -67,15 +64,35 @@ init flagsValue url key =
     in
     case decodedFlags of
         Ok flags ->
-            updateUrl url { page = NotFound, key = key, session = { key = key, seed = Random.initialSeed flags.seed } }
+            updateUrl url
+                { page = NotFound
+                , key = key
+                , session =
+                    { key = key
+                    , seed = Random.initialSeed flags.seed
+                    , supabaseUrl = flags.supabaseUrl
+                    , supabaseKey = flags.supabaseKey
+                    }
+                }
 
         Err _ ->
-            updateUrl url { page = NotFound, key = key, session = { key = key, seed = Random.initialSeed 0 } }
+            updateUrl url
+                { page = NotFound
+                , key = key
+                , session =
+                    { key = key
+                    , seed = Random.initialSeed 0
+                    , supabaseUrl = ""
+                    , supabaseKey = ""
+                    }
+                }
 
 
 flagsDecoder : JD.Decoder Flags
 flagsDecoder =
-    JD.map Flags
+    JD.map3 Flags
+        (JD.field "supabaseUrl" JD.string)
+        (JD.field "supabaseKey" JD.string)
         (JD.field "seed" JD.int)
 
 
@@ -211,11 +228,12 @@ pageFrame { title, content } =
 
 viewNav : Html msg
 viewNav =
-    div [ class "flex mt-4 mx-6 justify-between items-end" ]
-        [ a [ href "/", class "text-3xl font-serif" ] [ text "mitsumori" ]
-        , div []
-            [ a [ href "/signup", class "text-lg mr-4" ] [ text "signup" ]
-            , a [ href "/signin", class "text-lg" ] [ text "signin" ]
+    div [ class "flex mt-4 mx-6 justify-between items-end font-serif" ]
+        [ a [ href <| Route.toString Route.Home, class "text-3xl" ] [ text "mitsumori" ]
+        , div [ class "flex" ]
+            [ a [ href <| Route.toString Route.Signup, class "text-lg mr-4" ] [ text "signup" ]
+            , a [ href <| Route.toString Route.Signin, class "text-lg mr-4" ] [ text "signin" ]
+            , p [ class "text-lg" ] [ text "logout" ]
             ]
         ]
 

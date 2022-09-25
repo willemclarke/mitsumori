@@ -1,11 +1,5 @@
-import { getQuotes, setQuotes } from "./indexedDb";
 import { Elm } from "./Main.elm";
-
-export interface Quote {
-  quote: string;
-  author: string;
-  id: number;
-}
+import * as supabase from "./supabase";
 
 if (process.env.NODE_ENV === "development") {
   const ElmDebugTransform = await import("elm-debug-transformer");
@@ -18,19 +12,18 @@ if (process.env.NODE_ENV === "development") {
 const root = document.getElementById("elm");
 const app = Elm.Main.init({
   node: root,
-  flags: { seed: Math.floor(Math.random() * 0x0fffffff) },
+  flags: {
+    supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+    supabaseKey: import.meta.env.VITE_SUPABASE_KEY,
+    seed: Math.floor(Math.random() * 0x0fffffff),
+  },
 });
 
-app.ports.dataStoreGetQuotes.subscribe(() => {
-  return getQuotes().then((quotes) =>
-    app.ports.dataStoreGetQuoteResponse.send(quotes)
-  );
-});
+app.ports.signUp.subscribe(async (user) => {
+  const { session, error } = await supabase.signUp(user);
 
-app.ports.dataStoreSetQuote.subscribe(async (value) => {
-  return setQuotes(value).then(() =>
-    getQuotes().then((quotes) =>
-      app.ports.dataStoreGetQuoteResponse.send(quotes)
-    )
-  );
+  if (!session) {
+    return app.ports.signUpResonse.send(error);
+  }
+  return app.ports.signUpResonse.send(session);
 });

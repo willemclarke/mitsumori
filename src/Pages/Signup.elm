@@ -4,9 +4,11 @@ import Components.Button as Button
 import Html exposing (Html, a, div, form, header, input, label, text)
 import Html.Attributes exposing (class, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onInput)
-import Json.Encode as JE
-import Ports
+import RemoteData exposing (WebData)
 import Route
+import Session exposing (Session)
+import Supabase
+import User exposing (User)
 
 
 
@@ -17,12 +19,13 @@ type alias Model =
     { email : String
     , username : String
     , password : String
+    , session : Session
     }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( { email = "", username = "", password = "" }, Cmd.none )
+init : Session -> ( Model, Cmd Msg )
+init session =
+    ( { email = "", username = "", password = "", session = session }, Cmd.none )
 
 
 
@@ -34,6 +37,7 @@ type Msg
     | OnUsernameChange String
     | OnPasswordChange String
     | OnSubmit
+    | GotSignupResponse (WebData User)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -49,7 +53,19 @@ update msg model =
             ( { model | password = password }, Cmd.none )
 
         OnSubmit ->
-            ( { model | email = "", username = "", password = "" }, Cmd.none )
+            ( { model | email = "", username = "", password = "" }
+            , Supabase.signUp
+                { apiUrl = model.session.supabaseUrl, apiKey = model.session.supabaseKey }
+                { email = model.email, username = model.username, password = model.password }
+                GotSignupResponse
+            )
+
+        GotSignupResponse webData ->
+            let
+                webData_ =
+                    Debug.log "webData" webData
+            in
+            ( model, Cmd.none )
 
 
 

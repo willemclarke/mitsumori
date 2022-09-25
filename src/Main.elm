@@ -174,7 +174,7 @@ updateUrl url model =
                 |> toHome model
 
         Just Route.Signup ->
-            Signup.init ()
+            Signup.init model.session
                 |> toSignup model
 
         Just Route.Signin ->

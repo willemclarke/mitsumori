@@ -1,4 +1,4 @@
-module Supabase exposing (..)
+module Supabase exposing (signUp)
 
 import Http
 import Json.Encode as JE
@@ -17,8 +17,8 @@ encodeUser : { email : String, username : String, password : String } -> JE.Valu
 encodeUser { email, username, password } =
     JE.object
         [ ( "email", JE.string email )
-        , ( "username", JE.string username )
         , ( "password", JE.string password )
+        , ( "data", JE.object [ ( "username", JE.string username ) ] )
         ]
 
 
@@ -28,7 +28,7 @@ signUp { apiUrl, apiKey } user toMsg =
         { method = "POST"
         , body = Http.jsonBody <| encodeUser user
         , url = apiUrl ++ "/auth/v1/signup"
-        , headers = [ Http.header "Authorization" apiKey ]
+        , headers = [ Http.header "apiKey" apiKey ]
         , expect = Http.expectJson (RemoteData.fromResult >> toMsg) User.decoder
         , timeout = Nothing
         , tracker = Nothing

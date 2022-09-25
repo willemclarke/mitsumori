@@ -1,10 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = "https://mfmmmlmbmhogybwcfhqm.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mbW1tbG1ibWhvZ3lid2NmaHFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NjI0NjQ0MzQsImV4cCI6MTk3ODA0MDQzNH0.UMgK0VTp_QhOUQsj1FO7hB8S3_FRHerT6t5hyBES4tE";
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_KEY
+);
 
 export interface User {
   email: string;

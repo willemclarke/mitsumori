@@ -9,7 +9,7 @@ import Json.Encode as JE
 import Pages.Home as Home
 import Pages.Signin as Signin
 import Pages.Signup as Signup
-import Random exposing (Seed)
+import Random
 import Route
 import Session exposing (Session)
 import Url

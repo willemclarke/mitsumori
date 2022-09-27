@@ -85,7 +85,7 @@ update msg model =
             in
             case decoded of
                 Ok user ->
-                    ( model, Route.replaceUrl session.key Route.Home, [ Actions.SetSession <| setSession user session ] )
+                    ( model, Route.pushUrl session.key Route.Home, [ Actions.SetSession <| setSession user session ] )
 
                 Err err ->
                     let

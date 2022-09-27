@@ -32,3 +32,9 @@ app.ports.supabaseSignUp.subscribe(async (user) => {
     return app.ports.supabaseSignUpResponse.send(error);
   }
 });
+
+app.ports.supabaseSession.subscribe(async () => {
+  const session = supabase.session();
+  console.log({ session });
+  return app.ports.subabaseSessionResponse.send(session);
+});

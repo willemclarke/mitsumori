@@ -1,4 +1,4 @@
-port module Supabase exposing (Key, signIn, signUp, signUpResponse)
+port module Supabase exposing (Key, session, sessionResponse, signIn, signUp, signUpResponse)
 
 import Json.Encode as JE
 import Route exposing (Route(..))
@@ -11,6 +11,16 @@ type alias Key =
 signUp : JE.Value -> Cmd msg
 signUp =
     supabaseSignUp
+
+
+session : () -> Cmd msg
+session =
+    supabaseSession
+
+
+sessionResponse : (JE.Value -> msg) -> Sub msg
+sessionResponse =
+    subabaseSessionResponse
 
 
 signUpResponse : (JE.Value -> msg) -> Sub msg
@@ -30,3 +40,9 @@ port supabaseSignIn : JE.Value -> Cmd msg
 
 
 port supabaseSignUpResponse : (JE.Value -> msg) -> Sub msg
+
+
+port supabaseSession : () -> Cmd msg
+
+
+port subabaseSessionResponse : (JE.Value -> msg) -> Sub msg

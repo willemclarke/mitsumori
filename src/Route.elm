@@ -1,4 +1,4 @@
-module Route exposing (Route(..), fromUrl, replaceUrl, toString)
+module Route exposing (Route(..), fromUrl, pushUrl, replaceUrl, toString)
 
 import Browser.Navigation as Nav
 import Url
@@ -31,6 +31,11 @@ parser =
         , Parser.map Signup (Parser.s "signup")
         , Parser.map Signin (Parser.s "signin")
         ]
+
+
+pushUrl : Nav.Key -> Route -> Cmd msg
+pushUrl key route =
+    Nav.pushUrl key (toString route)
 
 
 replaceUrl : Nav.Key -> Route -> Cmd msg

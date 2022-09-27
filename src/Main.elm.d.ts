@@ -11,6 +11,12 @@ export namespace Elm {
         supabaseSignUpResponse: {
           send(data: Session | ApiError): Promise<void>;
         };
+        supabaseSession: {
+          subscribe(callback: () => Promise<void>): void;
+        };
+        subabaseSessionResponse: {
+          send(data: Session | null): Promise<void>;
+        };
       };
     }
 

@@ -13,8 +13,9 @@ import Pages.Signup as Signup
 import Random
 import Route
 import Session exposing (Session)
+import Supabase
 import Url
-import User
+import User exposing (User, UserType(..))
 
 
 
@@ -40,6 +41,7 @@ main =
 type alias Model =
     { page : Page
     , key : Nav.Key
+    , url : Url.Url
     , session : Session
     }
 
@@ -57,6 +59,16 @@ type alias Flags =
     }
 
 
+
+{-
+   TODO: need to handle when GotSessionResponse comes back as null (Model as maybe in decoder) - aka not authed (preferrably navigate to Login page)
+   TODO: same as above except for GotSignupResponse in Signup.elm - when errors - I need to reflect that in the form
+       - Add some form validation to Signup / Login
+   TODO: Add implementation to logout
+   TODO: cleanup Actions type & the way I currently handle actions, try to extract the foldl function
+-}
+
+
 init : JE.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flagsValue url key =
     let
@@ -65,28 +77,32 @@ init flagsValue url key =
     in
     case decodedFlags of
         Ok flags ->
-            updateUrl url
-                { page = NotFound
-                , key = key
-                , session =
+            ( { page = NotFound
+              , url = url
+              , key = key
+              , session =
                     { key = key
                     , user = User.unauthenticated
                     , seed = Random.initialSeed flags.seed
                     , supabase = flags.supabase
                     }
-                }
+              }
+            , Supabase.session ()
+            )
 
         Err _ ->
-            updateUrl url
-                { page = NotFound
-                , key = key
-                , session =
+            ( { page = NotFound
+              , url = url
+              , key = key
+              , session =
                     { key = key
                     , user = User.unauthenticated
                     , seed = Random.initialSeed 0
                     , supabase = { supabaseUrl = "", supabaseKey = "" }
                     }
-                }
+              }
+            , Cmd.none
+            )
 
 
 flagsDecoder : JD.Decoder Flags
@@ -113,10 +129,15 @@ type Msg
     | HomeMsg Home.Msg
     | SignupMsg Signup.Msg
     | SigninMsg Signin.Msg
+    | GotSessionResponse JE.Value
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
+    let
+        session =
+            model.session
+    in
     case msg of
         UrlChanged url ->
             updateUrl url model
@@ -128,6 +149,22 @@ update msg model =
 
                 Browser.External href ->
                     ( model, Nav.load href )
+
+        GotSessionResponse json ->
+            let
+                decoded =
+                    JD.decodeValue User.decoder json
+            in
+            case decoded of
+                Ok user ->
+                    let
+                        newModel =
+                            { model | session = setSession user session }
+                    in
+                    updateUrl model.url newModel
+
+                Err _ ->
+                    updateUrl model.url model
 
         HomeMsg homeMsg ->
             case model.page of
@@ -148,8 +185,8 @@ update msg model =
                             List.foldl
                                 (\action _ ->
                                     case action of
-                                        Actions.SetSession session ->
-                                            { model | session = session }
+                                        Actions.SetSession session_ ->
+                                            { model | session = session_ }
                                 )
                                 model
                                 actions
@@ -166,6 +203,11 @@ update msg model =
 
                 _ ->
                     ( model, Cmd.none )
+
+
+setSession : User -> Session -> Session
+setSession user session =
+    { session | user = user }
 
 
 toHome : Model -> ( Home.Model, Cmd Home.Msg ) -> ( Model, Cmd Msg )
@@ -210,7 +252,7 @@ view : Model -> Browser.Document Msg
 view model =
     let
         viewPage toMsg config =
-            pageFrame
+            pageFrame model.session
                 { title = config.title
                 , content = Html.map toMsg config.content
                 }
@@ -226,15 +268,15 @@ view model =
             viewPage SigninMsg (Signin.view signinModel)
 
         NotFound ->
-            pageFrame { title = "NotFound", content = viewNotFoundPage }
+            pageFrame model.session { title = "NotFound", content = viewNotFoundPage }
 
 
-pageFrame : { title : String, content : Html Msg } -> Browser.Document Msg
-pageFrame { title, content } =
+pageFrame : Session -> { title : String, content : Html Msg } -> Browser.Document Msg
+pageFrame session { title, content } =
     { title = title ++ " - Mitsumori"
     , body =
         [ div [ class "flex flex-col h-full w-full" ]
-            [ viewNav
+            [ viewNav session
             , div [ class "flex flex-col items-center h-full" ]
                 [ div [ class "flex flex-col justify-center mt-8 ml-4" ] [ content ]
                 ]
@@ -243,14 +285,20 @@ pageFrame { title, content } =
     }
 
 
-viewNav : Html msg
-viewNav =
+viewNav : Session -> Html msg
+viewNav session =
     div [ class "flex mt-4 mx-6 justify-between items-end font-serif" ]
         [ a [ href <| Route.toString Route.Home, class "text-3xl" ] [ text "mitsumori" ]
         , div [ class "flex" ]
-            [ a [ href <| Route.toString Route.Signup, class "text-lg mr-4" ] [ text "signup" ]
-            , a [ href <| Route.toString Route.Signin, class "text-lg mr-4" ] [ text "signin" ]
-            , p [ class "text-lg" ] [ text "logout" ]
+            [ case User.userType session.user of
+                Authenticated _ ->
+                    div [] [ p [ class "text-lg" ] [ text "logout" ], p [ class "text-normal" ] [ text <| "Logged in as " ++ User.username session.user ] ]
+
+                Unauthenticated ->
+                    div []
+                        [ a [ href <| Route.toString Route.Signup, class "text-lg mr-4" ] [ text "signup" ]
+                        , a [ href <| Route.toString Route.Signin, class "text-lg mr-4" ] [ text "signin" ]
+                        ]
             ]
         ]
 
@@ -270,15 +318,19 @@ viewNotFoundPage =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.page of
-        HomePage home ->
-            Sub.map HomeMsg (Home.subscriptions home)
+    let
+        subpageSubs =
+            case model.page of
+                HomePage home ->
+                    Sub.map HomeMsg (Home.subscriptions home)
 
-        Signup signUp ->
-            Sub.map SignupMsg (Signup.subscriptions signUp)
+                Signup signUp ->
+                    Sub.map SignupMsg (Signup.subscriptions signUp)
 
-        Signin signIn ->
-            Sub.map SigninMsg (Signin.subscriptions signIn)
+                Signin signIn ->
+                    Sub.map SigninMsg (Signin.subscriptions signIn)
 
-        _ ->
-            Sub.none
+                _ ->
+                    Sub.none
+    in
+    Sub.batch [ subpageSubs, Supabase.sessionResponse GotSessionResponse ]

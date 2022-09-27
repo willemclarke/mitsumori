@@ -10,6 +10,7 @@ import Json.Decode as JD
 import Json.Encode as JE
 import Random exposing (Seed)
 import Session exposing (Session)
+import User exposing (User)
 import Uuid exposing (Uuid)
 
 
@@ -21,7 +22,7 @@ type alias Model =
     { inputQuote : String
     , inputAuthor : String
     , quotes : List Quote
-    , seed : Seed
+    , session : Session
     , modalState : ModalState
     }
 
@@ -40,7 +41,7 @@ type ModalState
 
 init : Session -> ( Model, Cmd Msg )
 init session =
-    ( { inputQuote = "", inputAuthor = "", quotes = [], seed = session.seed, modalState = Hidden }, Cmd.none )
+    ( { inputQuote = "", inputAuthor = "", quotes = [], session = session, modalState = Hidden }, Cmd.none )
 
 
 quoteDecoder : JD.Decoder Quote
@@ -76,6 +77,10 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
+    let
+        session =
+            model.session
+    in
     case msg of
         OnQuoteChange str ->
             ( { model | inputQuote = str }, Cmd.none )
@@ -92,13 +97,13 @@ update msg model =
         OnSubmit ->
             let
                 uuid =
-                    generateUuid model.seed
+                    generateUuid session.seed
             in
             if String.isEmpty model.inputQuote && String.isEmpty model.inputAuthor then
                 ( model, Cmd.none )
 
             else
-                ( { model | inputQuote = "", modalState = Hidden, seed = step model.seed }
+                ( { model | inputQuote = "", modalState = Hidden, session = setSessionSeed session.seed session }
                 , Cmd.none
                 )
 
@@ -116,6 +121,11 @@ update msg model =
 
         NoOp ->
             ( model, Cmd.none )
+
+
+setSessionSeed : Seed -> Session -> Session
+setSessionSeed seed session =
+    { session | seed = step seed }
 
 
 generateUuid : Seed -> Uuid

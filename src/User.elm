@@ -1,4 +1,4 @@
-module User exposing (..)
+module User exposing (User, UserInfo, decoder, unauthenticated)
 
 import Json.Decode as JD
 
@@ -18,6 +18,11 @@ type UserType
 
 type User
     = User UserType
+
+
+unauthenticated : User
+unauthenticated =
+    User Unauthenticated
 
 
 decoder : JD.Decoder User

@@ -8,7 +8,6 @@ import Html.Events exposing (onInput)
 import Html.Extra as HE
 import Json.Decode as JD
 import Json.Encode as JE
-import Ports
 import Random exposing (Seed)
 import Session exposing (Session)
 import Uuid exposing (Uuid)
@@ -41,7 +40,7 @@ type ModalState
 
 init : Session -> ( Model, Cmd Msg )
 init session =
-    ( { inputQuote = "", inputAuthor = "", quotes = [], seed = session.seed, modalState = Hidden }, Ports.getQuotes () )
+    ( { inputQuote = "", inputAuthor = "", quotes = [], seed = session.seed, modalState = Hidden }, Cmd.none )
 
 
 quoteDecoder : JD.Decoder Quote
@@ -100,7 +99,7 @@ update msg model =
 
             else
                 ( { model | inputQuote = "", modalState = Hidden, seed = step model.seed }
-                , Ports.setQuote <| quoteEncoder { quote = model.inputQuote, author = model.inputAuthor, id = uuid }
+                , Cmd.none
                 )
 
         RecievedQuotes value ->
@@ -225,4 +224,4 @@ viewQuote quote =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Ports.getQuotesResponse RecievedQuotes
+    Sub.none

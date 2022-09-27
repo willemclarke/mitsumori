@@ -1,5 +1,6 @@
-module Main exposing (main)
+module Main exposing (Model, main)
 
+import Actions exposing (Actions(..))
 import Browser
 import Browser.Navigation as Nav
 import Html exposing (Html, a, div, p, text)
@@ -13,6 +14,7 @@ import Random
 import Route
 import Session exposing (Session)
 import Url
+import User
 
 
 
@@ -50,8 +52,7 @@ type Page
 
 
 type alias Flags =
-    { supabaseUrl : String
-    , supabaseKey : String
+    { supabase : Session.SupabaseFlags
     , seed : Int
     }
 
@@ -69,9 +70,9 @@ init flagsValue url key =
                 , key = key
                 , session =
                     { key = key
+                    , user = User.unauthenticated
                     , seed = Random.initialSeed flags.seed
-                    , supabaseUrl = flags.supabaseUrl
-                    , supabaseKey = flags.supabaseKey
+                    , supabase = flags.supabase
                     }
                 }
 
@@ -81,19 +82,25 @@ init flagsValue url key =
                 , key = key
                 , session =
                     { key = key
+                    , user = User.unauthenticated
                     , seed = Random.initialSeed 0
-                    , supabaseUrl = ""
-                    , supabaseKey = ""
+                    , supabase = { supabaseUrl = "", supabaseKey = "" }
                     }
                 }
 
 
 flagsDecoder : JD.Decoder Flags
 flagsDecoder =
-    JD.map3 Flags
+    JD.map2 Flags
+        (JD.field "supabase" supabaseFlagsDecoder)
+        (JD.field "seed" JD.int)
+
+
+supabaseFlagsDecoder : JD.Decoder Session.SupabaseFlags
+supabaseFlagsDecoder =
+    JD.map2 Session.SupabaseFlags
         (JD.field "supabaseUrl" JD.string)
         (JD.field "supabaseKey" JD.string)
-        (JD.field "seed" JD.int)
 
 
 
@@ -133,7 +140,21 @@ update msg model =
         SignupMsg signupMsg ->
             case model.page of
                 Signup signupModel ->
-                    toSignup model (Signup.update signupMsg signupModel)
+                    let
+                        ( signUpModel, signUpCmds_, actions ) =
+                            Signup.update signupMsg signupModel
+
+                        newModel =
+                            List.foldl
+                                (\action _ ->
+                                    case action of
+                                        Actions.SetSession session ->
+                                            { model | session = session }
+                                )
+                                model
+                                actions
+                    in
+                    toSignup newModel ( signUpModel, signUpCmds_ )
 
                 _ ->
                     ( model, Cmd.none )
@@ -145,10 +166,6 @@ update msg model =
 
                 _ ->
                     ( model, Cmd.none )
-
-
-
--- TODO : toSignup, toLogin
 
 
 toHome : Model -> ( Home.Model, Cmd Home.Msg ) -> ( Model, Cmd Msg )
@@ -252,5 +269,16 @@ viewNotFoundPage =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+subscriptions model =
+    case model.page of
+        HomePage home ->
+            Sub.map HomeMsg (Home.subscriptions home)
+
+        Signup signUp ->
+            Sub.map SignupMsg (Signup.subscriptions signUp)
+
+        Signin signIn ->
+            Sub.map SigninMsg (Signin.subscriptions signIn)
+
+        _ ->
+            Sub.none

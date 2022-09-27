@@ -1,10 +1,12 @@
 module Pages.Signup exposing (..)
 
+import Actions exposing (Actions)
 import Components.Button as Button
 import Html exposing (Html, a, div, form, header, input, label, text)
 import Html.Attributes exposing (class, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onInput)
-import RemoteData exposing (WebData)
+import Json.Decode as JD
+import Json.Encode as JE
 import Route
 import Session exposing (Session)
 import Supabase
@@ -13,6 +15,7 @@ import User exposing (User)
 
 
 -- MODEL
+-- TODO: wrap email, username & password into Form type
 
 
 type alias Model =
@@ -28,6 +31,15 @@ init session =
     ( { email = "", username = "", password = "", session = session }, Cmd.none )
 
 
+encodeUser : { email : String, username : String, password : String } -> JE.Value
+encodeUser { email, username, password } =
+    JE.object
+        [ ( "email", JE.string email )
+        , ( "username", JE.string username )
+        , ( "password", JE.string password )
+        ]
+
+
 
 -- UPDATE
 
@@ -37,35 +49,55 @@ type Msg
     | OnUsernameChange String
     | OnPasswordChange String
     | OnSubmit
-    | GotSignupResponse (WebData User)
+    | GotSignupResponse JE.Value
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Cmd Msg, List Actions )
 update msg model =
+    let
+        session =
+            model.session
+    in
     case msg of
         OnEmailChange email ->
-            ( { model | email = email }, Cmd.none )
+            ( { model | email = email }, Cmd.none, [] )
 
         OnUsernameChange username ->
-            ( { model | username = username }, Cmd.none )
+            ( { model | username = username }, Cmd.none, [] )
 
         OnPasswordChange password ->
-            ( { model | password = password }, Cmd.none )
+            ( { model | password = password }, Cmd.none, [] )
 
         OnSubmit ->
-            ( { model | email = "", username = "", password = "" }
-            , Supabase.signUp
-                { apiUrl = model.session.supabaseUrl, apiKey = model.session.supabaseKey }
-                { email = model.email, username = model.username, password = model.password }
-                GotSignupResponse
+            let
+                user =
+                    { email = model.email, username = model.username, password = model.password }
+            in
+            ( model
+            , Supabase.signUp (encodeUser user)
+            , []
             )
 
-        GotSignupResponse webData ->
+        GotSignupResponse json ->
             let
-                webData_ =
-                    Debug.log "webData" webData
+                decoded =
+                    JD.decodeValue User.decoder json
             in
-            ( model, Cmd.none )
+            case decoded of
+                Ok user ->
+                    ( model, Route.replaceUrl session.key Route.Home, [ Actions.SetSession <| setSession user session ] )
+
+                Err err ->
+                    let
+                        error =
+                            Debug.log "Err" err
+                    in
+                    ( model, Cmd.none, [] )
+
+
+setSession : User -> Session -> Session
+setSession user session =
+    { session | user = user }
 
 
 
@@ -132,5 +164,5 @@ viewSignupForm model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.none
+subscriptions _ =
+    Sub.batch [ Supabase.signUpResponse GotSignupResponse ]

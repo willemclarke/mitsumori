@@ -93,3 +93,8 @@ viewSigninForm model =
             , a [ href <| Route.toString Route.Signup, class "text-gray-700 underline underline-offset-2" ] [ text "Or sign up" ]
             ]
         ]
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.none

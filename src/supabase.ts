@@ -12,11 +12,13 @@ export interface User {
 }
 
 export const signUp = async (user: User) => {
-  return await supabase.auth.signUp(
+  return supabase.auth.signUp(
     { email: user.email, password: user.password },
     { data: { username: user.username } }
   );
 };
+
+export const session = () => supabase.auth.session();
 
 export const signIn = async (user: Omit<User, "username">) =>
   await supabase.auth.signIn({ email: user.email, password: user.password });

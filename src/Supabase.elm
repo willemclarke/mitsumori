@@ -1,35 +1,32 @@
-module Supabase exposing (signUp)
+port module Supabase exposing (Key, signIn, signUp, signUpResponse)
 
-import Http
 import Json.Encode as JE
-import RemoteData exposing (WebData)
-import Url exposing (Protocol(..))
-import User exposing (User)
+import Route exposing (Route(..))
 
 
-type alias HttpInfo =
-    { apiUrl : String
-    , apiKey : String
-    }
+type alias Key =
+    String
 
 
-encodeUser : { email : String, username : String, password : String } -> JE.Value
-encodeUser { email, username, password } =
-    JE.object
-        [ ( "email", JE.string email )
-        , ( "password", JE.string password )
-        , ( "data", JE.object [ ( "username", JE.string username ) ] )
-        ]
+signUp : JE.Value -> Cmd msg
+signUp =
+    supabaseSignUp
 
 
-signUp : HttpInfo -> { email : String, username : String, password : String } -> (WebData User -> msg) -> Cmd msg
-signUp { apiUrl, apiKey } user toMsg =
-    Http.request
-        { method = "POST"
-        , body = Http.jsonBody <| encodeUser user
-        , url = apiUrl ++ "/auth/v1/signup"
-        , headers = [ Http.header "apiKey" apiKey ]
-        , expect = Http.expectJson (RemoteData.fromResult >> toMsg) User.decoder
-        , timeout = Nothing
-        , tracker = Nothing
-        }
+signUpResponse : (JE.Value -> msg) -> Sub msg
+signUpResponse =
+    supabaseSignUpResponse
+
+
+signIn : JE.Value -> Cmd msg
+signIn =
+    supabaseSignIn
+
+
+port supabaseSignUp : JE.Value -> Cmd msg
+
+
+port supabaseSignIn : JE.Value -> Cmd msg
+
+
+port supabaseSignUpResponse : (JE.Value -> msg) -> Sub msg

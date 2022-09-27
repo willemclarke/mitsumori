@@ -66,6 +66,7 @@ type alias Flags =
        - Add some form validation to Signup / Login
    TODO: Add implementation to logout
    TODO: cleanup Actions type & the way I currently handle actions, try to extract the foldl function
+   TODO: User.elm - need to change authenticated/unauthenticated to not be based off of if theres a jwt token, since it could be expired
 -}
 
 

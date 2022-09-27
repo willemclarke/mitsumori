@@ -92,18 +92,21 @@ init flagsValue url key =
             )
 
         Err _ ->
-            ( { page = NotFound
-              , url = url
-              , key = key
-              , session =
-                    { key = key
-                    , user = User.unauthenticated
-                    , seed = Random.initialSeed 0
-                    , supabase = { supabaseUrl = "", supabaseKey = "" }
-                    }
-              }
-            , Cmd.none
-            )
+            ( emptyModel url key, Cmd.none )
+
+
+emptyModel : Url.Url -> Nav.Key -> Model
+emptyModel url key =
+    { page = NotFound
+    , url = url
+    , key = key
+    , session =
+        { key = key
+        , user = User.unauthenticated
+        , seed = Random.initialSeed 0
+        , supabase = { supabaseUrl = "", supabaseKey = "" }
+        }
+    }
 
 
 flagsDecoder : JD.Decoder Flags

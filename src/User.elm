@@ -3,12 +3,8 @@ module User exposing (User, UserInfo, UserType(..), decoder, unauthenticated, us
 import Json.Decode as JD
 
 
-type alias UserInfo =
-    { jwt : String
-    , email : String
-    , username : String
-    , id : String
-    }
+type User
+    = User UserType
 
 
 type UserType
@@ -16,8 +12,12 @@ type UserType
     | Unauthenticated
 
 
-type User
-    = User UserType
+type alias UserInfo =
+    { jwt : String
+    , email : String
+    , username : String
+    , id : String
+    }
 
 
 userType : User -> UserType

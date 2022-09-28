@@ -1,6 +1,11 @@
 import { ApiError, Session } from "@supabase/supabase-js";
 import { User } from "./supabase";
 
+interface Supabase {
+  supabaseUrl: string;
+  supabaseKey: string;
+}
+
 export namespace Elm {
   export namespace Main {
     export interface App {
@@ -11,6 +16,9 @@ export namespace Elm {
         supabaseSignUpResponse: {
           send(data: Session | ApiError): Promise<void>;
         };
+        subabaseSignOut: {
+          subscribe(callback: () => Promise<void>): void;
+        };
         supabaseSession: {
           subscribe(callback: () => Promise<void>): void;
         };
@@ -18,11 +26,6 @@ export namespace Elm {
           send(data: Session | null): Promise<void>;
         };
       };
-    }
-
-    interface Supabase {
-      supabaseUrl: string;
-      supabaseKey: string;
     }
 
     export function init(options: {

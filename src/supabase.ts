@@ -18,7 +18,13 @@ export const signUp = async (user: User) => {
   );
 };
 
-export const session = () => supabase.auth.session();
+export const signIn = async (user: Omit<User, "username">) => {
+  return supabase.auth.signIn({
+    email: user.email,
+    password: user.password,
+  });
+};
 
-export const signIn = async (user: Omit<User, "username">) =>
-  await supabase.auth.signIn({ email: user.email, password: user.password });
+export const signOut = async () => supabase.auth.signOut();
+
+export const session = () => supabase.auth.session();

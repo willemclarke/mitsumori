@@ -10,7 +10,6 @@ import Json.Decode as JD
 import Json.Encode as JE
 import Random exposing (Seed)
 import Session exposing (Session)
-import User exposing (User)
 import Uuid exposing (Uuid)
 
 

@@ -33,6 +33,11 @@ app.ports.supabaseSignUp.subscribe(async (user) => {
   }
 });
 
+app.ports.subabaseSignOut.subscribe(async () => {
+  const signOut = await supabase.signOut();
+  console.log({ signOut });
+});
+
 app.ports.supabaseSession.subscribe(async () => {
   const session = supabase.session();
   console.log({ session });

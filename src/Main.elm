@@ -5,6 +5,7 @@ import Browser
 import Browser.Navigation as Nav
 import Html exposing (Html, a, div, p, text)
 import Html.Attributes exposing (class, href)
+import Html.Events exposing (onClick)
 import Json.Decode as JD
 import Json.Encode as JE
 import Pages.Home as Home
@@ -130,10 +131,11 @@ supabaseFlagsDecoder =
 type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
+    | GotSessionResponse JE.Value
+    | SignOut
     | HomeMsg Home.Msg
     | SignupMsg Signup.Msg
     | SigninMsg Signin.Msg
-    | GotSessionResponse JE.Value
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -157,18 +159,23 @@ update msg model =
         GotSessionResponse json ->
             let
                 decoded =
-                    JD.decodeValue User.decoder json
+                    JD.decodeValue (JD.nullable User.decoder) json
             in
             case decoded of
                 Ok user ->
                     let
                         newModel =
-                            { model | session = setSession user session }
+                            user
+                                |> Maybe.map (\user_ -> { model | session = setSession user_ session })
+                                |> Maybe.withDefault model
                     in
                     updateUrl model.url newModel
 
                 Err _ ->
                     updateUrl model.url model
+
+        SignOut ->
+            ( model, Cmd.batch [ Supabase.signOut (), Nav.reload ] )
 
         HomeMsg homeMsg ->
             case model.page of
@@ -289,14 +296,14 @@ pageFrame session { title, content } =
     }
 
 
-viewNav : Session -> Html msg
+viewNav : Session -> Html Msg
 viewNav session =
     div [ class "flex mt-4 mx-6 justify-between items-end font-serif" ]
         [ a [ href <| Route.toString Route.Home, class "text-3xl" ] [ text "mitsumori" ]
         , div [ class "flex" ]
             [ case User.userType session.user of
                 Authenticated _ ->
-                    div [] [ p [ class "text-lg" ] [ text "logout" ], p [ class "text-normal" ] [ text <| "Logged in as " ++ User.username session.user ] ]
+                    div [ onClick SignOut ] [ p [ class "text-lg cursor-pointer" ] [ text "logout" ], p [ class "text-normal" ] [ text <| "Logged in as " ++ User.username session.user ] ]
 
                 Unauthenticated ->
                     div []
@@ -309,9 +316,9 @@ viewNav session =
 
 viewNotFoundPage : Html msg
 viewNotFoundPage =
-    div [ class "flex justify-center h-full w-full" ]
+    div [ class "flex justify-center h-full w-full mt-52 font-serif" ]
         [ div [ class "flex-col text-center justify-center" ]
-            [ div [ class "text-5xl mt-8" ] [ text "Page not found :(" ]
+            [ div [ class "text-3xl mt-8" ] [ text "Page not found :(" ]
             ]
         ]
 

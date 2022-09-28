@@ -15,24 +15,36 @@ import User exposing (User)
 
 
 -- MODEL
--- TODO: wrap email, username & password into Form type
 
 
 type alias Model =
+    { session : Session
+    , form : Form
+    }
+
+
+type alias Form =
     { email : String
     , username : String
     , password : String
-    , session : Session
     }
 
 
 init : Session -> ( Model, Cmd Msg )
 init session =
-    ( { email = "", username = "", password = "", session = session }, Cmd.none )
+    ( { session = session
+      , form =
+            { email = ""
+            , username = ""
+            , password = ""
+            }
+      }
+    , Cmd.none
+    )
 
 
-encodeUser : { email : String, username : String, password : String } -> JE.Value
-encodeUser { email, username, password } =
+encodeForm : Form -> JE.Value
+encodeForm { email, username, password } =
     JE.object
         [ ( "email", JE.string email )
         , ( "username", JE.string username )
@@ -60,23 +72,16 @@ update msg model =
     in
     case msg of
         OnEmailChange email ->
-            ( { model | email = email }, Cmd.none, [] )
+            updateForm (\form -> { form | email = email }) model
 
         OnUsernameChange username ->
-            ( { model | username = username }, Cmd.none, [] )
+            updateForm (\form -> { form | username = username }) model
 
         OnPasswordChange password ->
-            ( { model | password = password }, Cmd.none, [] )
+            updateForm (\form -> { form | password = password }) model
 
         OnSubmit ->
-            let
-                user =
-                    { email = model.email, username = model.username, password = model.password }
-            in
-            ( model
-            , Supabase.signUp (encodeUser user)
-            , []
-            )
+            ( model, Supabase.signUp (encodeForm model.form), [] )
 
         GotSignupResponse json ->
             let
@@ -95,6 +100,11 @@ update msg model =
                     ( model, Cmd.none, [] )
 
 
+updateForm : (Form -> Form) -> Model -> ( Model, Cmd Msg, List Actions )
+updateForm transform model =
+    ( { model | form = transform model.form }, Cmd.none, [] )
+
+
 setSession : User -> Session -> Session
 setSession user session =
     { session | user = user }
@@ -107,15 +117,15 @@ setSession user session =
 view : Model -> { title : String, content : Html Msg }
 view model =
     { title = "Signup"
-    , content = div [ class "mt-52" ] [ viewSignupForm model ]
+    , content = div [ class "mt-52" ] [ viewSignupForm model.form ]
     }
 
 
-viewSignupForm : Model -> Html Msg
-viewSignupForm model =
+viewSignupForm : Form -> Html Msg
+viewSignupForm form =
     div [ class "flex flex-col font-light text-black text-start lg:w-96 md:w-96 sm:w-40" ]
         [ header [ class "text-2xl mb-6 font-medium font-serif" ] [ text "Join mitsumori" ]
-        , form [ id "signup-form" ]
+        , Html.form [ id "signup-form" ]
             [ div [ class "flex flex-col my-2" ]
                 [ label [ class "text-gray-900", for "email" ]
                     [ text "Email address" ]
@@ -124,10 +134,10 @@ viewSignupForm model =
                     , id "email"
                     , placeholder "your.email@address.com"
                     , type_ "text"
-                    , value model.email
+                    , value form.email
                     , onInput OnEmailChange
                     ]
-                    [ text model.email ]
+                    [ text form.email ]
                 ]
             , div [ class "flex flex-col mt-6" ]
                 [ label [ class "text-gray-900", for "username" ]
@@ -137,10 +147,10 @@ viewSignupForm model =
                     , id "username"
                     , placeholder "johndoe"
                     , type_ "text"
-                    , value model.username
+                    , value form.username
                     , onInput OnUsernameChange
                     ]
-                    [ text model.email ]
+                    [ text form.email ]
                 ]
             , div [ class "flex flex-col mt-6" ]
                 [ label [ class "text-gray-700", for "password" ]
@@ -150,10 +160,10 @@ viewSignupForm model =
                     , id "password"
                     , placeholder "Choose your password"
                     , type_ "password"
-                    , value model.password
+                    , value form.password
                     , onInput OnPasswordChange
                     ]
-                    [ text model.password ]
+                    [ text form.password ]
                 ]
             ]
         , div [ class "flex mt-6 justify-between items-center" ]

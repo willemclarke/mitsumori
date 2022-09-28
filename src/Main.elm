@@ -238,13 +238,23 @@ toSignin model ( loginModel, cmds ) =
 
 updateUrl : Url.Url -> Model -> ( Model, Cmd Msg )
 updateUrl url model =
+    let
+        session =
+            model.session
+    in
     case Route.fromUrl url of
         Just Route.Home ->
-            Home.init model.session
-                |> toHome model
+            case User.userType session.user of
+                Authenticated _ ->
+                    Home.init session
+                        |> toHome model
+
+                Unauthenticated ->
+                    Signin.init ()
+                        |> toSignin model
 
         Just Route.Signup ->
-            Signup.init model.session
+            Signup.init session
                 |> toSignup model
 
         Just Route.Signin ->

@@ -1,14 +1,12 @@
 module Pages.Signup exposing (..)
 
-import Actions exposing (Actions)
 import Components.Button as Button
 import Html exposing (Html, a, div, form, header, input, label, text)
 import Html.Attributes exposing (class, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onInput)
 import Json.Decode as JD
 import Json.Encode as JE
-import Route
-import Session exposing (Session)
+import Shared exposing (Shared)
 import Supabase
 import User exposing (User)
 
@@ -18,8 +16,7 @@ import User exposing (User)
 
 
 type alias Model =
-    { session : Session
-    , form : Form
+    { form : Form
     }
 
 
@@ -30,10 +27,9 @@ type alias Form =
     }
 
 
-init : Session -> ( Model, Cmd Msg )
-init session =
-    ( { session = session
-      , form =
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( { form =
             { email = ""
             , username = ""
             , password = ""
@@ -64,12 +60,8 @@ type Msg
     | GotSignupResponse JE.Value
 
 
-update : Msg -> Model -> ( Model, Cmd Msg, List Actions )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        session =
-            model.session
-    in
     case msg of
         OnEmailChange email ->
             updateForm (\form -> { form | email = email }) model
@@ -81,31 +73,34 @@ update msg model =
             updateForm (\form -> { form | password = password }) model
 
         OnSubmit ->
-            ( model, Supabase.signUp (encodeForm model.form), [] )
+            ( model, Supabase.signUp (encodeForm model.form) )
 
         GotSignupResponse json ->
-            let
-                decoded =
-                    JD.decodeValue User.decoder json
-            in
-            case decoded of
-                Ok user ->
-                    ( model, Route.pushUrl session.key Route.Home, [ Actions.SetSession <| setSession user session ] )
-
-                Err err ->
-                    let
-                        error =
-                            Debug.log "Err" err
-                    in
-                    ( model, Cmd.none, [] )
+            ( model, Cmd.none )
 
 
-updateForm : (Form -> Form) -> Model -> ( Model, Cmd Msg, List Actions )
+
+-- let
+--     decoded =
+--         JD.decodeValue User.decoder json
+-- in
+-- case decoded of
+--     Ok user ->
+--         ( model, Route.pushUrl session.key Route.Home, [ Actions.SetSession <| setSession user session ] )
+--     Err err ->
+--         let
+--             error =
+--                 Debug.log "Err" err
+--         in
+--         ( model, Cmd.none, [] )
+
+
+updateForm : (Form -> Form) -> Model -> ( Model, Cmd Msg )
 updateForm transform model =
-    ( { model | form = transform model.form }, Cmd.none, [] )
+    ( { model | form = transform model.form }, Cmd.none )
 
 
-setSession : User -> Session -> Session
+setSession : User -> Shared -> Shared
 setSession user session =
     { session | user = user }
 
@@ -114,11 +109,9 @@ setSession user session =
 -- VIEW
 
 
-view : Model -> { title : String, content : Html Msg }
+view : Model -> Html Msg
 view model =
-    { title = "Signup"
-    , content = div [ class "mt-52" ] [ viewSignupForm model.form ]
-    }
+    div [ class "mt-52" ] [ viewSignupForm model.form ]
 
 
 viewSignupForm : Form -> Html Msg
@@ -168,7 +161,7 @@ viewSignupForm form =
             ]
         , div [ class "flex mt-6 justify-between items-center" ]
             [ Button.create { label = "Create account", onClick = OnSubmit } |> Button.view
-            , a [ href <| Route.toString Route.Signin, class "ml-2 text-gray-700 underline underline-offset-2" ] [ text "Or sign in" ]
+            , a [ href <| "signin", class "ml-2 text-gray-700 underline underline-offset-2" ] [ text "Or sign in" ]
             ]
         ]
 

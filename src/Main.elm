@@ -8,7 +8,7 @@ import Json.Decode as JD
 import Json.Encode as JE
 import Random
 import Router.Router as Router
-import Shared exposing (Shared, SharedUpdate(..), SupabaseFlags)
+import Shared exposing (Shared, SharedUpdate(..))
 import Supabase
 import Url
 import User exposing (UserType(..))
@@ -42,7 +42,7 @@ type alias Model =
 
 
 type AppState
-    = Initialising { supabase : SupabaseFlags, seed : Random.Seed }
+    = Initialising Flags
     | Ready Shared Router.Model
     | FailedToInitialise
 
@@ -57,7 +57,7 @@ init : JE.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flagsValue url key =
     case JD.decodeValue flagsDecoder flagsValue of
         Ok flags ->
-            ( { key = key, url = url, appState = Initialising { supabase = flags.supabase, seed = Random.initialSeed flags.seed } }, Supabase.session () )
+            ( { key = key, url = url, appState = Initialising { supabase = flags.supabase, seed = flags.seed } }, Supabase.session () )
 
         Err _ ->
             ( { key = key, url = url, appState = FailedToInitialise }, Cmd.none )
@@ -163,10 +163,10 @@ updateUserSession model json =
                         |> Maybe.withDefault User.unauthenticated
             in
             case model.appState of
-                Initialising { supabase, seed } ->
+                Initialising flags ->
                     let
                         initSharedState =
-                            { key = model.key, url = model.url, user = user, supabase = supabase, seed = seed }
+                            { key = model.key, url = model.url, user = user, supabase = flags.supabase, seed = Random.initialSeed flags.seed }
 
                         ( initRouterModel, routerCmd ) =
                             Router.init model.url

@@ -71,9 +71,6 @@ update shared msg model =
 
         GotSigninResponse json ->
             let
-                x =
-                    Debug.log "inside GotSignInResponse" json
-
                 decoded =
                     JD.decodeValue User.decoder json
             in

@@ -24,6 +24,7 @@ const app = Elm.Main.init({
 
 app.ports.signUp.subscribe(async (user) => {
   const { session, error } = await supabase.signUp(user);
+
   if (session) {
     return app.ports.signUpResponse.send(session);
   }

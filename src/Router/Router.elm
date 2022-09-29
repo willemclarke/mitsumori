@@ -156,7 +156,7 @@ viewNav shared =
         , div [ class "flex" ]
             [ case User.userType shared.user of
                 User.Authenticated _ ->
-                    p [ onClick SignOut, class "text-lg cursor-pointer" ] [ text "Sign out" ]
+                    p [ onClick SignOut, class "text-lg cursor-pointer" ] [ text "signout" ]
 
                 User.Unauthenticated ->
                     div []
@@ -182,11 +182,11 @@ subscriptions msgMapper model =
         Just Route.Home ->
             Sub.map HomeMsg (Home.subscriptions model.homeModel) |> Sub.map msgMapper
 
-        Just Route.Signup ->
-            Sub.map SignUpMsg (SignUp.subscriptions model.signUpModel) |> Sub.map msgMapper
-
         Just Route.Signin ->
             Sub.map SignInMsg (SignIn.subscriptions model.signInModel) |> Sub.map msgMapper
+
+        Just Route.Signup ->
+            Sub.map SignUpMsg (SignUp.subscriptions model.signUpModel) |> Sub.map msgMapper
 
         _ ->
             Sub.none

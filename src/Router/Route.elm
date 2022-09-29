@@ -44,6 +44,11 @@ toTitleString route =
             "Not Found"
 
 
+fromUrl : Url.Url -> Maybe Route
+fromUrl url =
+    Parser.parse parser url
+
+
 parser : Parser.Parser (Route -> a) a
 parser =
     Parser.oneOf
@@ -61,8 +66,3 @@ pushUrl key route =
 replaceUrl : Nav.Key -> Route -> Cmd msg
 replaceUrl key route =
     Nav.replaceUrl key (toString route)
-
-
-fromUrl : Url.Url -> Maybe Route
-fromUrl url =
-    Parser.parse parser url

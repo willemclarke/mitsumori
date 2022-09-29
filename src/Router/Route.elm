@@ -9,6 +9,7 @@ type Route
     = Home
     | Signup
     | Signin
+    | NotFound
 
 
 toString : Route -> String
@@ -22,6 +23,25 @@ toString route =
 
         Signin ->
             "signin"
+
+        _ ->
+            ""
+
+
+toTitleString : Route -> String
+toTitleString route =
+    case route of
+        Home ->
+            "Home"
+
+        Signup ->
+            "Signup"
+
+        Signin ->
+            "Signin"
+
+        NotFound ->
+            "Not Found"
 
 
 parser : Parser.Parser (Route -> a) a

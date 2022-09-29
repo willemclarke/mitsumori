@@ -202,24 +202,8 @@ subscriptions model =
         Initialising _ ->
             Sub.batch [ Supabase.sessionResponse HandleSessionResponse ]
 
-        Ready shared routerModel ->
-            Sub.none
+        Ready _ routerModel ->
+            Router.subscriptions RouterMsg routerModel
 
         FailedToInitialise ->
             Sub.none
-
-
-
--- let
---     subpageSubs =
---         case model.page of
---             HomePage home ->
---                 Sub.map HomeMsg (Home.subscriptions home)
---             Signup signUp ->
---                 Sub.map SignupMsg (Signup.subscriptions signUp)
---             Signin signIn ->
---                 Sub.map SigninMsg (Signin.subscriptions signIn)
---             _ ->
---                 Sub.none
--- in
--- Sub.batch [ subpageSubs, e ]

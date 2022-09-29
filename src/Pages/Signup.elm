@@ -6,7 +6,8 @@ import Html.Attributes exposing (class, for, href, id, placeholder, type_, value
 import Html.Events exposing (onInput)
 import Json.Decode as JD
 import Json.Encode as JE
-import Shared exposing (Shared)
+import Router.Route as Route
+import Shared exposing (Shared, SharedUpdate(..))
 import Supabase
 import User exposing (User)
 
@@ -60,8 +61,8 @@ type Msg
     | GotSignupResponse JE.Value
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Shared -> Msg -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
+update shared msg model =
     case msg of
         OnEmailChange email ->
             updateForm (\form -> { form | email = email }) model
@@ -73,31 +74,29 @@ update msg model =
             updateForm (\form -> { form | password = password }) model
 
         OnSubmit ->
-            ( model, Supabase.signUp (encodeForm model.form) )
+            ( model, Supabase.signUp (encodeForm model.form), Shared.NoUpdate )
 
         GotSignupResponse json ->
-            ( model, Cmd.none )
+            let
+                decoded =
+                    JD.decodeValue User.decoder json
+            in
+            case decoded of
+                Ok user ->
+                    ( model, Route.pushUrl shared.key Route.Home, Shared.UpdateUser user )
+
+                Err err ->
+                    -- TODO: handle form server errors here
+                    let
+                        error =
+                            Debug.log "Err" err
+                    in
+                    ( model, Cmd.none, Shared.NoUpdate )
 
 
-
--- let
---     decoded =
---         JD.decodeValue User.decoder json
--- in
--- case decoded of
---     Ok user ->
---         ( model, Route.pushUrl session.key Route.Home, [ Actions.SetSession <| setSession user session ] )
---     Err err ->
---         let
---             error =
---                 Debug.log "Err" err
---         in
---         ( model, Cmd.none, [] )
-
-
-updateForm : (Form -> Form) -> Model -> ( Model, Cmd Msg )
+updateForm : (Form -> Form) -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
 updateForm transform model =
-    ( { model | form = transform model.form }, Cmd.none )
+    ( { model | form = transform model.form }, Cmd.none, Shared.NoUpdate )
 
 
 setSession : User -> Shared -> Shared

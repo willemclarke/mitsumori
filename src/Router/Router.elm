@@ -4,26 +4,23 @@ import Browser
 import Browser.Navigation as Nav
 import Html exposing (Html, a, div, p, text)
 import Html.Attributes exposing (class, href)
+import Html.Events exposing (onClick)
 import Pages.Home as Home
 import Pages.Signin as SignIn
 import Pages.Signup as SignUp
 import Router.Route as Route exposing (Route)
 import Shared exposing (Shared)
+import Supabase
 import Url
 import User exposing (UserType(..))
 
 
 type alias Model =
-    { page : Page
-    , route : Route
+    { homeModel : Home.Model
+    , signUpModel : SignUp.Model
+    , signInModel : SignIn.Model
+    , route : Maybe Route
     }
-
-
-type Page
-    = HomePage Home.Model
-    | SignUp SignUp.Model
-    | SignIn SignIn.Model
-    | NotFound
 
 
 type Msg
@@ -32,6 +29,7 @@ type Msg
     | HomeMsg Home.Msg
     | SignUpMsg SignUp.Msg
     | SignInMsg SignIn.Msg
+    | SignOut
 
 
 init : Url.Url -> ( Model, Cmd Msg )
@@ -40,14 +38,16 @@ init url =
         ( homeModel, homeCmd ) =
             Home.init ()
 
-        ( signUpModel, signUpMsg ) =
+        ( signUpModel, _ ) =
             SignUp.init ()
 
-        ( signInModel, signInMsg ) =
+        ( signInModel, _ ) =
             SignIn.init ()
     in
-    ( { page = NotFound
-      , route = Route.fromUrl url |> Maybe.withDefault Route.Signin
+    ( { homeModel = homeModel
+      , signUpModel = signUpModel
+      , signInModel = signInModel
+      , route = Route.fromUrl url
       }
     , Cmd.map HomeMsg homeCmd
     )
@@ -57,60 +57,60 @@ update : Shared -> Msg -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
 update shared msg model =
     case msg of
         UrlChanged url ->
-            ( { model | route = Route.fromUrl url |> Maybe.withDefault Route.Signin }, Cmd.none, Shared.NoUpdate )
+            ( { model | route = Route.fromUrl url }, Cmd.none, Shared.NoUpdate )
 
         NavigateTo route ->
             ( model, Nav.pushUrl shared.key <| Route.toString route, Shared.NoUpdate )
 
         HomeMsg homeMsg ->
-            case model.page of
-                HomePage homeModel ->
-                    updateHome model (Home.update homeMsg homeModel)
-
-                _ ->
-                    ( model, Cmd.none, Shared.NoUpdate )
+            updateHome model homeMsg
 
         SignUpMsg signUpMsg ->
-            case model.page of
-                SignUp signUpModel ->
-                    updateSignUp model (SignUp.update signUpMsg signUpModel)
-
-                _ ->
-                    ( model, Cmd.none, Shared.NoUpdate )
+            updateSignUp shared model signUpMsg
 
         SignInMsg signInMsg ->
-            case model.page of
-                SignIn signInModel ->
-                    updateSignIn model (SignIn.update signInMsg signInModel)
+            updateSignIn model signInMsg
 
-                _ ->
-                    ( model, Cmd.none, Shared.NoUpdate )
+        SignOut ->
+            ( model, Cmd.batch [ Supabase.signOut (), Nav.reload ], Shared.NoUpdate )
 
 
 
 -- remember when I want to setUser from Signup/Signin i will have to come back here and add Shared.SetUser
 
 
-updateHome : Model -> ( Home.Model, Cmd Home.Msg ) -> ( Model, Cmd Msg, Shared.SharedUpdate )
-updateHome model ( homeModel, homeCmd ) =
-    ( { model | page = HomePage homeModel }, Cmd.map HomeMsg homeCmd, Shared.NoUpdate )
+updateHome : Model -> Home.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )
+updateHome model homeMsg =
+    let
+        ( nextHomeModel, homeCmd ) =
+            Home.update homeMsg model.homeModel
+    in
+    ( { model | homeModel = nextHomeModel }, Cmd.map HomeMsg homeCmd, Shared.NoUpdate )
 
 
-updateSignUp : Model -> ( SignUp.Model, Cmd SignUp.Msg ) -> ( Model, Cmd Msg, Shared.SharedUpdate )
-updateSignUp model ( signUpModel, signUpCmd ) =
-    ( { model | page = SignUp signUpModel }, Cmd.map SignUpMsg signUpCmd, Shared.NoUpdate )
+updateSignUp : Shared -> Model -> SignUp.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )
+updateSignUp shared model signUpMsg =
+    let
+        ( nextSignUpModel, signUpCmd, sharedUpdate ) =
+            SignUp.update shared signUpMsg model.signUpModel
+    in
+    ( { model | signUpModel = nextSignUpModel }, Cmd.map SignUpMsg signUpCmd, sharedUpdate )
 
 
-updateSignIn : Model -> ( SignIn.Model, Cmd SignIn.Msg ) -> ( Model, Cmd Msg, Shared.SharedUpdate )
-updateSignIn model ( signInModel, signInCmd ) =
-    ( { model | page = SignIn signInModel }, Cmd.map SignInMsg signInCmd, Shared.NoUpdate )
+updateSignIn : Model -> SignIn.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )
+updateSignIn model signInMsg =
+    let
+        ( nextSignInModel, signInCmd ) =
+            SignIn.update signInMsg model.signInModel
+    in
+    ( { model | signInModel = nextSignInModel }, Cmd.map SignInMsg signInCmd, Shared.NoUpdate )
 
 
 view : (Msg -> msg) -> Shared -> Model -> Browser.Document msg
 view msgMapper shared model =
     let
         title =
-            Route.toString model.route
+            Route.toTitleString (Maybe.withDefault Route.NotFound model.route)
 
         content =
             div [ class "flex flex-col h-full w-full" ]
@@ -125,33 +125,40 @@ view msgMapper shared model =
     }
 
 
+
+-- this needs to be based off of the route
+
+
 pageView : Shared -> Model -> Html Msg
 pageView shared model =
-    case model.page of
-        HomePage homeModel ->
-            Home.view homeModel
+    case model.route of
+        Just Route.Home ->
+            Home.view model.homeModel
                 |> Html.map HomeMsg
 
-        SignUp signUpModel ->
-            SignUp.view signUpModel
+        Just Route.Signup ->
+            SignUp.view model.signUpModel
                 |> Html.map SignUpMsg
 
-        SignIn signInModel ->
-            SignIn.view signInModel
+        Just Route.Signin ->
+            SignIn.view model.signInModel
                 |> Html.map SignInMsg
 
-        NotFound ->
+        Just Route.NotFound ->
+            viewNotFoundPage
+
+        Nothing ->
             viewNotFoundPage
 
 
 viewNav : Shared -> Html Msg
-viewNav session =
+viewNav shared =
     div [ class "flex mt-4 mx-6 justify-between items-end font-serif" ]
         [ a [ href <| Route.toString Route.Home, class "text-3xl" ] [ text "mitsumori" ]
         , div [ class "flex" ]
-            [ case User.userType session.user of
+            [ case User.userType shared.user of
                 User.Authenticated _ ->
-                    div [] [ p [ class "text-lg cursor-pointer" ] [ text "logout" ], p [ class "text-normal" ] [ text <| "Logged in as " ++ User.username session.user ] ]
+                    div [ onClick SignOut ] [ p [ class "text-lg cursor-pointer" ] [ text "logout" ], p [ class "text-normal" ] [ text <| "Logged in as " ++ User.username shared.user ] ]
 
                 User.Unauthenticated ->
                     div []
@@ -169,3 +176,19 @@ viewNotFoundPage =
             [ div [ class "text-3xl mt-8" ] [ text "Page not found :(" ]
             ]
         ]
+
+
+subscriptions : (Msg -> msg) -> Model -> Sub msg
+subscriptions msgMapper model =
+    case model.route of
+        Just Route.Home ->
+            Sub.map HomeMsg (Home.subscriptions model.homeModel) |> Sub.map msgMapper
+
+        Just Route.Signup ->
+            Sub.map SignUpMsg (SignUp.subscriptions model.signUpModel) |> Sub.map msgMapper
+
+        Just Route.Signin ->
+            Sub.map SignInMsg (SignIn.subscriptions model.signInModel) |> Sub.map msgMapper
+
+        _ ->
+            Sub.none

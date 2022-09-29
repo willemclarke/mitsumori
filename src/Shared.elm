@@ -1,7 +1,6 @@
 module Shared exposing (..)
 
 import Browser.Navigation as Nav
-import Json.Encode as JE
 import Random exposing (Seed)
 import Url
 import User exposing (User)

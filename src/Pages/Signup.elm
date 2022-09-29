@@ -9,7 +9,7 @@ import Json.Encode as JE
 import Router.Route as Route
 import Shared exposing (Shared, SharedUpdate(..))
 import Supabase
-import User exposing (User)
+import User
 
 
 
@@ -97,11 +97,6 @@ update shared msg model =
 updateForm : (Form -> Form) -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
 updateForm transform model =
     ( { model | form = transform model.form }, Cmd.none, Shared.NoUpdate )
-
-
-setSession : User -> Shared -> Shared
-setSession user session =
-    { session | user = user }
 
 
 

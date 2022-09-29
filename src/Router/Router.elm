@@ -69,7 +69,7 @@ update shared msg model =
             updateSignUp shared model signUpMsg
 
         SignInMsg signInMsg ->
-            updateSignIn model signInMsg
+            updateSignIn shared model signInMsg
 
         SignOut ->
             ( model, Cmd.batch [ Supabase.signOut (), Nav.reload ], Shared.NoUpdate )
@@ -93,13 +93,13 @@ updateSignUp shared model signUpMsg =
     ( { model | signUpModel = nextSignUpModel }, Cmd.map SignUpMsg signUpCmd, sharedUpdate )
 
 
-updateSignIn : Model -> SignIn.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )
-updateSignIn model signInMsg =
+updateSignIn : Shared -> Model -> SignIn.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )
+updateSignIn shared model signInMsg =
     let
-        ( nextSignInModel, signInCmd ) =
-            SignIn.update signInMsg model.signInModel
+        ( nextSignInModel, signInCmd, sharedUpdate ) =
+            SignIn.update shared signInMsg model.signInModel
     in
-    ( { model | signInModel = nextSignInModel }, Cmd.map SignInMsg signInCmd, Shared.NoUpdate )
+    ( { model | signInModel = nextSignInModel }, Cmd.map SignInMsg signInCmd, sharedUpdate )
 
 
 view : (Msg -> msg) -> Shared -> Model -> Browser.Document msg
@@ -156,7 +156,7 @@ viewNav shared =
         , div [ class "flex" ]
             [ case User.userType shared.user of
                 User.Authenticated _ ->
-                    div [ onClick SignOut ] [ p [ class "text-lg cursor-pointer" ] [ text "logout" ], p [ class "text-normal" ] [ text <| "Logged in as " ++ User.username shared.user ] ]
+                    p [ onClick SignOut, class "text-lg cursor-pointer" ] [ text "Sign out" ]
 
                 User.Unauthenticated ->
                     div []

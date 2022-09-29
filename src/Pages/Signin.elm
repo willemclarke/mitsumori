@@ -4,6 +4,12 @@ import Components.Button as Button
 import Html exposing (Html, a, div, form, header, input, label, text)
 import Html.Attributes exposing (class, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onInput)
+import Json.Decode as JD
+import Json.Encode as JE
+import Router.Route as Route
+import Shared exposing (Shared)
+import Supabase
+import User
 
 
 
@@ -11,6 +17,11 @@ import Html.Events exposing (onInput)
 
 
 type alias Model =
+    { form : Form
+    }
+
+
+type alias Form =
     { email : String
     , password : String
     }
@@ -18,7 +29,21 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { email = "", password = "" }, Cmd.none )
+    ( { form =
+            { email = ""
+            , password = ""
+            }
+      }
+    , Cmd.none
+    )
+
+
+encodeForm : Form -> JE.Value
+encodeForm { email, password } =
+    JE.object
+        [ ( "email", JE.string email )
+        , ( "password", JE.string password )
+        ]
 
 
 
@@ -29,19 +54,45 @@ type Msg
     = OnEmailChange String
     | OnPasswordChange String
     | OnSubmit
+    | GotSigninResponse JE.Value
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Shared -> Msg -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
+update shared msg model =
     case msg of
         OnEmailChange email ->
-            ( { model | email = email }, Cmd.none )
+            updateForm (\form -> { form | email = email }) model
 
         OnPasswordChange password ->
-            ( { model | password = password }, Cmd.none )
+            updateForm (\form -> { form | password = password }) model
 
         OnSubmit ->
-            ( model, Cmd.none )
+            ( model, Supabase.signIn (encodeForm model.form), Shared.NoUpdate )
+
+        GotSigninResponse json ->
+            let
+                x =
+                    Debug.log "inside GotSignInResponse" json
+
+                decoded =
+                    JD.decodeValue User.decoder json
+            in
+            case decoded of
+                Ok user ->
+                    ( model, Route.pushUrl shared.key Route.Home, Shared.UpdateUser user )
+
+                Err err ->
+                    -- TODO: handle form server errors here
+                    let
+                        error =
+                            Debug.log "Err" err
+                    in
+                    ( model, Cmd.none, Shared.NoUpdate )
+
+
+updateForm : (Form -> Form) -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
+updateForm transform model =
+    ( { model | form = transform model.form }, Cmd.none, Shared.NoUpdate )
 
 
 
@@ -50,14 +101,14 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div [ class "mt-52" ] [ viewSigninForm model ]
+    div [ class "mt-52" ] [ viewSigninForm model.form ]
 
 
-viewSigninForm : Model -> Html Msg
-viewSigninForm model =
+viewSigninForm : Form -> Html Msg
+viewSigninForm form =
     div [ class "flex flex-col font-light text-black text-start lg:w-96 md:w-96 sm:w-40" ]
         [ header [ class "text-2xl mb-6 font-medium font-serif" ] [ text "Welcome back" ]
-        , form [ id "signup-form" ]
+        , Html.form [ id "signup-form" ]
             [ div [ class "flex flex-col my-2" ]
                 [ label [ class "text-gray-900", for "email" ]
                     [ text "Email address" ]
@@ -66,10 +117,10 @@ viewSigninForm model =
                     , id "email"
                     , placeholder "your.email@address.com"
                     , type_ "text"
-                    , value model.email
+                    , value form.email
                     , onInput OnEmailChange
                     ]
-                    [ text model.email ]
+                    [ text form.email ]
                 ]
             , div [ class "flex flex-col mt-6" ]
                 [ label [ class "text-gray-700", for "password" ]
@@ -79,10 +130,10 @@ viewSigninForm model =
                     , id "password"
                     , placeholder "Choose your password"
                     , type_ "password"
-                    , value model.password
+                    , value form.password
                     , onInput OnPasswordChange
                     ]
-                    [ text model.password ]
+                    [ text form.password ]
                 ]
             ]
         , div [ class "flex mt-6 justify-between items-center" ]
@@ -94,4 +145,4 @@ viewSigninForm model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    Sub.batch [ Supabase.signInResponse GotSigninResponse ]

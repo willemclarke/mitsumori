@@ -1,5 +1,5 @@
 import { ApiError, Session } from "@supabase/supabase-js";
-import { User } from "./supabase";
+import { SignInUser, SignUpUser } from "./supabase";
 
 interface Supabase {
   supabaseUrl: string;
@@ -10,19 +10,25 @@ export namespace Elm {
   export namespace Main {
     export interface App {
       ports: {
-        supabaseSignUp: {
-          subscribe(callback: (user: User) => Promise<void>): void;
+        signUp: {
+          subscribe(callback: (user: SignUpUser) => Promise<void>): void;
         };
-        supabaseSignUpResponse: {
+        signUpResponse: {
           send(data: Session | ApiError): Promise<void>;
         };
-        subabaseSignOut: {
+        signIn: {
+          subscribe(callback: (user: SignInUser) => Promise<void>): void;
+        };
+        signInResponse: {
+          send(data: Session | ApiError): Promise<void>;
+        };
+        signOut: {
           subscribe(callback: () => Promise<void>): void;
         };
-        supabaseSession: {
+        session: {
           subscribe(callback: () => Promise<void>): void;
         };
-        subabaseSessionResponse: {
+        sessionResponse: {
           send(data: Session | null): Promise<void>;
         };
       };

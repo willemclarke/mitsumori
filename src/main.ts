@@ -22,24 +22,37 @@ const app = Elm.Main.init({
   },
 });
 
-app.ports.supabaseSignUp.subscribe(async (user) => {
+app.ports.signUp.subscribe(async (user) => {
   const { session, error } = await supabase.signUp(user);
   if (session) {
-    return app.ports.supabaseSignUpResponse.send(session);
+    return app.ports.signUpResponse.send(session);
   }
 
   if (error) {
-    return app.ports.supabaseSignUpResponse.send(error);
+    return app.ports.signUpResponse.send(error);
   }
 });
 
-app.ports.subabaseSignOut.subscribe(async () => {
-  const signOut = await supabase.signOut();
-  console.log({ signOut });
+app.ports.signIn.subscribe(async (user) => {
+  const { session, error } = await supabase.signIn(user);
+
+  if (session) {
+    return app.ports.signInResponse.send(session);
+  }
+
+  if (error) {
+    return app.ports.signInResponse.send(error);
+  }
 });
 
-app.ports.supabaseSession.subscribe(async () => {
-  const session = supabase.session();
-  console.log({ session });
-  return app.ports.subabaseSessionResponse.send(session);
+app.ports.signOut.subscribe(async () => {
+  await supabase.signOut();
 });
+
+app.ports.session.subscribe(async () => {
+  const session = supabase.session();
+  console.log("app.ports.session", { session });
+  return app.ports.sessionResponse.send(session);
+});
+
+await supabase.onAuthChange();

@@ -3,57 +3,22 @@ port module Supabase exposing (session, sessionResponse, signIn, signInResponse,
 import Json.Encode as JE
 
 
-signUp : JE.Value -> Cmd msg
-signUp =
-    supabaseSignUp
+port signUp : JE.Value -> Cmd msg
 
 
-signUpResponse : (JE.Value -> msg) -> Sub msg
-signUpResponse =
-    supabaseSignUpResponse
+port signUpResponse : (JE.Value -> msg) -> Sub msg
 
 
-signIn : JE.Value -> Cmd msg
-signIn =
-    supabaseSignIn
+port signIn : JE.Value -> Cmd msg
 
 
-signInResponse : (JE.Value -> msg) -> Sub msg
-signInResponse =
-    supabaseSignInResponse
+port signInResponse : (JE.Value -> msg) -> Sub msg
 
 
-signOut : () -> Cmd msg
-signOut =
-    subabaseSignOut
+port signOut : () -> Cmd msg
 
 
-session : () -> Cmd msg
-session =
-    supabaseSession
+port session : () -> Cmd msg
 
 
-sessionResponse : (JE.Value -> msg) -> Sub msg
-sessionResponse =
-    subabaseSessionResponse
-
-
-port supabaseSignUp : JE.Value -> Cmd msg
-
-
-port supabaseSignUpResponse : (JE.Value -> msg) -> Sub msg
-
-
-port supabaseSignIn : JE.Value -> Cmd msg
-
-
-port supabaseSignInResponse : (JE.Value -> msg) -> Sub msg
-
-
-port subabaseSignOut : () -> Cmd msg
-
-
-port supabaseSession : () -> Cmd msg
-
-
-port subabaseSessionResponse : (JE.Value -> msg) -> Sub msg
+port sessionResponse : (JE.Value -> msg) -> Sub msg

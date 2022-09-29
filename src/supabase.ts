@@ -5,25 +5,36 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_KEY
 );
 
-export interface User {
+export interface SignUpUser {
   email: string;
   username: string;
   password: string;
 }
 
-export const signUp = async (user: User) => {
+export interface SignInUser {
+  email: string;
+  username: string;
+  password: string;
+}
+
+export const signUp = (user: SignUpUser) => {
   return supabase.auth.signUp(
     { email: user.email, password: user.password },
     { data: { username: user.username } }
   );
 };
 
-export const signIn = async (user: Omit<User, "username">) => {
+export const signIn = (user: SignInUser) => {
   return supabase.auth.signIn({
     email: user.email,
     password: user.password,
   });
 };
+
+export const onAuthChange = async () =>
+  supabase.auth.onAuthStateChange((event, session) => {
+    console.log({ event, session });
+  });
 
 export const signOut = async () => supabase.auth.signOut();
 

@@ -8,9 +8,12 @@ import Html.Events exposing (onClick)
 import Pages.Home as Home
 import Pages.Signin as SignIn
 import Pages.Signup as SignUp
+import Platform exposing (Task)
+import Process
 import Router.Route as Route exposing (Route)
 import Shared exposing (Shared)
 import Supabase
+import Task
 import Url
 import User exposing (UserType(..))
 
@@ -30,6 +33,7 @@ type Msg
     | SignUpMsg SignUp.Msg
     | SignInMsg SignIn.Msg
     | SignOut
+    | Refresh
 
 
 init : Url.Url -> ( Model, Cmd Msg )
@@ -72,7 +76,15 @@ update shared msg model =
             updateSignIn shared model signInMsg
 
         SignOut ->
-            ( model, Cmd.batch [ Supabase.signOut (), Nav.reload ], Shared.NoUpdate )
+            ( model, Cmd.batch [ Supabase.signOut (), after 300 Refresh ], Shared.NoUpdate )
+
+        Refresh ->
+            ( model, Cmd.batch [ Nav.reload ], Shared.NoUpdate )
+
+
+after : Float -> msg -> Cmd msg
+after time msg =
+    Task.perform (always msg) <| Process.sleep time
 
 
 updateHome : Model -> Home.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )

@@ -133,6 +133,15 @@ updateRouter model routerMsg =
             ( model, Cmd.none )
 
 
+
+{- This function serves as the foundation to transition from the `Initialising` state
+   to the `Ready` state. On init we call to check if the users session is in localstorage.
+    If we successfully get back a session we:
+        - initialise the whole thing
+        - update the currently running (`Ready`) app
+-}
+
+
 updateUserSession : Model -> JE.Value -> ( Model, Cmd Msg )
 updateUserSession model json =
     let

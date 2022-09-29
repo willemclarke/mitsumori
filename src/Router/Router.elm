@@ -75,10 +75,6 @@ update shared msg model =
             ( model, Cmd.batch [ Supabase.signOut (), Nav.reload ], Shared.NoUpdate )
 
 
-
--- remember when I want to setUser from Signup/Signin i will have to come back here and add Shared.SetUser
-
-
 updateHome : Model -> Home.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )
 updateHome model homeMsg =
     let
@@ -125,16 +121,18 @@ view msgMapper shared model =
     }
 
 
-
--- this needs to be based off of the route
-
-
 pageView : Shared -> Model -> Html Msg
 pageView shared model =
     case model.route of
         Just Route.Home ->
-            Home.view model.homeModel
-                |> Html.map HomeMsg
+            case User.userType shared.user of
+                User.Authenticated _ ->
+                    Home.view model.homeModel
+                        |> Html.map HomeMsg
+
+                User.Unauthenticated ->
+                    SignIn.view model.signInModel
+                        |> Html.map SignInMsg
 
         Just Route.Signup ->
             SignUp.view model.signUpModel

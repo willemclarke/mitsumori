@@ -1,22 +1,17 @@
 module Main exposing (Model, main)
 
-import Actions exposing (Actions(..))
 import Browser
 import Browser.Navigation as Nav
-import Html exposing (Html, a, div, p, text)
-import Html.Attributes exposing (class, href)
-import Html.Events exposing (onClick)
+import Html exposing (text)
+import Html.Attributes exposing (href)
 import Json.Decode as JD
 import Json.Encode as JE
-import Pages.Home as Home
-import Pages.Signin as Signin
-import Pages.Signup as Signup
 import Random
-import Route
-import Session exposing (Session)
+import Router.Router as Router
+import Shared exposing (Shared, SharedUpdate(..), SupabaseFlags)
 import Supabase
 import Url
-import User exposing (User, UserType(..))
+import User exposing (UserType(..))
 
 
 
@@ -40,74 +35,32 @@ main =
 
 
 type alias Model =
-    { page : Page
-    , key : Nav.Key
+    { key : Nav.Key
     , url : Url.Url
-    , session : Session
+    , appState : AppState
     }
 
 
-type Page
-    = HomePage Home.Model
-    | Signup Signup.Model
-    | Signin Signin.Model
-    | NotFound
+type AppState
+    = Initialising { supabase : SupabaseFlags, seed : Random.Seed }
+    | Ready Shared Router.Model
+    | FailedToInitialise
 
 
 type alias Flags =
-    { supabase : Session.SupabaseFlags
+    { supabase : Shared.SupabaseFlags
     , seed : Int
     }
 
 
-
-{-
-   TODO: need to handle when GotSessionResponse comes back as null (Model as maybe in decoder) - aka not authed (preferrably navigate to Login page)
-   TODO: same as above except for GotSignupResponse in Signup.elm - when errors - I need to reflect that in the form
-       - Add some form validation to Signup / Login
-   TODO: Add implementation to logout
-   TODO: cleanup Actions type & the way I currently handle actions, try to extract the foldl function
-   TODO: User.elm - need to change authenticated/unauthenticated to not be based off of if theres a jwt token, since it could be expired
--}
-
-
 init : JE.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flagsValue url key =
-    let
-        decodedFlags =
-            JD.decodeValue flagsDecoder flagsValue
-    in
-    case decodedFlags of
+    case JD.decodeValue flagsDecoder flagsValue of
         Ok flags ->
-            ( { page = NotFound
-              , url = url
-              , key = key
-              , session =
-                    { key = key
-                    , user = User.unauthenticated
-                    , seed = Random.initialSeed flags.seed
-                    , supabase = flags.supabase
-                    }
-              }
-            , Supabase.session ()
-            )
+            ( { key = key, url = url, appState = Initialising { supabase = flags.supabase, seed = Random.initialSeed flags.seed } }, Supabase.session () )
 
         Err _ ->
-            ( emptyModel url key, Cmd.none )
-
-
-emptyModel : Url.Url -> Nav.Key -> Model
-emptyModel url key =
-    { page = NotFound
-    , url = url
-    , key = key
-    , session =
-        { key = key
-        , user = User.unauthenticated
-        , seed = Random.initialSeed 0
-        , supabase = { supabaseUrl = "", supabaseKey = "" }
-        }
-    }
+            ( { key = key, url = url, appState = FailedToInitialise }, Cmd.none )
 
 
 flagsDecoder : JD.Decoder Flags
@@ -117,9 +70,9 @@ flagsDecoder =
         (JD.field "seed" JD.int)
 
 
-supabaseFlagsDecoder : JD.Decoder Session.SupabaseFlags
+supabaseFlagsDecoder : JD.Decoder Shared.SupabaseFlags
 supabaseFlagsDecoder =
-    JD.map2 Session.SupabaseFlags
+    JD.map2 Shared.SupabaseFlags
         (JD.field "supabaseUrl" JD.string)
         (JD.field "supabaseKey" JD.string)
 
@@ -129,24 +82,23 @@ supabaseFlagsDecoder =
 
 
 type Msg
-    = LinkClicked Browser.UrlRequest
-    | UrlChanged Url.Url
-    | GotSessionResponse JE.Value
-    | SignOut
-    | HomeMsg Home.Msg
-    | SignupMsg Signup.Msg
-    | SigninMsg Signin.Msg
+    = UrlChanged Url.Url
+    | LinkClicked Browser.UrlRequest
+    | HandleSessionResponse JE.Value
+    | RouterMsg Router.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        session =
-            model.session
-    in
     case msg of
         UrlChanged url ->
-            updateUrl url model
+            updateRouter { model | url = url } (Router.UrlChanged url)
+
+        RouterMsg routerMsg ->
+            updateRouter model routerMsg
+
+        HandleSessionResponse json ->
+            updateUserSession model json
 
         LinkClicked urlRequest ->
             case urlRequest of
@@ -156,113 +108,76 @@ update msg model =
                 Browser.External href ->
                     ( model, Nav.load href )
 
-        GotSessionResponse json ->
+
+updateRouter : Model -> Router.Msg -> ( Model, Cmd Msg )
+updateRouter model routerMsg =
+    case model.appState of
+        Ready sharedState routerModel ->
             let
-                decoded =
-                    JD.decodeValue (JD.nullable User.decoder) json
+                nextSharedState =
+                    Shared.update sharedState sharedStateUpdate
+
+                ( nextRouterModel, routerCmd, sharedStateUpdate ) =
+                    Router.update sharedState routerMsg routerModel
             in
-            case decoded of
-                Ok user ->
-                    let
-                        newModel =
-                            user
-                                |> Maybe.map (\user_ -> { model | session = setSession user_ session })
-                                |> Maybe.withDefault model
-                    in
-                    updateUrl model.url newModel
+            ( { model | appState = Ready nextSharedState nextRouterModel }
+            , Cmd.map RouterMsg routerCmd
+            )
 
-                Err _ ->
-                    updateUrl model.url model
-
-        SignOut ->
-            ( model, Cmd.batch [ Supabase.signOut (), Nav.reload ] )
-
-        HomeMsg homeMsg ->
-            case model.page of
-                HomePage homeModel ->
-                    toHome model (Home.update homeMsg homeModel)
-
-                _ ->
-                    ( model, Cmd.none )
-
-        SignupMsg signupMsg ->
-            case model.page of
-                Signup signupModel ->
-                    let
-                        ( signUpModel, signUpCmds_, actions ) =
-                            Signup.update signupMsg signupModel
-
-                        newModel =
-                            List.foldl
-                                (\action _ ->
-                                    case action of
-                                        Actions.SetSession session_ ->
-                                            { model | session = session_ }
-                                )
-                                model
-                                actions
-                    in
-                    toSignup newModel ( signUpModel, signUpCmds_ )
-
-                _ ->
-                    ( model, Cmd.none )
-
-        SigninMsg loginMsg ->
-            case model.page of
-                Signin loginModel ->
-                    toSignin model (Signin.update loginMsg loginModel)
-
-                _ ->
-                    ( model, Cmd.none )
+        _ ->
+            let
+                _ =
+                    Debug.log "We got a router message even though the app is not ready?"
+                        routerMsg
+            in
+            ( model, Cmd.none )
 
 
-setSession : User -> Session -> Session
-setSession user session =
-    { session | user = user }
+
+{- This function serves as the foundation to transition from the `Initialising` state
+   to the `Ready` state. On init we call to check if the users session is in localstorage.
+    If we successfully get back a session we:
+        - initialise the whole thing
+        - update the currently running (`Ready`) app
+-}
 
 
-toHome : Model -> ( Home.Model, Cmd Home.Msg ) -> ( Model, Cmd Msg )
-toHome model ( homeModel, cmds ) =
-    ( { model | page = HomePage homeModel }, Cmd.map HomeMsg cmds )
-
-
-toSignup : Model -> ( Signup.Model, Cmd Signup.Msg ) -> ( Model, Cmd Msg )
-toSignup model ( signupModel, cmds ) =
-    ( { model | page = Signup signupModel }, Cmd.map SignupMsg cmds )
-
-
-toSignin : Model -> ( Signin.Model, Cmd Signin.Msg ) -> ( Model, Cmd Msg )
-toSignin model ( loginModel, cmds ) =
-    ( { model | page = Signin loginModel }, Cmd.map SigninMsg cmds )
-
-
-updateUrl : Url.Url -> Model -> ( Model, Cmd Msg )
-updateUrl url model =
+updateUserSession : Model -> JE.Value -> ( Model, Cmd Msg )
+updateUserSession model json =
     let
-        session =
-            model.session
+        decoded =
+            JD.decodeValue (JD.nullable User.decoder) json
     in
-    case Route.fromUrl url of
-        Just Route.Home ->
-            case User.userType session.user of
-                Authenticated _ ->
-                    Home.init session
-                        |> toHome model
+    case decoded of
+        Err _ ->
+            ( { model | appState = FailedToInitialise }, Cmd.none )
 
-                Unauthenticated ->
-                    Signin.init ()
-                        |> toSignin model
+        {- Need to Maybe.map userSession as its possible there was not a session in localstorage.
+           If storage was Nothing, map to the Unauthenticated state
+        -}
+        Ok userSession ->
+            let
+                user =
+                    userSession
+                        |> Maybe.map (\usrSession -> usrSession)
+                        |> Maybe.withDefault User.unauthenticated
+            in
+            case model.appState of
+                Initialising { supabase, seed } ->
+                    let
+                        initSharedState =
+                            { key = model.key, url = model.url, user = user, supabase = supabase, seed = seed }
 
-        Just Route.Signup ->
-            Signup.init session
-                |> toSignup model
+                        ( initRouterModel, routerCmd ) =
+                            Router.init model.url
+                    in
+                    ( { model | appState = Ready initSharedState initRouterModel }, Cmd.map RouterMsg routerCmd )
 
-        Just Route.Signin ->
-            Signin.init ()
-                |> toSignin model
+                Ready sharedState routerModel ->
+                    ( { model | appState = Ready (Shared.update sharedState <| UpdateUser user) routerModel }, Cmd.none )
 
-        Nothing ->
-            ( { model | page = NotFound }, Cmd.none )
+                FailedToInitialise ->
+                    ( model, Cmd.none )
 
 
 
@@ -271,66 +186,19 @@ updateUrl url model =
 
 view : Model -> Browser.Document Msg
 view model =
-    let
-        viewPage toMsg config =
-            pageFrame model.session
-                { title = config.title
-                , content = Html.map toMsg config.content
-                }
-    in
-    case model.page of
-        HomePage homeModel ->
-            viewPage HomeMsg (Home.view homeModel)
+    case model.appState of
+        Initialising _ ->
+            { title = "Loading"
+            , body = [ text "Loading" ]
+            }
 
-        Signup signupModel ->
-            viewPage SignupMsg (Signup.view signupModel)
+        Ready sharedState routerModel ->
+            Router.view RouterMsg sharedState routerModel
 
-        Signin signinModel ->
-            viewPage SigninMsg (Signin.view signinModel)
-
-        NotFound ->
-            pageFrame model.session { title = "NotFound", content = viewNotFoundPage }
-
-
-pageFrame : Session -> { title : String, content : Html Msg } -> Browser.Document Msg
-pageFrame session { title, content } =
-    { title = title ++ " - Mitsumori"
-    , body =
-        [ div [ class "flex flex-col h-full w-full" ]
-            [ viewNav session
-            , div [ class "flex flex-col items-center h-full" ]
-                [ div [ class "flex flex-col justify-center mt-8 ml-4" ] [ content ]
-                ]
-            ]
-        ]
-    }
-
-
-viewNav : Session -> Html Msg
-viewNav session =
-    div [ class "flex mt-4 mx-6 justify-between items-end font-serif" ]
-        [ a [ href <| Route.toString Route.Home, class "text-3xl" ] [ text "mitsumori" ]
-        , div [ class "flex" ]
-            [ case User.userType session.user of
-                Authenticated _ ->
-                    div [ onClick SignOut ] [ p [ class "text-lg cursor-pointer" ] [ text "logout" ], p [ class "text-normal" ] [ text <| "Logged in as " ++ User.username session.user ] ]
-
-                Unauthenticated ->
-                    div []
-                        [ a [ href <| Route.toString Route.Signup, class "text-lg mr-4" ] [ text "signup" ]
-                        , a [ href <| Route.toString Route.Signin, class "text-lg mr-4" ] [ text "signin" ]
-                        ]
-            ]
-        ]
-
-
-viewNotFoundPage : Html msg
-viewNotFoundPage =
-    div [ class "flex justify-center h-full w-full mt-52 font-serif" ]
-        [ div [ class "flex-col text-center justify-center" ]
-            [ div [ class "text-3xl mt-8" ] [ text "Page not found :(" ]
-            ]
-        ]
+        FailedToInitialise ->
+            { title = "Failure"
+            , body = [ text "The application failed to initialize. " ]
+            }
 
 
 
@@ -339,19 +207,12 @@ viewNotFoundPage =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    let
-        subpageSubs =
-            case model.page of
-                HomePage home ->
-                    Sub.map HomeMsg (Home.subscriptions home)
+    case model.appState of
+        Initialising _ ->
+            Sub.batch [ Supabase.sessionResponse HandleSessionResponse ]
 
-                Signup signUp ->
-                    Sub.map SignupMsg (Signup.subscriptions signUp)
+        Ready _ routerModel ->
+            Router.subscriptions RouterMsg routerModel
 
-                Signin signIn ->
-                    Sub.map SigninMsg (Signin.subscriptions signIn)
-
-                _ ->
-                    Sub.none
-    in
-    Sub.batch [ subpageSubs, Supabase.sessionResponse GotSessionResponse ]
+        FailedToInitialise ->
+            Sub.none

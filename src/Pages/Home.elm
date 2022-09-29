@@ -9,7 +9,7 @@ import Html.Extra as HE
 import Json.Decode as JD
 import Json.Encode as JE
 import Random exposing (Seed)
-import Session exposing (Session)
+import Shared exposing (Shared)
 import Uuid exposing (Uuid)
 
 
@@ -21,7 +21,6 @@ type alias Model =
     { inputQuote : String
     , inputAuthor : String
     , quotes : List Quote
-    , session : Session
     , modalState : ModalState
     }
 
@@ -38,9 +37,9 @@ type ModalState
     | Hidden
 
 
-init : Session -> ( Model, Cmd Msg )
-init session =
-    ( { inputQuote = "", inputAuthor = "", quotes = [], session = session, modalState = Hidden }, Cmd.none )
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( { inputQuote = "", inputAuthor = "", quotes = [], modalState = Hidden }, Cmd.none )
 
 
 quoteDecoder : JD.Decoder Quote
@@ -76,10 +75,6 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
-    let
-        session =
-            model.session
-    in
     case msg of
         OnQuoteChange str ->
             ( { model | inputQuote = str }, Cmd.none )
@@ -94,15 +89,15 @@ update msg model =
             ( { model | modalState = Hidden }, Cmd.none )
 
         OnSubmit ->
-            let
-                uuid =
-                    generateUuid session.seed
-            in
+            -- let
+            -- uuid =
+            --     generateUuid session.seed
+            -- in
             if String.isEmpty model.inputQuote && String.isEmpty model.inputAuthor then
                 ( model, Cmd.none )
 
             else
-                ( { model | inputQuote = "", modalState = Hidden, session = setSessionSeed session.seed session }
+                ( { model | inputQuote = "", modalState = Hidden }
                 , Cmd.none
                 )
 
@@ -122,7 +117,7 @@ update msg model =
             ( model, Cmd.none )
 
 
-setSessionSeed : Seed -> Session -> Session
+setSessionSeed : Seed -> Shared -> Shared
 setSessionSeed seed session =
     { session | seed = step seed }
 
@@ -141,16 +136,13 @@ step =
 -- VIEW
 
 
-view : Model -> { title : String, content : Html Msg }
+view : Model -> Html Msg
 view model =
-    { title = "Home"
-    , content =
-        div
-            [ class "flex flex-col justify-center" ]
-            [ addQuoteButton model.inputQuote model.modalState
-            , viewQuotes model.quotes
-            ]
-    }
+    div
+        [ class "flex flex-col justify-center" ]
+        [ addQuoteButton model.inputQuote model.modalState
+        , viewQuotes model.quotes
+        ]
 
 
 addQuoteButton : String -> ModalState -> Html Msg

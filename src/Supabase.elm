@@ -1,11 +1,6 @@
-port module Supabase exposing (Key, session, sessionResponse, signIn, signInResponse, signOut, signUp, signUpResponse)
+port module Supabase exposing (session, sessionResponse, signIn, signInResponse, signOut, signUp, signUpResponse)
 
 import Json.Encode as JE
-import Route exposing (Route(..))
-
-
-type alias Key =
-    String
 
 
 signUp : JE.Value -> Cmd msg

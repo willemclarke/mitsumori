@@ -4,7 +4,6 @@ import Components.Button as Button
 import Html exposing (Html, a, div, form, header, input, label, text)
 import Html.Attributes exposing (class, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onInput)
-import Route
 
 
 
@@ -49,11 +48,9 @@ update msg model =
 -- VIEW
 
 
-view : Model -> { title : String, content : Html Msg }
+view : Model -> Html Msg
 view model =
-    { title = "Login"
-    , content = div [ class "mt-52" ] [ viewSigninForm model ]
-    }
+    div [ class "mt-52" ] [ viewSigninForm model ]
 
 
 viewSigninForm : Model -> Html Msg
@@ -90,7 +87,7 @@ viewSigninForm model =
             ]
         , div [ class "flex mt-6 justify-between items-center" ]
             [ Button.create { label = "Sign in", onClick = OnSubmit } |> Button.view
-            , a [ href <| Route.toString Route.Signup, class "text-gray-700 underline underline-offset-2" ] [ text "Or sign up" ]
+            , a [ href <| "signup", class "text-gray-700 underline underline-offset-2" ] [ text "Or sign up" ]
             ]
         ]
 

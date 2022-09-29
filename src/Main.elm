@@ -1,25 +1,17 @@
 module Main exposing (Model, main)
 
--- import Route exposing (Route)
-
-import Actions exposing (Actions(..))
 import Browser
 import Browser.Navigation as Nav
-import Html exposing (Html, a, div, p, text)
-import Html.Attributes exposing (class, href)
-import Html.Events exposing (onClick)
+import Html exposing (text)
+import Html.Attributes exposing (href)
 import Json.Decode as JD
 import Json.Encode as JE
-import Pages.Home as Home
-import Pages.Signin as Signin
-import Pages.Signup as Signup
 import Random
-import Router.Route as Route
 import Router.Router as Router
 import Shared exposing (Shared, SharedUpdate(..), SupabaseFlags)
 import Supabase
 import Url
-import User exposing (User, UserType(..))
+import User exposing (UserType(..))
 
 
 

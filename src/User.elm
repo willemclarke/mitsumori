@@ -48,9 +48,9 @@ userDecoder : JD.Decoder UserInfo
 userDecoder =
     JD.map4 UserInfo
         (JD.field "access_token" JD.string)
-        (JD.field "user" (JD.field "id" JD.string))
         (JD.field "user" (JD.field "email" JD.string))
         (JD.field "user" (JD.field "user_metadata" (JD.field "username" JD.string)))
+        (JD.field "user" (JD.field "id" JD.string))
 
 
 username : User -> String

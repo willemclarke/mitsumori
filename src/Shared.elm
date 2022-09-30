@@ -1,4 +1,4 @@
-module Shared exposing (..)
+module Shared exposing (Shared, SharedUpdate(..), SupabaseFlags, update)
 
 import Browser.Navigation as Nav
 import Random exposing (Seed)

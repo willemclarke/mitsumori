@@ -1,4 +1,4 @@
-module Pages.Signin exposing (..)
+module Pages.Signin exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Components.Button as Button
 import Html exposing (Html, a, div, form, header, input, label, text)
@@ -41,8 +41,8 @@ init _ =
 encodeForm : Form -> JE.Value
 encodeForm { email, password } =
     JE.object
-        [ ( "email", JE.string email )
-        , ( "password", JE.string password )
+        [ ( "email", JE.string <| String.trim email )
+        , ( "password", JE.string <| String.trim password )
         ]
 
 
@@ -76,7 +76,10 @@ update shared msg model =
             in
             case decoded of
                 Ok user ->
-                    ( model, Route.pushUrl shared.key Route.Home, Shared.UpdateUser user )
+                    ( { model | form = emptyForm }
+                    , Route.pushUrl shared.key Route.Home
+                    , Shared.UpdateUser user
+                    )
 
                 Err err ->
                     -- TODO: handle form server errors here
@@ -90,6 +93,11 @@ update shared msg model =
 updateForm : (Form -> Form) -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
 updateForm transform model =
     ( { model | form = transform model.form }, Cmd.none, Shared.NoUpdate )
+
+
+emptyForm : Form
+emptyForm =
+    { email = "", password = "" }
 
 
 

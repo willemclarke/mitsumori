@@ -1,4 +1,4 @@
-module Router.Router exposing (..)
+module Router.Router exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Browser
 import Browser.Navigation as Nav
@@ -76,7 +76,7 @@ update shared msg model =
             updateSignIn shared model signInMsg
 
         SignOut ->
-            ( model, Cmd.batch [ Supabase.signOut (), after 300 Refresh ], Shared.NoUpdate )
+            ( model, Cmd.batch [ Supabase.signOut (), after 400 Refresh ], Shared.NoUpdate )
 
         Refresh ->
             ( model, Cmd.batch [ Nav.reload ], Shared.NoUpdate )
@@ -135,16 +135,10 @@ view msgMapper shared model =
 
 pageView : Shared -> Model -> Html Msg
 pageView shared model =
-    case model.route of
+    case Route.checkNav shared.user model.route of
         Just Route.Home ->
-            case User.userType shared.user of
-                User.Authenticated _ ->
-                    Home.view model.homeModel
-                        |> Html.map HomeMsg
-
-                User.Unauthenticated ->
-                    SignIn.view model.signInModel
-                        |> Html.map SignInMsg
+            Home.view model.homeModel
+                |> Html.map HomeMsg
 
         Just Route.Signup ->
             SignUp.view model.signUpModel

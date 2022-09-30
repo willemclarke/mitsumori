@@ -1,4 +1,4 @@
-module Pages.Home exposing (..)
+module Pages.Home exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Components.Button as Button
 import Components.Modal as Modal
@@ -115,11 +115,6 @@ update msg model =
 
         NoOp ->
             ( model, Cmd.none )
-
-
-setSessionSeed : Seed -> Shared -> Shared
-setSessionSeed seed session =
-    { session | seed = step seed }
 
 
 generateUuid : Seed -> Uuid

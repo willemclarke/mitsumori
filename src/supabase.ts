@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
+export const supabaseClient = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_KEY
 );
@@ -18,24 +18,24 @@ export interface SignInUser {
 }
 
 export const signUp = (user: SignUpUser) => {
-  return supabase.auth.signUp(
+  return supabaseClient.auth.signUp(
     { email: user.email, password: user.password },
     { data: { username: user.username } }
   );
 };
 
 export const signIn = (user: SignInUser) => {
-  return supabase.auth.signIn({
+  return supabaseClient.auth.signIn({
     email: user.email,
     password: user.password,
   });
 };
 
-export const onAuthChange = async () =>
-  supabase.auth.onAuthStateChange((event, session) => {
+export const onAuthChange = () =>
+  supabaseClient.auth.onAuthStateChange((event, session) => {
     console.log({ event, session });
   });
 
-export const signOut = async () => supabase.auth.signOut();
+export const signOut = async () => supabaseClient.auth.signOut();
 
-export const session = () => supabase.auth.session();
+export const session = () => supabaseClient.auth.session();

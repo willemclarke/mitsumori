@@ -2,8 +2,9 @@ module Main exposing (Model, main)
 
 import Browser
 import Browser.Navigation as Nav
-import Html exposing (text)
-import Html.Attributes exposing (href)
+import Components.Spinner as Spinner
+import Html exposing (Html, div, text)
+import Html.Attributes exposing (class, href)
 import Json.Decode as JD
 import Json.Encode as JE
 import Random
@@ -53,11 +54,18 @@ type alias Flags =
     }
 
 
-init : JE.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init : JD.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flagsValue url key =
     case JD.decodeValue flagsDecoder flagsValue of
         Ok flags ->
-            ( { key = key, url = url, appState = Initialising { supabase = flags.supabase, seed = flags.seed } }, Supabase.session () )
+            ( { key = key
+              , url = url
+              , appState =
+                    Initialising
+                        { supabase = flags.supabase, seed = flags.seed }
+              }
+            , Supabase.session ()
+            )
 
         Err _ ->
             ( { key = key, url = url, appState = FailedToInitialise }, Cmd.none )
@@ -158,9 +166,7 @@ updateUserSession model json =
         Ok userSession ->
             let
                 user =
-                    userSession
-                        |> Maybe.map (\usrSession -> usrSession)
-                        |> Maybe.withDefault User.unauthenticated
+                    Maybe.withDefault User.unauthenticated userSession
             in
             case model.appState of
                 Initialising flags ->
@@ -182,6 +188,7 @@ updateUserSession model json =
 
 
 -- VIEW
+-- TODO: handle layouts for when the app is loading, and when it errors
 
 
 view : Model -> Browser.Document Msg
@@ -189,7 +196,7 @@ view model =
     case model.appState of
         Initialising _ ->
             { title = "Loading"
-            , body = [ text "Loading" ]
+            , body = [ viewPageLoading ]
             }
 
         Ready sharedState routerModel ->
@@ -201,18 +208,28 @@ view model =
             }
 
 
+viewPageLoading : Html msg
+viewPageLoading =
+    div [ class "flex flex-col h-full w-full justify-center items-center" ]
+        [ Spinner.spinner ]
+
+
 
 -- SUBSCRIPTIONS
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
+    let
+        commonSubs =
+            Supabase.sessionResponse HandleSessionResponse
+    in
     case model.appState of
         Initialising _ ->
-            Sub.batch [ Supabase.sessionResponse HandleSessionResponse ]
+            Sub.batch [ commonSubs ]
 
         Ready _ routerModel ->
-            Router.subscriptions RouterMsg routerModel
+            Sub.batch [ commonSubs, Router.subscriptions RouterMsg routerModel ]
 
         FailedToInitialise ->
             Sub.none

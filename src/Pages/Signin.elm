@@ -106,7 +106,7 @@ emptyForm =
 
 view : Model -> Html Msg
 view model =
-    div [ class "mt-52" ] [ viewSigninForm model.form ]
+    div [] [ viewSigninForm model.form ]
 
 
 viewSigninForm : Form -> Html Msg

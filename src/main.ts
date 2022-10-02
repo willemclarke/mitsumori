@@ -52,8 +52,19 @@ app.ports.signOut.subscribe(async () => {
 
 app.ports.session.subscribe(async () => {
   const session = supabase.session();
-  console.log("app.ports.session", { session });
   return app.ports.sessionResponse.send(session);
 });
 
-await supabase.onAuthChange();
+const onAuthChange = () => {
+  return supabase.supabaseClient.auth.onAuthStateChange((event, session) => {
+    switch (event) {
+      case "TOKEN_REFRESHED": {
+        console.log("Refreshing user session/token");
+        return app.ports.sessionResponse.send(session);
+      }
+      default:
+        return;
+    }
+  });
+};
+onAuthChange();

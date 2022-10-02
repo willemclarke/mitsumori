@@ -9,7 +9,6 @@ import Html.Extra as HE
 import Json.Decode as JD
 import Json.Encode as JE
 import Random exposing (Seed)
-import Shared exposing (Shared)
 import Uuid exposing (Uuid)
 
 
@@ -134,7 +133,7 @@ step =
 view : Model -> Html Msg
 view model =
     div
-        [ class "flex flex-col justify-center" ]
+        [ class "flex flex-col h-full" ]
         [ addQuoteButton model.inputQuote model.modalState
         , viewQuotes model.quotes
         ]

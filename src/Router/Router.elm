@@ -76,7 +76,7 @@ update shared msg model =
             updateSignIn shared model signInMsg
 
         SignOut ->
-            ( model, Cmd.batch [ Supabase.signOut (), after 400 Refresh ], Shared.NoUpdate )
+            ( model, Cmd.batch [ Supabase.signOut (), after 600 Refresh ], Shared.NoUpdate )
 
         Refresh ->
             ( model, Cmd.batch [ Nav.reload ], Shared.NoUpdate )
@@ -123,9 +123,8 @@ view msgMapper shared model =
         content =
             div [ class "flex flex-col h-full w-full" ]
                 [ viewNav shared
-                , div [ class "flex flex-col items-center h-full" ]
-                    [ div [ class "flex flex-col justify-center mt-8 ml-4" ] [ pageView shared model ]
-                    ]
+                , div [ class "flex flex-col items-center justify-center h-full w-full" ]
+                    [ pageView shared model ]
                 ]
     in
     { title = title ++ " - Mitsumori"

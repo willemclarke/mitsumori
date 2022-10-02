@@ -18,7 +18,13 @@ import User
 
 type alias Model =
     { form : Form
+    , problems : List Problem
     }
+
+
+type Problem
+    = InvalidEntry ValidatedField String
+    | Error String
 
 
 type alias Form =
@@ -35,6 +41,7 @@ init _ =
             , username = ""
             , password = ""
             }
+      , problems = []
       }
     , Cmd.none
     )
@@ -74,7 +81,12 @@ update shared msg model =
             updateForm (\form -> { form | password = password }) model
 
         OnSubmit ->
-            ( model, Supabase.signUp (encodeForm model.form), Shared.NoUpdate )
+            case validateForm model.form of
+                Ok validForm ->
+                    ( { model | problems = [] }, Supabase.signUp (encodeForm validForm), Shared.NoUpdate )
+
+                Err problems ->
+                    ( { model | problems = problems }, Cmd.none, Shared.NoUpdate )
 
         GotSignupResponse json ->
             let
@@ -89,12 +101,8 @@ update shared msg model =
                     )
 
                 Err err ->
-                    -- TODO: handle form server errors here
-                    let
-                        error =
-                            Debug.log "Err" err
-                    in
-                    ( model, Cmd.none, Shared.NoUpdate )
+                    -- need to get these errors to work
+                    ( { model | problems = [] }, Cmd.none, Shared.NoUpdate )
 
 
 updateForm : (Form -> Form) -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
@@ -108,12 +116,30 @@ emptyForm =
 
 
 
+-- FORM STUFF
+
+
+type ValidatedField
+    = Username
+    | Email
+    | Password
+
+
+fieldsToValidate : List ValidatedField
+fieldsToValidate =
+    [ Username
+    , Email
+    , Password
+    ]
+
+
+
 -- VIEW
 
 
 view : Model -> Html Msg
 view model =
-    div [ class "mt-52" ] [ viewSignupForm model.form ]
+    div [] [ viewSignupForm model.form ]
 
 
 viewSignupForm : Form -> Html Msg
@@ -166,6 +192,45 @@ viewSignupForm form =
             , a [ href <| "signin", class "ml-2 text-gray-700 underline underline-offset-2" ] [ text "Or sign in" ]
             ]
         ]
+
+
+validateForm : Form -> Result (List Problem) Form
+validateForm form =
+    case List.concatMap (validateField form) fieldsToValidate of
+        [] ->
+            Ok form
+
+        problems ->
+            Err problems
+
+
+validateField : Form -> ValidatedField -> List Problem
+validateField form field =
+    List.map (InvalidEntry field) <|
+        case field of
+            Email ->
+                if String.isEmpty form.email then
+                    [ "Email can't be blank." ]
+
+                else
+                    []
+
+            Username ->
+                if String.isEmpty form.username then
+                    [ "Username can't be blank." ]
+
+                else
+                    []
+
+            Password ->
+                if String.isEmpty form.password then
+                    [ "password can't be blank." ]
+
+                else if String.length form.password < 8 then
+                    [ "Password must be at least 8 characters long." ]
+
+                else
+                    []
 
 
 subscriptions : Model -> Sub Msg

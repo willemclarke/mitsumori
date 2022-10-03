@@ -8,7 +8,6 @@ import Html.Events exposing (onClick)
 import Pages.Home as Home
 import Pages.Signin as SignIn
 import Pages.Signup as SignUp
-import Platform exposing (Task)
 import Process
 import Router.Route as Route exposing (Route)
 import Shared exposing (Shared)

@@ -1,6 +1,23 @@
-port module Supabase exposing (session, sessionResponse, signIn, signInResponse, signOut, signUp, signUpResponse)
+port module Supabase exposing (Error, errorDecoder, session, sessionResponse, signIn, signInResponse, signOut, signUp, signUpResponse)
 
+import Json.Decode as JD
 import Json.Encode as JE
+
+
+type alias Error =
+    { code : Int
+    , msg : String
+    }
+
+
+errorDecoder : JD.Decoder Error
+errorDecoder =
+    JD.map2
+        (\code msg ->
+            { code = code, msg = msg }
+        )
+        (JD.field "code" JD.int)
+        (JD.field "msg" JD.string)
 
 
 port signUp : JE.Value -> Cmd msg

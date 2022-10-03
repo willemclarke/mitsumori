@@ -1,7 +1,7 @@
 module Pages.Signup exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Components.Button as Button
-import Html exposing (Html, a, div, form, header, input, label, text)
+import Html exposing (Html, a, div, form, header, input, label, li, p, text, ul)
 import Html.Attributes exposing (class, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onInput)
 import Json.Decode as JD
@@ -22,9 +22,19 @@ type alias Model =
     }
 
 
+type SignupResponse
+    = UserOk User.User
+    | SignupError Supabase.Error
+    | PayloadError
+
+
 type Problem
     = InvalidEntry ValidatedField String
-    | Error String
+    | ServerError Supabase.Error
+
+
+
+-- | Error Err
 
 
 type alias Form =
@@ -54,6 +64,16 @@ encodeForm { email, username, password } =
         , ( "username", JE.string <| String.trim username )
         , ( "password", JE.string <| String.trim password )
         ]
+
+
+signupResponseDecoder : JE.Value -> SignupResponse
+signupResponseDecoder json =
+    JD.decodeValue
+        (JD.oneOf
+            [ JD.map UserOk User.decoder, JD.map SignupError Supabase.errorDecoder ]
+        )
+        json
+        |> Result.withDefault PayloadError
 
 
 
@@ -90,19 +110,30 @@ update shared msg model =
 
         GotSignupResponse json ->
             let
-                decoded =
-                    JD.decodeValue User.decoder json
+                signupResponse =
+                    signupResponseDecoder json
             in
-            case decoded of
-                Ok user ->
+            case signupResponse of
+                UserOk user ->
                     ( { model | form = emptyForm }
                     , Route.pushUrl shared.key Route.Home
                     , Shared.UpdateUser user
                     )
 
-                Err err ->
-                    -- need to get these errors to work
-                    ( { model | problems = [] }, Cmd.none, Shared.NoUpdate )
+                SignupError error ->
+                    let
+                        x =
+                            Debug.log "inside SignupError error" error
+
+                        -- map Supabase.Error into the ServerError type so we can append to model
+                        serverErrors =
+                            List.map ServerError [ error ] |> Debug.log "serverErrors"
+                    in
+                    -- TODO: proper error handling
+                    ( { model | problems = List.append model.problems serverErrors }, Cmd.none, Shared.NoUpdate )
+
+                PayloadError ->
+                    ( model, Cmd.none, Shared.NoUpdate )
 
 
 updateForm : (Form -> Form) -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
@@ -133,17 +164,56 @@ fieldsToValidate =
     ]
 
 
+validateForm : Form -> Result (List Problem) Form
+validateForm form =
+    case List.concatMap (validateField form) fieldsToValidate of
+        [] ->
+            Ok form
+
+        problems ->
+            Err problems
+
+
+validateField : Form -> ValidatedField -> List Problem
+validateField form field =
+    List.map (InvalidEntry field) <|
+        case field of
+            Email ->
+                if String.isEmpty form.email then
+                    [ "Email can't be blank." ]
+
+                else
+                    []
+
+            Username ->
+                if String.isEmpty form.username then
+                    [ "Username can't be blank." ]
+
+                else
+                    []
+
+            Password ->
+                if String.isEmpty form.password then
+                    [ "Password can't be blank." ]
+
+                else if String.length form.password < 8 then
+                    [ "Password must be at least 8 characters long." ]
+
+                else
+                    []
+
+
 
 -- VIEW
 
 
 view : Model -> Html Msg
 view model =
-    div [] [ viewSignupForm model.form ]
+    div [] [ viewSignupForm model.form model.problems ]
 
 
-viewSignupForm : Form -> Html Msg
-viewSignupForm form =
+viewSignupForm : Form -> List Problem -> Html Msg
+viewSignupForm form problems =
     div [ class "flex flex-col font-light text-black text-start lg:w-96 md:w-96 sm:w-40" ]
         [ header [ class "text-2xl mb-6 font-medium font-serif" ] [ text "Join mitsumori" ]
         , Html.form [ id "signup-form" ]
@@ -186,6 +256,7 @@ viewSignupForm form =
                     ]
                     [ text form.password ]
                 ]
+            , ul [ class "mt-3" ] (List.map viewProblem problems)
             ]
         , div [ class "flex mt-6 justify-between items-center" ]
             [ Button.create { label = "Create account", onClick = OnSubmit } |> Button.view
@@ -194,43 +265,18 @@ viewSignupForm form =
         ]
 
 
-validateForm : Form -> Result (List Problem) Form
-validateForm form =
-    case List.concatMap (validateField form) fieldsToValidate of
-        [] ->
-            Ok form
+viewProblem : Problem -> Html msg
+viewProblem problem =
+    let
+        errorMsg =
+            case problem of
+                InvalidEntry _ string ->
+                    string
 
-        problems ->
-            Err problems
-
-
-validateField : Form -> ValidatedField -> List Problem
-validateField form field =
-    List.map (InvalidEntry field) <|
-        case field of
-            Email ->
-                if String.isEmpty form.email then
-                    [ "Email can't be blank." ]
-
-                else
-                    []
-
-            Username ->
-                if String.isEmpty form.username then
-                    [ "Username can't be blank." ]
-
-                else
-                    []
-
-            Password ->
-                if String.isEmpty form.password then
-                    [ "password can't be blank." ]
-
-                else if String.length form.password < 8 then
-                    [ "Password must be at least 8 characters long." ]
-
-                else
-                    []
+                ServerError { msg } ->
+                    msg
+    in
+    li [ class "mt-2 text-red-500" ] [ text errorMsg ]
 
 
 subscriptions : Model -> Sub Msg

@@ -26,11 +26,12 @@ app.ports.signUp.subscribe(async (user) => {
   const { session, error } = await supabase.signUp(user);
 
   if (session) {
-    return app.ports.signUpResponse.send(session);
+    return await app.ports.signUpResponse.send(session);
   }
 
   if (error) {
-    return app.ports.signUpResponse.send(error);
+    console.log("inside error branch", error);
+    return await app.ports.signUpResponse.send(error);
   }
 });
 

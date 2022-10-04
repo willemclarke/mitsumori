@@ -2,7 +2,7 @@ module Router.Router exposing (Model, Msg(..), init, subscriptions, update, view
 
 import Browser
 import Browser.Navigation as Nav
-import Html exposing (Html, a, div, p, text)
+import Html exposing (Html, a, button, div, p, text)
 import Html.Attributes exposing (class, href)
 import Html.Events exposing (onClick)
 import Pages.Home as Home
@@ -132,8 +132,8 @@ view msgMapper shared model =
 
 
 pageView : Shared -> Model -> Html Msg
-pageView shared model =
-    case Route.checkNav shared.user model.route of
+pageView { user } model =
+    case Route.checkNav user model.route of
         Just Route.Home ->
             Home.view model.homeModel
                 |> Html.map HomeMsg
@@ -154,11 +154,19 @@ pageView shared model =
 
 
 viewNav : Shared -> Html Msg
-viewNav shared =
+viewNav { user } =
+    let
+        href_ =
+            if User.isAuthenticated user then
+                Route.toString Route.Home
+
+            else
+                Route.toString Route.Signup
+    in
     div [ class "flex mt-4 mx-6 justify-between items-end font-serif" ]
-        [ a [ href <| Route.toString Route.Home, class "text-3xl" ] [ text "mitsumori" ]
+        [ a [ href href_, class "text-3xl" ] [ text "mitsumori" ]
         , div [ class "flex" ]
-            [ case User.userType shared.user of
+            [ case User.userType user of
                 User.Authenticated _ ->
                     p [ onClick SignOut, class "text-lg cursor-pointer" ] [ text "signout" ]
 
@@ -186,11 +194,11 @@ subscriptions msgMapper model =
         Just Route.Home ->
             Sub.map HomeMsg (Home.subscriptions model.homeModel) |> Sub.map msgMapper
 
-        Just Route.Signin ->
-            Sub.map SignInMsg (SignIn.subscriptions model.signInModel) |> Sub.map msgMapper
-
         Just Route.Signup ->
             Sub.map SignUpMsg (SignUp.subscriptions model.signUpModel) |> Sub.map msgMapper
+
+        Just Route.Signin ->
+            Sub.map SignInMsg (SignIn.subscriptions model.signInModel) |> Sub.map msgMapper
 
         _ ->
             Sub.none

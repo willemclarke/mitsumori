@@ -1,4 +1,4 @@
-module User exposing (User, UserInfo, UserType(..), decoder, unauthenticated, userType, username)
+module User exposing (User, UserInfo, UserType(..), decoder, isAuthenticated, unauthenticated, userType, username)
 
 import Json.Decode as JD
 
@@ -23,6 +23,16 @@ type alias UserInfo =
 userType : User -> UserType
 userType (User type_) =
     type_
+
+
+isAuthenticated : User -> Bool
+isAuthenticated (User type_) =
+    case type_ of
+        Authenticated _ ->
+            True
+
+        Unauthenticated ->
+            False
 
 
 unauthenticated : User

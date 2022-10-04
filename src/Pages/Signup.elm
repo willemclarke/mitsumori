@@ -2,7 +2,7 @@ module Pages.Signup exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Components.Button as Button
 import Html exposing (Html, a, div, form, header, input, label, li, p, text, ul)
-import Html.Attributes exposing (class, for, href, id, placeholder, type_, value)
+import Html.Attributes exposing (class, classList, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onInput)
 import Json.Decode as JD
 import Json.Encode as JE
@@ -22,15 +22,15 @@ type alias Model =
     }
 
 
+type Problem
+    = InvalidEntry ValidatedField String
+    | ServerError Supabase.Error
+
+
 type SignupResponse
     = UserOk User.User
     | SignupError Supabase.Error
     | PayloadError
-
-
-type Problem
-    = InvalidEntry ValidatedField String
-    | ServerError Supabase.Error
 
 
 
@@ -115,21 +115,13 @@ update shared msg model =
             in
             case signupResponse of
                 UserOk user ->
-                    ( { model | form = emptyForm }
-                    , Route.pushUrl shared.key Route.Home
-                    , Shared.UpdateUser user
-                    )
+                    ( { model | form = emptyForm }, Route.pushUrl shared.key Route.Home, Shared.UpdateUser user )
 
                 SignupError error ->
                     let
-                        x =
-                            Debug.log "inside SignupError error" error
-
-                        -- map Supabase.Error into the ServerError type so we can append to model
                         serverErrors =
-                            List.map ServerError [ error ] |> Debug.log "serverErrors"
+                            List.map ServerError [ error ]
                     in
-                    -- TODO: proper error handling
                     ( { model | problems = List.append model.problems serverErrors }, Cmd.none, Shared.NoUpdate )
 
                 PayloadError ->
@@ -203,6 +195,58 @@ validateField form field =
                     []
 
 
+invalidEntryToString : List Problem -> ValidatedField -> String
+invalidEntryToString problems field =
+    getInvalidEntry problems field
+        |> List.map problemToString
+        |> String.join ""
+
+
+serverErrorToString : List Problem -> String
+serverErrorToString problems =
+    getServerError problems
+        |> List.map problemToString
+        |> String.join ""
+
+
+getInvalidEntry : List Problem -> ValidatedField -> List Problem
+getInvalidEntry problems validatedField =
+    List.filter
+        (\problem ->
+            case problem of
+                InvalidEntry field _ ->
+                    field == validatedField
+
+                _ ->
+                    False
+        )
+        problems
+
+
+getServerError : List Problem -> List Problem
+getServerError problems =
+    List.filter
+        (\problem ->
+            case problem of
+                ServerError _ ->
+                    True
+
+                InvalidEntry _ _ ->
+                    False
+        )
+        problems
+
+
+problemToString : Problem -> String
+problemToString problem =
+    case problem of
+        InvalidEntry _ str ->
+            str
+
+        ServerError { message } ->
+            message
+
+
 
 -- VIEW
 
@@ -212,16 +256,27 @@ view model =
     div [] [ viewSignupForm model.form model.problems ]
 
 
+viewFormInvalidEntry : List Problem -> ValidatedField -> Html msg
+viewFormInvalidEntry problems field =
+    div [ class "h-1" ] [ p [ class "text-sm text-red-500 mt-2" ] [ text <| invalidEntryToString problems field ] ]
+
+
+viewFormServerError : List Problem -> Html msg
+viewFormServerError problems =
+    div [ class "h-1" ] [ p [ class "text-sm mt-1 text-red-500" ] [ text <| serverErrorToString problems ] ]
+
+
 viewSignupForm : Form -> List Problem -> Html Msg
 viewSignupForm form problems =
     div [ class "flex flex-col font-light text-black text-start lg:w-96 md:w-96 sm:w-40" ]
         [ header [ class "text-2xl mb-6 font-medium font-serif" ] [ text "Join mitsumori" ]
         , Html.form [ id "signup-form" ]
-            [ div [ class "flex flex-col my-2" ]
+            [ div [ class "flex flex-col mt-2" ]
                 [ label [ class "text-gray-900", for "email" ]
                     [ text "Email address" ]
                 , input
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
+                    , classList [ ( "border-red-500", not (String.isEmpty <| invalidEntryToString problems Email) ) ]
                     , id "email"
                     , placeholder "your.email@address.com"
                     , type_ "text"
@@ -229,12 +284,14 @@ viewSignupForm form problems =
                     , onInput OnEmailChange
                     ]
                     [ text form.email ]
+                , viewFormInvalidEntry problems Email
                 ]
             , div [ class "flex flex-col mt-6" ]
-                [ label [ class "text-gray-900", for "username" ]
+                [ label [ class "text-gray-900 mt-2", for "username" ]
                     [ text "Username" ]
                 , input
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
+                    , classList [ ( "border-red-500", not (String.isEmpty <| invalidEntryToString problems Username) ) ]
                     , id "username"
                     , placeholder "johndoe"
                     , type_ "text"
@@ -242,12 +299,14 @@ viewSignupForm form problems =
                     , onInput OnUsernameChange
                     ]
                     [ text form.email ]
+                , viewFormInvalidEntry problems Username
                 ]
             , div [ class "flex flex-col mt-6" ]
-                [ label [ class "text-gray-700", for "password" ]
+                [ label [ class "text-gray-700 mt-2", for "password" ]
                     [ text "Password (8+ chars)" ]
                 , input
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
+                    , classList [ ( "border-red-500", not (String.isEmpty <| invalidEntryToString problems Password) ) ]
                     , id "password"
                     , placeholder "Choose your password"
                     , type_ "password"
@@ -255,28 +314,15 @@ viewSignupForm form problems =
                     , onInput OnPasswordChange
                     ]
                     [ text form.password ]
+                , viewFormInvalidEntry problems Password
                 ]
-            , ul [ class "mt-3" ] (List.map viewProblem problems)
+            , viewFormServerError problems
             ]
-        , div [ class "flex mt-6 justify-between items-center" ]
+        , div [ class "flex mt-9 justify-between items-center" ]
             [ Button.create { label = "Create account", onClick = OnSubmit } |> Button.view
             , a [ href <| "signin", class "ml-2 text-gray-700 underline underline-offset-2" ] [ text "Or sign in" ]
             ]
         ]
-
-
-viewProblem : Problem -> Html msg
-viewProblem problem =
-    let
-        errorMsg =
-            case problem of
-                InvalidEntry _ string ->
-                    string
-
-                ServerError { msg } ->
-                    msg
-    in
-    li [ class "mt-2 text-red-500" ] [ text errorMsg ]
 
 
 subscriptions : Model -> Sub Msg

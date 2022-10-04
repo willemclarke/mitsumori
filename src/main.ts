@@ -26,12 +26,11 @@ app.ports.signUp.subscribe(async (user) => {
   const { session, error } = await supabase.signUp(user);
 
   if (session) {
-    return await app.ports.signUpResponse.send(session);
+    return app.ports.signUpResponse.send(session);
   }
 
   if (error) {
-    console.log("inside error branch", error);
-    return await app.ports.signUpResponse.send(error);
+    return app.ports.signUpResponse.send(error);
   }
 });
 
@@ -60,6 +59,7 @@ const onAuthChange = () => {
   return supabase.supabaseClient.auth.onAuthStateChange((event, session) => {
     switch (event) {
       case "TOKEN_REFRESHED": {
+        console.log("inside token refreshed");
         console.log("Refreshing user session/token");
         return app.ports.sessionResponse.send(session);
       }

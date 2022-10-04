@@ -2,7 +2,7 @@ module Router.Router exposing (Model, Msg(..), init, subscriptions, update, view
 
 import Browser
 import Browser.Navigation as Nav
-import Html exposing (Html, a, button, div, p, text)
+import Html exposing (Html, a, div, p, text)
 import Html.Attributes exposing (class, href)
 import Html.Events exposing (onClick)
 import Pages.Home as Home

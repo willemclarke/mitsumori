@@ -5,19 +5,16 @@ import Json.Encode as JE
 
 
 type alias Error =
-    { code : Int
-    , msg : String
+    { message : String
+    , status : Int
     }
 
 
 errorDecoder : JD.Decoder Error
 errorDecoder =
-    JD.map2
-        (\code msg ->
-            { code = code, msg = msg }
-        )
-        (JD.field "code" JD.int)
-        (JD.field "msg" JD.string)
+    JD.map2 Error
+        (JD.field "message" JD.string)
+        (JD.field "status" JD.int)
 
 
 port signUp : JE.Value -> Cmd msg

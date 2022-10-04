@@ -146,7 +146,7 @@ updateRouter model routerMsg =
    to the `Ready` state. On init we call to check if the users session is in localstorage.
     If we successfully get back a session we:
         - initialise the whole thing
-        - update the currently running (`Ready`) app
+        - OR update the currently running (`Ready`) app
 -}
 
 
@@ -160,9 +160,6 @@ updateUserSession model json =
         Err _ ->
             ( { model | appState = FailedToInitialise }, Cmd.none )
 
-        {- Need to Maybe.map userSession as its possible there was not a session in localstorage.
-           If storage was Nothing, map to the Unauthenticated state
-        -}
         Ok userSession ->
             let
                 user =
@@ -188,7 +185,6 @@ updateUserSession model json =
 
 
 -- VIEW
--- TODO: handle layouts for when the app is loading, and when it errors
 
 
 view : Model -> Browser.Document Msg

@@ -1,7 +1,7 @@
 module Pages.Signup exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Components.Button as Button
-import Html exposing (Html, a, div, form, header, input, label, li, p, text, ul)
+import Html exposing (Html, a, div, form, header, input, label, p, text)
 import Html.Attributes exposing (class, classList, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onInput)
 import Json.Decode as JD
@@ -22,6 +22,13 @@ type alias Model =
     }
 
 
+type alias Form =
+    { email : String
+    , username : String
+    , password : String
+    }
+
+
 type Problem
     = InvalidEntry ValidatedField String
     | ServerError Supabase.Error
@@ -31,17 +38,6 @@ type SignupResponse
     = UserOk User.User
     | SignupError Supabase.Error
     | PayloadError
-
-
-
--- | Error Err
-
-
-type alias Form =
-    { email : String
-    , username : String
-    , password : String
-    }
 
 
 init : () -> ( Model, Cmd Msg )
@@ -139,7 +135,7 @@ emptyForm =
 
 
 
--- FORM STUFF
+-- FORM TYPES/HELPERS
 
 
 type ValidatedField

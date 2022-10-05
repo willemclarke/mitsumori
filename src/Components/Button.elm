@@ -69,7 +69,7 @@ view (Button ({ label, additionalStyles, isLoading, isDisabled } as config)) =
         ]
         [ div [ class "flex items-center" ]
             [ HE.viewIf isLoading <|
-                div [ class "flex items-center justify-center z-999 mr-3" ] [ spinner ]
+                div [ class "flex items-center justify-center mr-3" ] [ spinner ]
             , text label
             ]
         ]

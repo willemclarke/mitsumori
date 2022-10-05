@@ -31,11 +31,6 @@ export const signIn = (user: SignInUser) => {
   });
 };
 
-export const onAuthChange = () =>
-  supabaseClient.auth.onAuthStateChange((event, session) => {
-    console.log({ event, session });
-  });
-
 export const signOut = async () => supabaseClient.auth.signOut();
 
 export const session = () => supabaseClient.auth.session();

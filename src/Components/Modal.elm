@@ -110,7 +110,7 @@ view (Modal options) =
                         [ class "mt-3 text-center sm:mt-0 sm:text-left flex flex-col grow"
                         ]
                         [ h3
-                            [ class "text-xl font-medium text-gray-900 leading-6"
+                            [ class "font-serif text-xl font-medium text-gray-900 leading-6"
                             , id "modal-title"
                             ]
                             [ text options.title ]

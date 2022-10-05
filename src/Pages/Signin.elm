@@ -19,6 +19,7 @@ import User
 type alias Model =
     { form : Form
     , problems : List Problem
+    , isLoading : Bool
     }
 
 
@@ -46,6 +47,7 @@ init _ =
             , password = ""
             }
       , problems = []
+      , isLoading = False
       }
     , Cmd.none
     )
@@ -92,7 +94,7 @@ update shared msg model =
         OnSubmit ->
             case validateForm model.form of
                 Ok validForm ->
-                    ( { model | problems = [] }, Supabase.signIn (encodeForm validForm), Shared.NoUpdate )
+                    ( { model | problems = [], isLoading = True }, Supabase.signIn (encodeForm validForm), Shared.NoUpdate )
 
                 Err problems ->
                     ( { model | problems = problems }, Cmd.none, Shared.NoUpdate )
@@ -104,14 +106,14 @@ update shared msg model =
             in
             case signinResponse of
                 UserOk user ->
-                    ( { model | form = emptyForm }, Route.pushUrl shared.key Route.Home, Shared.UpdateUser user )
+                    ( { model | form = emptyForm, isLoading = True }, Route.pushUrl shared.key Route.Home, Shared.UpdateUser user )
 
                 SignupError error ->
                     let
                         serverErrors =
                             List.map ServerError [ error ]
                     in
-                    ( { model | problems = List.append model.problems serverErrors }, Cmd.none, Shared.NoUpdate )
+                    ( { model | isLoading = False, problems = List.append model.problems serverErrors }, Cmd.none, Shared.NoUpdate )
 
                 PayloadError ->
                     ( model, Cmd.none, Shared.NoUpdate )
@@ -230,8 +232,8 @@ problemToString problem =
 
 
 view : Model -> Html Msg
-view model =
-    div [] [ viewSigninForm model.form model.problems ]
+view { form, problems, isLoading } =
+    div [] [ viewSigninForm form problems isLoading ]
 
 
 viewFormInvalidEntry : List Problem -> ValidatedField -> Html msg
@@ -244,8 +246,8 @@ viewFormServerError problems =
     div [ class "h-1" ] [ p [ class "text-sm mt-1 text-red-500" ] [ text <| serverErrorToString problems ] ]
 
 
-viewSigninForm : Form -> List Problem -> Html Msg
-viewSigninForm form problems =
+viewSigninForm : Form -> List Problem -> Bool -> Html Msg
+viewSigninForm form problems isLoading =
     div [ class "flex flex-col font-light text-black text-start lg:w-96 md:w-96 sm:w-40" ]
         [ header [ class "text-2xl mb-6 font-medium font-serif" ] [ text "Welcome back" ]
         , Html.form [ id "signup-form" ]
@@ -282,7 +284,9 @@ viewSigninForm form problems =
             , viewFormServerError problems
             ]
         , div [ class "flex mt-9 justify-between items-center" ]
-            [ Button.create { label = "Sign in", onClick = OnSubmit } |> Button.view
+            [ Button.create { label = "Sign in", onClick = OnSubmit }
+                |> Button.withIsLoading isLoading
+                |> Button.view
             , a [ href <| "signup", class "text-gray-700 underline underline-offset-2" ] [ text "Or sign up" ]
             ]
         ]

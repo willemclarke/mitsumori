@@ -20,6 +20,29 @@ type alias UserInfo =
     }
 
 
+decoder : JD.Decoder User
+decoder =
+    userDecoder
+        |> JD.andThen
+            (\userInfo ->
+                case userInfo.jwt of
+                    "" ->
+                        JD.succeed (User Unauthenticated)
+
+                    _ ->
+                        JD.succeed <| User (Authenticated userInfo)
+            )
+
+
+userDecoder : JD.Decoder UserInfo
+userDecoder =
+    JD.map4 UserInfo
+        (JD.field "access_token" JD.string)
+        (JD.field "user" (JD.field "email" JD.string))
+        (JD.field "user" (JD.field "user_metadata" (JD.field "username" JD.string)))
+        (JD.field "user" (JD.field "id" JD.string))
+
+
 userType : User -> UserType
 userType (User type_) =
     type_
@@ -48,29 +71,6 @@ isAuthenticated (User type_) =
 unauthenticated : User
 unauthenticated =
     User Unauthenticated
-
-
-decoder : JD.Decoder User
-decoder =
-    userDecoder
-        |> JD.andThen
-            (\userInfo ->
-                case userInfo.jwt of
-                    "" ->
-                        JD.succeed (User Unauthenticated)
-
-                    _ ->
-                        JD.succeed <| User (Authenticated userInfo)
-            )
-
-
-userDecoder : JD.Decoder UserInfo
-userDecoder =
-    JD.map4 UserInfo
-        (JD.field "access_token" JD.string)
-        (JD.field "user" (JD.field "email" JD.string))
-        (JD.field "user" (JD.field "user_metadata" (JD.field "username" JD.string)))
-        (JD.field "user" (JD.field "id" JD.string))
 
 
 username : User -> String

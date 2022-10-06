@@ -166,15 +166,14 @@ viewNav { user } =
     div [ class "flex mt-4 mx-6 justify-between items-end font-serif" ]
         [ a [ href href_, class "text-3xl" ] [ text "mitsumori" ]
         , div [ class "flex" ]
-            [ case User.userType user of
-                User.Authenticated _ ->
-                    p [ onClick SignOut, class "text-lg cursor-pointer" ] [ text "signout" ]
+            [ if User.isAuthenticated user then
+                p [ onClick SignOut, class "text-lg cursor-pointer" ] [ text "signout" ]
 
-                User.Unauthenticated ->
-                    div []
-                        [ a [ href <| Route.toString Route.Signup, class "text-lg mr-4" ] [ text "signup" ]
-                        , a [ href <| Route.toString Route.Signin, class "text-lg mr-4" ] [ text "signin" ]
-                        ]
+              else
+                div []
+                    [ a [ href <| Route.toString Route.Signup, class "text-lg mr-4" ] [ text "signup" ]
+                    , a [ href <| Route.toString Route.Signin, class "text-lg mr-4" ] [ text "signin" ]
+                    ]
             ]
         ]
 

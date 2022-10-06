@@ -34,6 +34,15 @@ type Problem
     | ServerError Supabase.Error
 
 
+type ValidatedField
+    = Email
+    | Password
+
+
+type TrimmedForm
+    = Trimmed Form
+
+
 type SigninResponse
     = UserOk User.User
     | SignupError Supabase.Error
@@ -53,11 +62,11 @@ init _ =
     )
 
 
-encodeForm : Form -> JE.Value
-encodeForm { email, password } =
+encodeForm : TrimmedForm -> JE.Value
+encodeForm (Trimmed form) =
     JE.object
-        [ ( "email", JE.string <| String.trim email )
-        , ( "password", JE.string <| String.trim password )
+        [ ( "email", JE.string form.email )
+        , ( "password", JE.string form.password )
         ]
 
 
@@ -130,12 +139,7 @@ emptyForm =
 
 
 
--- FORM TYPES/HELPERS
-
-
-type ValidatedField
-    = Email
-    | Password
+-- FORM HELPERS
 
 
 fieldsToValidate : List ValidatedField
@@ -143,18 +147,22 @@ fieldsToValidate =
     [ Email, Password ]
 
 
-validateForm : Form -> Result (List Problem) Form
+validateForm : Form -> Result (List Problem) TrimmedForm
 validateForm form =
-    case List.concatMap (validateField form) fieldsToValidate of
+    let
+        trimmedForm =
+            trimFields form
+    in
+    case List.concatMap (validateField trimmedForm) fieldsToValidate of
         [] ->
-            Ok form
+            Ok trimmedForm
 
         problems ->
             Err problems
 
 
-validateField : Form -> ValidatedField -> List Problem
-validateField form field =
+validateField : TrimmedForm -> ValidatedField -> List Problem
+validateField (Trimmed form) field =
     List.map (InvalidEntry field) <|
         case field of
             Email ->
@@ -173,6 +181,11 @@ validateField form field =
 
                 else
                     []
+
+
+trimFields : Form -> TrimmedForm
+trimFields form =
+    Trimmed { email = String.trim form.email, password = String.trim form.password }
 
 
 invalidEntryToString : List Problem -> ValidatedField -> String

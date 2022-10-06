@@ -22,6 +22,33 @@ const app = Elm.Main.init({
   },
 });
 
+app.ports.getQuotes.subscribe(async (userId) => {
+  const { data: quotes, error } = await supabase.getQuotes(userId);
+  if (quotes) {
+    // TODO: better name for port since it gets used for adding a quote and sending them back
+    // and also just getting quotes
+    return app.ports.addQuoteResponse.send(quotes);
+  }
+
+  if (error) {
+    return app.ports.addQuoteResponse.send(error);
+  }
+});
+
+app.ports.addQuote.subscribe(async (clientQuote) => {
+  const { data, error } = await supabase.insertQuote(clientQuote);
+  if (data) {
+    const { data: quotes, error } = await supabase.getQuotes(
+      clientQuote.userId ?? ""
+    );
+    return app.ports.addQuoteResponse.send(quotes ?? error);
+  }
+
+  if (error) {
+    app.ports.addQuoteResponse.send(error);
+  }
+});
+
 app.ports.signUp.subscribe(async (user) => {
   const { session, error } = await supabase.signUp(user);
 

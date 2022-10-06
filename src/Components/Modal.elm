@@ -1,7 +1,7 @@
 module Components.Modal exposing (acceptAndDiscardActions, basicAction, create, view)
 
 import Components.Button as Button
-import Html exposing (Html, div, h3, p, span, text)
+import Html exposing (Html, div, h3, header, p, span, text)
 import Html.Attributes exposing (attribute, class, id)
 import Html.Events exposing (onClick)
 
@@ -101,7 +101,7 @@ view (Modal options) =
                 ]
                 [ text "\u{200B}" ]
             , div
-                [ class "inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom bg-white rounded-lg shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6"
+                [ class "inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom bg-white rounded-xl shadow-lg transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6"
                 ]
                 [ div
                     [ class "sm:flex sm:items-start"
@@ -109,8 +109,8 @@ view (Modal options) =
                     [ div
                         [ class "mt-3 text-center sm:mt-0 sm:text-left flex flex-col grow"
                         ]
-                        [ h3
-                            [ class "font-serif text-xl font-medium text-gray-900 leading-6"
+                        [ header
+                            [ class "text-2xl mb-6 font-medium font-serif"
                             , id "modal-title"
                             ]
                             [ text options.title ]
@@ -125,7 +125,7 @@ view (Modal options) =
                         ]
                     ]
                 , div
-                    [ class "flex flex-col my-2 sm:flex-row-reverse"
+                    [ class "flex flex-col mt-9 mb-2 sm:flex-row-reverse"
                     ]
                     [ acceptButton_
                     , cancelButton_

@@ -3,12 +3,16 @@ module Pages.Home exposing (Model, Msg(..), init, subscriptions, update, view)
 import Components.Button as Button
 import Components.Modal as Modal
 import Html exposing (Html, div, form, input, label, p, text, ul)
-import Html.Attributes exposing (class, for, id, placeholder, type_, value)
+import Html.Attributes exposing (class, classList, for, id, placeholder, type_)
 import Html.Events exposing (onInput)
 import Html.Extra as HE
 import Json.Decode as JD
 import Json.Encode as JE
+import Json.Encode.Extra
 import Random exposing (Seed)
+import Shared exposing (Shared)
+import Supabase
+import User
 import Uuid exposing (Uuid)
 
 
@@ -17,18 +21,32 @@ import Uuid exposing (Uuid)
 
 
 type alias Model =
-    { inputQuote : String
-    , inputAuthor : String
-    , quotes : List Quote
+    { quotes : List Quote
+    , modalForm : ModalForm
+    , modalFormProblems : List Problem
+    , modalIsLoading : Bool
     , modalState : ModalState
     }
 
 
 type alias Quote =
+    { id : String
+    , quote : String
+    , author : String
+    , createdAt : String
+    , userId : String
+    }
+
+
+type alias ModalForm =
     { quote : String
     , author : String
-    , id : Uuid
     }
+
+
+type Problem
+    = InvalidEntry ValidatedField String
+    | ServerError Supabase.Error
 
 
 type ModalState
@@ -36,25 +54,59 @@ type ModalState
     | Hidden
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( { inputQuote = "", inputAuthor = "", quotes = [], modalState = Hidden }, Cmd.none )
+type ValidatedField
+    = Quote_
+    | Author
 
 
-quoteDecoder : JD.Decoder Quote
-quoteDecoder =
-    JD.map3 Quote
-        (JD.field "quote" JD.string)
-        (JD.field "author" JD.string)
-        (JD.field "id" Uuid.decoder)
+type TrimmedForm
+    = Trimmed ModalForm
 
 
-quoteEncoder : Quote -> JE.Value
-quoteEncoder { quote, author, id } =
+type QuoteResponse
+    = QuotesOk (List Supabase.Quote)
+    | QuotesError Supabase.Error
+    | PayloadError
+
+
+init : Shared -> ( Model, Cmd Msg )
+init shared =
+    ( { quotes = []
+      , modalForm = { quote = "", author = "" }
+      , modalFormProblems = []
+      , modalIsLoading = False
+      , modalState = Hidden
+      }
+    , Supabase.getQuotes <| Maybe.withDefault "" (User.userId shared.user)
+    )
+
+
+quoteResponseDecoder : JE.Value -> QuoteResponse
+quoteResponseDecoder json =
+    JD.decodeValue
+        (JD.oneOf
+            [ JD.map QuotesOk (JD.list Supabase.quoteDecoder), JD.map QuotesError Supabase.errorDecoder ]
+        )
+        json
+        |> Result.withDefault PayloadError
+
+
+quoteFromSupabaseQuote : Supabase.Quote -> Quote
+quoteFromSupabaseQuote quote =
+    { id = quote.id
+    , quote = quote.quote_text
+    , author = quote.quote_author
+    , createdAt = quote.created_at
+    , userId = quote.user_id
+    }
+
+
+encodeQuote : TrimmedForm -> User.User -> JE.Value
+encodeQuote (Trimmed form) user =
     JE.object
-        [ ( "quote", JE.string quote )
-        , ( "author", JE.string author )
-        , ( "id", Uuid.encode id )
+        [ ( "quote", JE.string form.quote )
+        , ( "author", JE.string form.author )
+        , ( "userId", Json.Encode.Extra.maybe JE.string (User.userId user) )
         ]
 
 
@@ -65,55 +117,75 @@ quoteEncoder { quote, author, id } =
 type Msg
     = OnQuoteChange String
     | OnAuthorChange String
-    | OnSubmit
-    | RecievedQuotes JD.Value
-    | AddQuoteOnClick
+    | SubmitAddQuoteModal
+    | GotQuotesResponse JD.Value
+    | OpenAddQuoteModal
     | CloseModal
     | NoOp
 
 
-update : Msg -> Model -> ( Model, Cmd msg )
-update msg model =
+update : Shared -> Msg -> Model -> ( Model, Cmd msg, Shared.SharedUpdate )
+update shared msg model =
     case msg of
-        OnQuoteChange str ->
-            ( { model | inputQuote = str }, Cmd.none )
+        OnQuoteChange quote ->
+            updateModalForm (\form -> { form | quote = quote }) model
 
-        OnAuthorChange str ->
-            ( { model | inputAuthor = str }, Cmd.none )
+        OnAuthorChange author ->
+            updateModalForm (\form -> { form | author = author }) model
 
-        AddQuoteOnClick ->
-            ( { model | modalState = Visible }, Cmd.none )
+        OpenAddQuoteModal ->
+            ( { model | modalState = Visible }, Cmd.none, Shared.NoUpdate )
 
         CloseModal ->
-            ( { model | modalState = Hidden }, Cmd.none )
+            ( { model | modalState = Hidden, modalForm = emptyModalForm, modalFormProblems = [] }, Cmd.none, Shared.NoUpdate )
 
-        OnSubmit ->
-            -- let
-            -- uuid =
-            --     generateUuid session.seed
-            -- in
-            if String.isEmpty model.inputQuote && String.isEmpty model.inputAuthor then
-                ( model, Cmd.none )
+        SubmitAddQuoteModal ->
+            case validateForm model.modalForm of
+                Ok validForm ->
+                    let
+                        encodedQuote =
+                            encodeQuote validForm shared.user
+                    in
+                    ( { model | modalFormProblems = [], modalIsLoading = True }, Supabase.addQuote encodedQuote, Shared.NoUpdate )
 
-            else
-                ( { model | inputQuote = "", modalState = Hidden }
-                , Cmd.none
-                )
+                Err problems ->
+                    ( { model | modalFormProblems = problems }, Cmd.none, Shared.NoUpdate )
 
-        RecievedQuotes value ->
+        GotQuotesResponse json ->
             let
-                decodedQuotes =
-                    JD.decodeValue (quoteDecoder |> JD.list) value
+                quoteResponse =
+                    quoteResponseDecoder json
             in
-            case decodedQuotes of
-                Ok quotes ->
-                    ( { model | quotes = quotes }, Cmd.none )
+            case quoteResponse of
+                QuotesOk supabaseQuotes ->
+                    let
+                        mappedQuotes =
+                            List.map quoteFromSupabaseQuote supabaseQuotes
+                    in
+                    ( { model | quotes = mappedQuotes, modalIsLoading = False, modalForm = emptyModalForm, modalState = Hidden }, Cmd.none, Shared.NoUpdate )
 
-                Err _ ->
-                    ( model, Cmd.none )
+                QuotesError error ->
+                    let
+                        serverErrors =
+                            List.map ServerError [ error ]
+                    in
+                    ( { model | modalFormProblems = List.append model.modalFormProblems serverErrors, modalIsLoading = False }, Cmd.none, Shared.NoUpdate )
+
+                PayloadError ->
+                    ( model, Cmd.none, Shared.NoUpdate )
 
         NoOp ->
-            ( model, Cmd.none )
+            ( model, Cmd.none, Shared.NoUpdate )
+
+
+emptyModalForm : ModalForm
+emptyModalForm =
+    { quote = "", author = "" }
+
+
+updateModalForm : (ModalForm -> ModalForm) -> Model -> ( Model, Cmd msg, Shared.SharedUpdate )
+updateModalForm transform model =
+    ( { model | modalForm = transform model.modalForm }, Cmd.none, Shared.NoUpdate )
 
 
 generateUuid : Seed -> Uuid
@@ -127,71 +199,125 @@ step =
 
 
 
+-- FORM HELPERS
+
+
+fieldsToValidate : List ValidatedField
+fieldsToValidate =
+    [ Quote_, Author ]
+
+
+validateForm : ModalForm -> Result (List Problem) TrimmedForm
+validateForm form =
+    let
+        trimmedForm =
+            trimFields form
+    in
+    case List.concatMap (validateField trimmedForm) fieldsToValidate of
+        [] ->
+            Ok trimmedForm
+
+        problems ->
+            Err problems
+
+
+validateField : TrimmedForm -> ValidatedField -> List Problem
+validateField (Trimmed form) field =
+    List.map (InvalidEntry field) <|
+        case field of
+            Quote_ ->
+                if String.isEmpty form.quote then
+                    [ "Quote can't be blank" ]
+
+                else
+                    []
+
+            Author ->
+                if String.isEmpty form.author then
+                    [ "Author can't be blank" ]
+
+                else
+                    []
+
+
+trimFields : ModalForm -> TrimmedForm
+trimFields form =
+    Trimmed
+        { quote = String.trim form.quote
+        , author = String.trim form.author
+        }
+
+
+invalidEntryToString : List Problem -> ValidatedField -> String
+invalidEntryToString problems field =
+    getInvalidEntry problems field
+        |> List.map problemToString
+        |> String.join ""
+
+
+serverErrorToString : List Problem -> String
+serverErrorToString problems =
+    getServerError problems
+        |> List.map problemToString
+        |> String.join ""
+
+
+getInvalidEntry : List Problem -> ValidatedField -> List Problem
+getInvalidEntry problems validatedField =
+    List.filter
+        (\problem ->
+            case problem of
+                InvalidEntry field _ ->
+                    field == validatedField
+
+                _ ->
+                    False
+        )
+        problems
+
+
+getServerError : List Problem -> List Problem
+getServerError problems =
+    List.filter
+        (\problem ->
+            case problem of
+                ServerError _ ->
+                    True
+
+                InvalidEntry _ _ ->
+                    False
+        )
+        problems
+
+
+problemToString : Problem -> String
+problemToString problem =
+    case problem of
+        InvalidEntry _ str ->
+            str
+
+        ServerError { message } ->
+            message
+
+
+
 -- VIEW
 
 
 view : Model -> Html Msg
 view model =
     div
-        [ class "flex flex-col h-full" ]
-        [ addQuoteButton model.inputQuote model.modalState
+        [ class "flex flex-col h-full items-center" ]
+        [ addQuoteButton model.modalForm model.modalFormProblems model.modalState
         , viewQuotes model.quotes
         ]
 
 
-addQuoteButton : String -> ModalState -> Html Msg
-addQuoteButton inputtedQuote modalState =
+addQuoteButton : ModalForm -> List Problem -> ModalState -> Html Msg
+addQuoteButton form problems modalState =
     div [ class "my-4" ]
-        [ Button.create { label = "Add Quote", onClick = AddQuoteOnClick } |> Button.view
-        , viewAddQuoteModal inputtedQuote modalState
-        ]
-
-
-viewAddQuoteModal : String -> ModalState -> Html Msg
-viewAddQuoteModal inputtedQuote modalState =
-    case modalState of
-        Visible ->
-            Modal.create
-                { title = "Add quote"
-                , body = modalBody inputtedQuote
-                , actions =
-                    Modal.acceptAndDiscardActions (Modal.basicAction "Add quote" OnSubmit) (Modal.basicAction "Cancel" CloseModal)
-                }
-                |> Modal.view
-
-        Hidden ->
-            HE.nothing
-
-
-modalBody : String -> Html Msg
-modalBody inputtedQuote =
-    div [ class "flex flex-col text-black" ]
-        [ form [ id "add-quote-form" ]
-            [ div [ class "flex flex-col my-2" ]
-                [ label [ for "quote" ]
-                    [ text "Quote body" ]
-                , input
-                    [ class "mt-2 p-2 border-2 border-black rounded shadow-l"
-                    , id "quote"
-                    , placeholder "Type quote here"
-                    , type_ "text"
-                    , onInput OnQuoteChange
-                    ]
-                    [ text inputtedQuote ]
-                ]
-            , div [ class "flex flex-col mt-3" ]
-                [ label [ for "author" ]
-                    [ text "Author" ]
-                , input
-                    [ class "mt-2 p-2 border-2 border-black rounded shadow-l"
-                    , id "author"
-                    , placeholder "Author"
-                    , type_ "text"
-                    , onInput OnAuthorChange
-                    ]
-                    [ text inputtedQuote ]
-                ]
-            ]
+        [ Button.create { label = "Add Quote", onClick = OpenAddQuoteModal } |> Button.view
+        , viewAddQuoteModal form problems modalState
         ]
 
 
@@ -208,9 +334,72 @@ viewQuote quote =
         [ p [ class "text-lg font-medium" ] [ text quote.quote ]
         , div [ class "flex justify-between" ]
             [ p [ class "text-gray-600 text-sm" ]
-                [ text <| "---" ++ quote.author ]
+                [ text <| "--- " ++ quote.author ]
             ]
         ]
+
+
+viewAddQuoteModal : ModalForm -> List Problem -> ModalState -> Html Msg
+viewAddQuoteModal form problems modalState =
+    case modalState of
+        Visible ->
+            Modal.create
+                { title = "Add quote"
+                , body = viewModalFormBody form problems
+                , actions =
+                    Modal.acceptAndDiscardActions (Modal.basicAction "Add quote" SubmitAddQuoteModal) (Modal.basicAction "Cancel" CloseModal)
+                }
+                |> Modal.view
+
+        Hidden ->
+            HE.nothing
+
+
+viewModalFormBody : ModalForm -> List Problem -> Html Msg
+viewModalFormBody form problems =
+    div [ class "flex flex-col text-black" ]
+        [ Html.form [ id "add-quote-form" ]
+            [ div [ class "flex flex-col mt-2" ]
+                [ label [ class "text-gray-900", for "quote" ]
+                    [ text "Quote body" ]
+                , input
+                    [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
+                    , classList [ ( "border-red-500", not (String.isEmpty <| invalidEntryToString problems Quote_) ) ]
+                    , id "quote"
+                    , placeholder "Type quote here"
+                    , type_ "text"
+                    , onInput OnQuoteChange
+                    ]
+                    [ text form.quote ]
+                , viewFormInvalidEntry problems Quote_
+                ]
+            , div [ class "flex flex-col mt-6" ]
+                [ label [ class "text-gray-900 mt-2", for "author" ]
+                    [ text "Author" ]
+                , input
+                    [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
+                    , classList [ ( "border-red-500", not (String.isEmpty <| invalidEntryToString problems Author) ) ]
+                    , id "author"
+                    , placeholder "Author"
+                    , type_ "text"
+                    , onInput OnAuthorChange
+                    ]
+                    [ text form.author ]
+                , viewFormInvalidEntry problems Author
+                ]
+            , viewFormServerError problems
+            ]
+        ]
+
+
+viewFormInvalidEntry : List Problem -> ValidatedField -> Html msg
+viewFormInvalidEntry problems field =
+    div [ class "h-1" ] [ p [ class "text-sm text-red-500 mt-2" ] [ text <| invalidEntryToString problems field ] ]
+
+
+viewFormServerError : List Problem -> Html msg
+viewFormServerError problems =
+    div [ class "h-1" ] [ p [ class "text-sm mt-1 text-red-500" ] [ text <| serverErrorToString problems ] ]
 
 
 
@@ -219,4 +408,4 @@ viewQuote quote =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    Supabase.addQuoteResponse GotQuotesResponse

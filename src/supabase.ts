@@ -1,21 +1,24 @@
 import { createClient } from "@supabase/supabase-js";
+import { ClientQuote, SignInUser, SignUpUser } from "./types";
 
 export const supabaseClient = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_KEY
 );
 
-export interface SignUpUser {
-  email: string;
-  username: string;
-  password: string;
-}
+export const insertQuote = async (quote: ClientQuote) => {
+  return supabaseClient.from("quotes").insert([
+    {
+      quote_text: quote.quote,
+      quote_author: quote.author,
+      user_id: quote.userId,
+    },
+  ]);
+};
 
-export interface SignInUser {
-  email: string;
-  username: string;
-  password: string;
-}
+export const getQuotes = async (userId: string) => {
+  return supabaseClient.from("quotes").select("*").eq("user_id", userId);
+};
 
 export const signUp = (user: SignUpUser) => {
   return supabaseClient.auth.signUp(

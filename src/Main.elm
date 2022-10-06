@@ -172,7 +172,7 @@ updateUserSession model json =
                             { key = model.key, url = model.url, user = user, supabase = flags.supabase, seed = Random.initialSeed flags.seed }
 
                         ( initRouterModel, routerCmd ) =
-                            Router.init model.url
+                            Router.init initSharedState model.url
                     in
                     ( { model | appState = Ready initSharedState initRouterModel }, Cmd.map RouterMsg routerCmd )
 

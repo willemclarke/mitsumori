@@ -35,11 +35,11 @@ type Msg
     | Refresh
 
 
-init : Url.Url -> ( Model, Cmd Msg )
-init url =
+init : Shared -> Url.Url -> ( Model, Cmd Msg )
+init shared url =
     let
         ( homeModel, homeCmd ) =
-            Home.init ()
+            Home.init shared
 
         ( signUpModel, _ ) =
             SignUp.init ()
@@ -66,7 +66,7 @@ update shared msg model =
             ( model, Nav.pushUrl shared.key <| Route.toString route, Shared.NoUpdate )
 
         HomeMsg homeMsg ->
-            updateHome model homeMsg
+            updateHome shared model homeMsg
 
         SignUpMsg signUpMsg ->
             updateSignUp shared model signUpMsg
@@ -86,13 +86,13 @@ after time msg =
     Task.perform (always msg) <| Process.sleep time
 
 
-updateHome : Model -> Home.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )
-updateHome model homeMsg =
+updateHome : Shared -> Model -> Home.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )
+updateHome shared model homeMsg =
     let
-        ( nextHomeModel, homeCmd ) =
-            Home.update homeMsg model.homeModel
+        ( nextHomeModel, homeCmd, sharedUpdate ) =
+            Home.update shared homeMsg model.homeModel
     in
-    ( { model | homeModel = nextHomeModel }, Cmd.map HomeMsg homeCmd, Shared.NoUpdate )
+    ( { model | homeModel = nextHomeModel }, Cmd.map HomeMsg homeCmd, sharedUpdate )
 
 
 updateSignUp : Shared -> Model -> SignUp.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )

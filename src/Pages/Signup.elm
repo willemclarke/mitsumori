@@ -344,4 +344,4 @@ viewSignupForm form problems isLoading =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.batch [ Supabase.signUpResponse GotSignupResponse ]
+    Supabase.signUpResponse GotSignupResponse

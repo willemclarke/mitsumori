@@ -49,14 +49,14 @@ view (Button ({ label, additionalStyles, isLoading, isDisabled } as config)) =
     let
         isDisabled_ =
             if isDisabled then
-                "bg-stone-900/60"
+                "bg-black/60"
 
             else
-                "bg-stone-900"
+                "bg-black"
 
         classes =
             String.join " "
-                [ "py-2 px-4 shadow hover:shadow-md focus:ring focus:ring-slate-300 rounded-md bg-stone-900 text-white"
+                [ "py-2 px-4 shadow hover:shadow-md focus:ring focus:ring-slate-300 rounded-md bg-black text-white"
                 , isDisabled_
                 , Maybe.withDefault "" additionalStyles
                 ]

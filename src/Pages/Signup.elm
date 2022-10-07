@@ -337,7 +337,7 @@ viewSignupForm form problems isLoading =
             [ Button.create { label = "Create account", onClick = OnSubmit }
                 |> Button.withIsLoading isLoading
                 |> Button.view
-            , a [ href <| "signin", class "ml-2 text-gray-700 underline underline-offset-2" ] [ text "Or sign in" ]
+            , a [ href <| "signin", class "ml-2 text-gray-700 underline underline-offset-2 hover:text-black" ] [ text "Or sign in" ]
             ]
         ]
 

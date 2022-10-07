@@ -16,8 +16,23 @@ export const insertQuote = async (quote: ClientQuote) => {
   ]);
 };
 
+export const updateQuote = async (quote: ClientQuote) => {
+  return supabaseClient
+    .from("quotes")
+    .update({
+      quote_text: quote.quote,
+      quote_author: quote.author,
+      quote_reference: quote.reference,
+    })
+    .eq("id", quote.quoteId);
+};
+
 export const getQuotes = async (userId: string) => {
-  return supabaseClient.from("quotes").select("*").eq("user_id", userId);
+  return supabaseClient
+    .from("quotes")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
 };
 
 export const signUp = (user: SignUpUser) => {

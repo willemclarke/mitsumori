@@ -115,7 +115,7 @@ update shared msg model =
             in
             case signinResponse of
                 UserOk user ->
-                    ( { model | form = emptyForm, isLoading = True }, Route.replaceUrl shared.key Route.Home, Shared.UpdateUser user )
+                    ( { model | form = emptyForm, isLoading = False }, Route.replaceUrl shared.key Route.Home, Shared.UpdateUser user )
 
                 SignupError error ->
                     let
@@ -300,7 +300,7 @@ viewSigninForm form problems isLoading =
             [ Button.create { label = "Sign in", onClick = OnSubmit }
                 |> Button.withIsLoading isLoading
                 |> Button.view
-            , a [ href <| "signup", class "text-gray-700 underline underline-offset-2" ] [ text "Or sign up" ]
+            , a [ href <| "signup", class "text-gray-700 underline underline-offset-2 hover:text-black" ] [ text "Or sign up" ]
             ]
         ]
 

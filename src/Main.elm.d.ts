@@ -17,7 +17,10 @@ export namespace Elm {
         addQuote: {
           subscribe(callback: (data: ClientQuote) => Promise<void>): void;
         };
-        addQuoteResponse: {
+        editQuote: {
+          subscribe(callback: (data: ClientQuote) => Promise<void>): void;
+        };
+        quoteResponse: {
           send(data: any): Promise<void>;
         };
         signUp: {

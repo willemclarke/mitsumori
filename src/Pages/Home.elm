@@ -1,10 +1,9 @@
 module Pages.Home exposing (Model, Msg(..), init, subscriptions, update, view)
 
-import Components.Button as Button
 import Components.Modal as Modal
-import Html exposing (Html, div, form, input, label, p, text, ul)
-import Html.Attributes exposing (class, classList, for, id, placeholder, type_)
-import Html.Events exposing (onInput)
+import Html exposing (Html, a, button, div, form, header, input, label, p, text, ul)
+import Html.Attributes exposing (class, classList, for, href, id, placeholder, type_, value)
+import Html.Events exposing (onClick, onInput)
 import Html.Extra as HE
 import Json.Decode as JD
 import Json.Encode as JE
@@ -12,6 +11,8 @@ import Json.Encode.Extra
 import Random exposing (Seed)
 import Shared exposing (Shared)
 import Supabase
+import Svg exposing (path, svg)
+import Svg.Attributes as SvgAttrs
 import User
 import Uuid exposing (Uuid)
 
@@ -25,7 +26,8 @@ type alias Model =
     , modalForm : ModalForm
     , modalFormProblems : List Problem
     , modalIsLoading : Bool
-    , modalState : ModalState
+    , modalVisibility : ModalVisibility
+    , modalType : ModalType
     }
 
 
@@ -35,12 +37,14 @@ type alias Quote =
     , author : String
     , createdAt : String
     , userId : String
+    , reference : String
     }
 
 
 type alias ModalForm =
     { quote : String
     , author : String
+    , reference : String
     }
 
 
@@ -49,7 +53,12 @@ type Problem
     | ServerError Supabase.Error
 
 
-type ModalState
+type ModalType
+    = NewQuote
+    | Editing Quote
+
+
+type ModalVisibility
     = Visible
     | Hidden
 
@@ -57,6 +66,7 @@ type ModalState
 type ValidatedField
     = Quote_
     | Author
+    | Reference
 
 
 type TrimmedForm
@@ -72,10 +82,11 @@ type QuoteResponse
 init : Shared -> ( Model, Cmd Msg )
 init shared =
     ( { quotes = []
-      , modalForm = { quote = "", author = "" }
+      , modalForm = { quote = "", author = "", reference = "" }
       , modalFormProblems = []
       , modalIsLoading = False
-      , modalState = Hidden
+      , modalType = NewQuote
+      , modalVisibility = Hidden
       }
     , Supabase.getQuotes <| Maybe.withDefault "" (User.userId shared.user)
     )
@@ -98,15 +109,18 @@ quoteFromSupabaseQuote quote =
     , author = quote.quote_author
     , createdAt = quote.created_at
     , userId = quote.user_id
+    , reference = Maybe.withDefault "" quote.quote_reference
     }
 
 
-encodeQuote : TrimmedForm -> User.User -> JE.Value
-encodeQuote (Trimmed form) user =
+encodeQuote : TrimmedForm -> Maybe String -> User.User -> JE.Value
+encodeQuote (Trimmed form) id user =
     JE.object
         [ ( "quote", JE.string form.quote )
         , ( "author", JE.string form.author )
+        , ( "reference", JE.string form.reference )
         , ( "userId", Json.Encode.Extra.maybe JE.string (User.userId user) )
+        , ( "quoteId", Json.Encode.Extra.maybe JE.string id )
         ]
 
 
@@ -115,38 +129,69 @@ encodeQuote (Trimmed form) user =
 
 
 type Msg
-    = OnQuoteChange String
-    | OnAuthorChange String
-    | SubmitAddQuoteModal
-    | GotQuotesResponse JD.Value
-    | OpenAddQuoteModal
+    = OpenAddQuoteModal
     | CloseModal
+    | OnQuoteChange String
+    | OnAuthorChange String
+    | OnReferenceChange String
+    | EditQuote Quote
+    | SubmitAddQuoteModal
+    | SubmitEditQuoteModal String
+    | GotQuotesResponse JD.Value
     | NoOp
 
 
 update : Shared -> Msg -> Model -> ( Model, Cmd msg, Shared.SharedUpdate )
 update shared msg model =
     case msg of
+        OpenAddQuoteModal ->
+            ( { model | modalVisibility = Visible }, Cmd.none, Shared.NoUpdate )
+
+        CloseModal ->
+            ( { model | modalType = NewQuote, modalVisibility = Hidden, modalForm = emptyModalForm, modalFormProblems = [] }, Cmd.none, Shared.NoUpdate )
+
         OnQuoteChange quote ->
             updateModalForm (\form -> { form | quote = quote }) model
 
         OnAuthorChange author ->
             updateModalForm (\form -> { form | author = author }) model
 
-        OpenAddQuoteModal ->
-            ( { model | modalState = Visible }, Cmd.none, Shared.NoUpdate )
+        OnReferenceChange reference ->
+            updateModalForm (\form -> { form | reference = reference }) model
 
-        CloseModal ->
-            ( { model | modalState = Hidden, modalForm = emptyModalForm, modalFormProblems = [] }, Cmd.none, Shared.NoUpdate )
+        {- If we edit a quote, update the modalForm with the quotes values, also pass the Quote to the `Editing`
+           constructor so when we submit the modal, we have the ID of the quote for supabase to use.
+        -}
+        EditQuote quote ->
+            ( { model
+                | modalForm = { quote = quote.quote, author = quote.author, reference = quote.reference }
+                , modalType = Editing quote
+                , modalVisibility = Visible
+              }
+            , Cmd.none
+            , Shared.NoUpdate
+            )
 
         SubmitAddQuoteModal ->
             case validateForm model.modalForm of
                 Ok validForm ->
                     let
                         encodedQuote =
-                            encodeQuote validForm shared.user
+                            encodeQuote validForm Nothing shared.user
                     in
                     ( { model | modalFormProblems = [], modalIsLoading = True }, Supabase.addQuote encodedQuote, Shared.NoUpdate )
+
+                Err problems ->
+                    ( { model | modalFormProblems = problems }, Cmd.none, Shared.NoUpdate )
+
+        SubmitEditQuoteModal quoteId ->
+            case validateForm model.modalForm of
+                Ok validForm ->
+                    let
+                        encodedQuote =
+                            encodeQuote validForm (Just quoteId) shared.user
+                    in
+                    ( { model | modalFormProblems = [], modalIsLoading = True }, Supabase.editQuote encodedQuote, Shared.NoUpdate )
 
                 Err problems ->
                     ( { model | modalFormProblems = problems }, Cmd.none, Shared.NoUpdate )
@@ -162,7 +207,7 @@ update shared msg model =
                         mappedQuotes =
                             List.map quoteFromSupabaseQuote supabaseQuotes
                     in
-                    ( { model | quotes = mappedQuotes, modalIsLoading = False, modalForm = emptyModalForm, modalState = Hidden }, Cmd.none, Shared.NoUpdate )
+                    ( { model | quotes = mappedQuotes, modalIsLoading = False, modalForm = emptyModalForm, modalType = NewQuote, modalVisibility = Hidden }, Cmd.none, Shared.NoUpdate )
 
                 QuotesError error ->
                     let
@@ -180,7 +225,7 @@ update shared msg model =
 
 emptyModalForm : ModalForm
 emptyModalForm =
-    { quote = "", author = "" }
+    { quote = "", author = "", reference = "" }
 
 
 updateModalForm : (ModalForm -> ModalForm) -> Model -> ( Model, Cmd msg, Shared.SharedUpdate )
@@ -239,12 +284,16 @@ validateField (Trimmed form) field =
                 else
                     []
 
+            Reference ->
+                []
+
 
 trimFields : ModalForm -> TrimmedForm
 trimFields form =
     Trimmed
         { quote = String.trim form.quote
         , author = String.trim form.author
+        , reference = String.trim form.reference
         }
 
 
@@ -307,49 +356,107 @@ problemToString problem =
 view : Model -> Html Msg
 view model =
     div
-        [ class "flex flex-col h-full items-center" ]
-        [ addQuoteButton model.modalForm model.modalFormProblems model.modalState
+        [ class "flex flex-col h-full w-full items-center" ]
+        [ viewHeader model.modalForm model.modalFormProblems model.modalType model.modalVisibility
         , viewQuotes model.quotes
         ]
 
 
-addQuoteButton : ModalForm -> List Problem -> ModalState -> Html Msg
-addQuoteButton form problems modalState =
-    div [ class "my-4" ]
-        [ Button.create { label = "Add Quote", onClick = OpenAddQuoteModal } |> Button.view
-        , viewAddQuoteModal form problems modalState
+viewHeader : ModalForm -> List Problem -> ModalType -> ModalVisibility -> Html Msg
+viewHeader form problems modalType visibility =
+    div [ class "flex flex-col mt-16" ]
+        [ div [ class "flex items-center" ]
+            [ header [ class "text-4xl font-serif font-light mr-3" ] [ text "Your quotes" ]
+            , pencilSquareIcon
+            ]
+        , addQuoteButton form problems modalType visibility
         ]
 
 
-viewQuotes : List Quote -> Html msg
+pencilSquareIcon : Html msg
+pencilSquareIcon =
+    Svg.svg
+        [ SvgAttrs.class "h-12 w-12"
+        , SvgAttrs.fill "none"
+        , SvgAttrs.viewBox "0 0 24 24"
+        , SvgAttrs.strokeWidth "1.5"
+        , SvgAttrs.stroke "currentColor"
+        ]
+        [ Svg.path [ SvgAttrs.strokeLinecap "round", SvgAttrs.strokeLinejoin "round", SvgAttrs.d "M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" ] [] ]
+
+
+addQuoteButton : ModalForm -> List Problem -> ModalType -> ModalVisibility -> Html Msg
+addQuoteButton form problems modalType visibility =
+    div [ class "flex justify-end" ]
+        [ button [ class "text-gray-700 hover:text-black", onClick OpenAddQuoteModal ] [ text "Add quote" ]
+        , viewAddQuoteModal form problems modalType visibility
+        ]
+
+
+viewQuotes : List Quote -> Html Msg
 viewQuotes quotes =
-    div [ class "mx-6 w-11/12 max-w-3xl text-start" ]
+    div [ class "mx-6 text-start" ]
         [ ul [] (List.map viewQuote quotes)
         ]
 
 
-viewQuote : Quote -> Html msg
+viewQuote : Quote -> Html Msg
 viewQuote quote =
-    div [ class "items-center my-6 cursor-default" ]
-        [ p [ class "text-lg font-medium" ] [ text quote.quote ]
-        , div [ class "flex justify-between" ]
-            [ p [ class "text-gray-600 text-sm" ]
-                [ text <| "--- " ++ quote.author ]
+    let
+        quoteTags =
+            [ "Stoicism", "Roman" ]
+                |> List.map viewQuoteTag
+
+        quoteReference =
+            if String.isEmpty quote.reference then
+                HE.nothing
+
+            else
+                div [ class "flex justify-end" ] [ a [ href <| quote.reference, class "text-gray-600 text-sm cursor-pointer hover:text-black" ] [ text "Quote reference" ] ]
+    in
+    div [ class "items-center my-7 cursor-default border rounded-lg p-4 shadow-sm" ]
+        [ p [ class "text-lg font-normal" ] [ text quote.quote ]
+        , p [ class "text-gray-600 text-md font-medium" ]
+            [ text <| "- " ++ quote.author ]
+        , div [ class "flex justify-end space-x-1" ] quoteTags
+        , div [ class "flex items-center justify-between" ]
+            [ button [ onClick <| EditQuote quote, class "text-gray-600 text-xs font-medium mt-4 cursor-pointer hover:text-black" ] [ text "Edit quote" ]
+            , quoteReference
             ]
         ]
 
 
-viewAddQuoteModal : ModalForm -> List Problem -> ModalState -> Html Msg
-viewAddQuoteModal form problems modalState =
-    case modalState of
+viewQuoteTag : String -> Html msg
+viewQuoteTag tag =
+    div [ class "flex justify-center rounded-lg text-sm text-white py-0.5 px-1 bg-lime-600" ] [ text tag ]
+
+
+viewAddQuoteModal : ModalForm -> List Problem -> ModalType -> ModalVisibility -> Html Msg
+viewAddQuoteModal form problems modalType visibility =
+    case visibility of
         Visible ->
-            Modal.create
-                { title = "Add quote"
-                , body = viewModalFormBody form problems
-                , actions =
-                    Modal.acceptAndDiscardActions (Modal.basicAction "Add quote" SubmitAddQuoteModal) (Modal.basicAction "Cancel" CloseModal)
-                }
-                |> Modal.view
+            case modalType of
+                NewQuote ->
+                    Modal.create
+                        { title = "Add quote"
+                        , body = viewModalFormBody form problems
+                        , actions =
+                            Modal.acceptAndDiscardActions
+                                (Modal.basicAction "Add quote" SubmitAddQuoteModal)
+                                (Modal.basicAction "Cancel" CloseModal)
+                        }
+                        |> Modal.view
+
+                Editing quote ->
+                    Modal.create
+                        { title = "Edit quote"
+                        , body = viewModalFormBody form problems
+                        , actions =
+                            Modal.acceptAndDiscardActions
+                                (Modal.basicAction "Edit quote" (SubmitEditQuoteModal quote.id))
+                                (Modal.basicAction "Cancel" CloseModal)
+                        }
+                        |> Modal.view
 
         Hidden ->
             HE.nothing
@@ -366,6 +473,7 @@ viewModalFormBody form problems =
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
                     , classList [ ( "border-red-500", not (String.isEmpty <| invalidEntryToString problems Quote_) ) ]
                     , id "quote"
+                    , value form.quote
                     , placeholder "Type quote here"
                     , type_ "text"
                     , onInput OnQuoteChange
@@ -380,12 +488,26 @@ viewModalFormBody form problems =
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
                     , classList [ ( "border-red-500", not (String.isEmpty <| invalidEntryToString problems Author) ) ]
                     , id "author"
+                    , value form.author
                     , placeholder "Author"
                     , type_ "text"
                     , onInput OnAuthorChange
                     ]
                     [ text form.author ]
                 , viewFormInvalidEntry problems Author
+                ]
+            , div [ class "flex flex-col mt-6" ]
+                [ label [ class "text-gray-900 mt-2", for "reference" ]
+                    [ text "Reference" ]
+                , input
+                    [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
+                    , id "reference"
+                    , value form.reference
+                    , placeholder "https://link-to-the-quote.com"
+                    , type_ "text"
+                    , onInput OnReferenceChange
+                    ]
+                    [ text form.author ]
                 ]
             , viewFormServerError problems
             ]
@@ -408,4 +530,4 @@ viewFormServerError problems =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Supabase.addQuoteResponse GotQuotesResponse
+    Supabase.quoteResponse GotQuotesResponse

@@ -63,7 +63,7 @@ update shared msg model =
             ( { model | route = Route.fromUrl url }, Cmd.none, Shared.NoUpdate )
 
         NavigateTo route ->
-            ( model, Nav.pushUrl shared.key <| Route.toString route, Shared.NoUpdate )
+            ( model, Route.pushUrl shared.key route, Shared.NoUpdate )
 
         HomeMsg homeMsg ->
             updateHome shared model homeMsg
@@ -75,7 +75,7 @@ update shared msg model =
             updateSignIn shared model signInMsg
 
         SignOut ->
-            ( model, Cmd.batch [ Supabase.signOut (), after 600 Refresh ], Shared.NoUpdate )
+            ( model, Cmd.batch [ Supabase.signOut (), after 500 Refresh ], Shared.NoUpdate )
 
         Refresh ->
             ( model, Cmd.batch [ Nav.reload ], Shared.NoUpdate )

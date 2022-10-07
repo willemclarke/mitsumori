@@ -27,11 +27,25 @@ app.ports.getQuotes.subscribe(async (userId) => {
   if (quotes) {
     // TODO: better name for port since it gets used for adding a quote and sending them back
     // and also just getting quotes
-    return app.ports.addQuoteResponse.send(quotes);
+    return app.ports.quoteResponse.send(quotes);
   }
 
   if (error) {
-    return app.ports.addQuoteResponse.send(error);
+    return app.ports.quoteResponse.send(error);
+  }
+});
+
+app.ports.editQuote.subscribe(async (clientQuote) => {
+  const { data, error } = await supabase.updateQuote(clientQuote);
+  if (data) {
+    const { data: quotes, error } = await supabase.getQuotes(
+      clientQuote.userId ?? ""
+    );
+    return app.ports.quoteResponse.send(quotes ?? error);
+  }
+
+  if (error) {
+    app.ports.quoteResponse.send(error);
   }
 });
 
@@ -41,11 +55,11 @@ app.ports.addQuote.subscribe(async (clientQuote) => {
     const { data: quotes, error } = await supabase.getQuotes(
       clientQuote.userId ?? ""
     );
-    return app.ports.addQuoteResponse.send(quotes ?? error);
+    return app.ports.quoteResponse.send(quotes ?? error);
   }
 
   if (error) {
-    app.ports.addQuoteResponse.send(error);
+    app.ports.quoteResponse.send(error);
   }
 });
 

@@ -1,4 +1,4 @@
-port module Supabase exposing (Error, Quote, addQuote, addQuoteResponse, errorDecoder, getQuotes, quoteDecoder, session, sessionResponse, signIn, signInResponse, signOut, signUp, signUpResponse)
+port module Supabase exposing (Error, Quote, addQuote, editQuote, errorDecoder, getQuotes, quoteDecoder, quoteResponse, session, sessionResponse, signIn, signInResponse, signOut, signUp, signUpResponse)
 
 import Json.Decode as JD
 import Json.Encode as JE
@@ -10,6 +10,7 @@ type alias Quote =
     , quote_author : String
     , created_at : String
     , user_id : String
+    , quote_reference : Maybe String
     }
 
 
@@ -21,12 +22,13 @@ type alias Error =
 
 quoteDecoder : JD.Decoder Quote
 quoteDecoder =
-    JD.map5 Quote
+    JD.map6 Quote
         (JD.field "id" JD.string)
         (JD.field "quote_text" JD.string)
         (JD.field "quote_author" JD.string)
         (JD.field "created_at" JD.string)
         (JD.field "user_id" JD.string)
+        (JD.field "quote_reference" (JD.nullable JD.string))
 
 
 errorDecoder : JD.Decoder Error
@@ -39,7 +41,14 @@ errorDecoder =
 port addQuote : JE.Value -> Cmd msg
 
 
-port addQuoteResponse : (JE.Value -> msg) -> Sub msg
+port editQuote : JE.Value -> Cmd msg
+
+
+
+{- this is called `quoteResponse` as this port will be used for both adding a new quote/editing -}
+
+
+port quoteResponse : (JE.Value -> msg) -> Sub msg
 
 
 port getQuotes : String -> Cmd msg

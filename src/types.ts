@@ -17,7 +17,9 @@ export interface SupabaseFlags {
 export interface ClientQuote {
   quote: string;
   author: string;
+  reference: string;
   userId: string | null;
+  quoteId: string | null;
 }
 
 export interface SupabaseQuote {
@@ -26,4 +28,5 @@ export interface SupabaseQuote {
   quote_author: string;
   created_at: string;
   user_id: string;
+  quote_reference: string;
 }

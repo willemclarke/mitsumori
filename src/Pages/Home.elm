@@ -134,7 +134,7 @@ type Msg
     | OnQuoteChange String
     | OnAuthorChange String
     | OnReferenceChange String
-    | EditQuote Quote
+    | OpenEditQuoteModal Quote
     | SubmitAddQuoteModal
     | SubmitEditQuoteModal String
     | GotQuotesResponse JD.Value
@@ -162,7 +162,7 @@ update shared msg model =
         {- If we edit a quote, update the modalForm with the quotes values, also pass the Quote to the `Editing`
            constructor so when we submit the modal, we have the ID of the quote for supabase to use.
         -}
-        EditQuote quote ->
+        OpenEditQuoteModal quote ->
             ( { model
                 | modalForm = { quote = quote.quote, author = quote.author, reference = quote.reference }
                 , modalType = Editing quote
@@ -420,7 +420,7 @@ viewQuote quote =
             [ text <| "- " ++ quote.author ]
         , div [ class "flex justify-end space-x-1" ] quoteTags
         , div [ class "flex items-center justify-between" ]
-            [ button [ onClick <| EditQuote quote, class "text-gray-600 text-xs font-medium mt-4 cursor-pointer hover:text-black" ] [ text "Edit quote" ]
+            [ button [ onClick <| OpenEditQuoteModal quote, class "text-gray-600 text-xs font-medium mt-4 cursor-pointer hover:text-black" ] [ text "Edit quote" ]
             , quoteReference
             ]
         ]

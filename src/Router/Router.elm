@@ -132,10 +132,10 @@ view msgMapper shared model =
 
 
 pageView : Shared -> Model -> Html Msg
-pageView { user } model =
+pageView ({ user } as shared) model =
     case Route.checkNav user model.route of
         Just Route.Home ->
-            Home.view model.homeModel
+            Home.view shared model.homeModel
                 |> Html.map HomeMsg
 
         Just Route.Signup ->

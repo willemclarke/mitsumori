@@ -10,8 +10,9 @@ import Json.Encode as JE
 import Json.Encode.Extra
 import Random exposing (Seed)
 import Shared exposing (Shared)
+import String.Extra as SE
 import Supabase
-import Svg exposing (path, svg)
+import Svg
 import Svg.Attributes as SvgAttrs
 import User
 import Uuid exposing (Uuid)
@@ -353,20 +354,24 @@ problemToString problem =
 -- VIEW
 
 
-view : Model -> Html Msg
-view model =
+view : Shared -> Model -> Html Msg
+view shared model =
     div
         [ class "flex flex-col h-full w-full items-center" ]
-        [ viewHeader model.modalForm model.modalFormProblems model.modalType model.modalVisibility
+        [ viewHeader shared.user model.modalForm model.modalFormProblems model.modalType model.modalVisibility
         , viewQuotes model.quotes
         ]
 
 
-viewHeader : ModalForm -> List Problem -> ModalType -> ModalVisibility -> Html Msg
-viewHeader form problems modalType visibility =
+viewHeader : User.User -> ModalForm -> List Problem -> ModalType -> ModalVisibility -> Html Msg
+viewHeader user form problems modalType visibility =
+    let
+        username =
+            (SE.toSentenceCase <| User.username user) ++ "'s"
+    in
     div [ class "flex flex-col mt-16" ]
         [ div [ class "flex items-center" ]
-            [ header [ class "text-4xl font-serif font-light mr-3" ] [ text "Your quotes" ]
+            [ header [ class "text-4xl font-serif font-light mr-3" ] [ text <| String.join " " [ username, "quotes" ] ]
             , pencilSquareIcon
             ]
         , addQuoteButton form problems modalType visibility
@@ -412,17 +417,17 @@ viewQuote quote =
                 HE.nothing
 
             else
-                div [ class "flex justify-end" ] [ a [ href <| quote.reference, class "text-gray-600 text-sm cursor-pointer hover:text-black" ] [ text "Quote reference" ] ]
+                div [ class "flex justify-end" ] [ a [ href <| quote.reference, class "text-gray-600 text-xs cursor-pointer hover:text-black" ] [ text "Quote reference" ] ]
     in
     div [ class "items-center my-7 cursor-default border rounded-lg p-4 shadow-sm" ]
         [ p [ class "text-lg font-normal" ] [ text quote.quote ]
         , p [ class "text-gray-600 text-md font-medium" ]
             [ text <| "- " ++ quote.author ]
-        , div [ class "flex justify-end space-x-1" ] quoteTags
         , div [ class "flex items-center justify-between" ]
             [ button [ onClick <| OpenEditQuoteModal quote, class "text-gray-600 text-xs font-medium mt-4 cursor-pointer hover:text-black" ] [ text "Edit quote" ]
-            , quoteReference
+            , div [ class "flex justify-end space-x-1" ] quoteTags
             ]
+        , quoteReference
         ]
 
 

@@ -47,17 +47,15 @@ app.ports.editQuote.subscribe(async (clientQuote) => {
   }
 });
 
-app.ports.deleteQuote.subscribe(async (clientQuote) => {
-  if (!clientQuote) {
+app.ports.deleteQuote.subscribe(async (data) => {
+  if (!data) {
     return;
   }
 
-  const { data, error } = await supabase.deleteQuote(clientQuote);
+  const { data: result, error } = await supabase.deleteQuote(data.quoteId);
 
-  if (data) {
-    const { data: quotes, error } = await supabase.getQuotes(
-      clientQuote.userId ?? ""
-    );
+  if (result) {
+    const { data: quotes, error } = await supabase.getQuotes(data.userId ?? "");
     return app.ports.quoteResponse.send(quotes ?? error);
   }
 

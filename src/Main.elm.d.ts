@@ -16,7 +16,12 @@ export namespace Elm {
         };
         deleteQuote: {
           subscribe(
-            callback: (data: ClientQuote | null) => Promise<void>
+            callback: (
+              data: {
+                quoteId: string;
+                userId: string | null;
+              } | null
+            ) => Promise<void>
           ): void;
         };
         quoteResponse: {

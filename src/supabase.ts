@@ -35,8 +35,8 @@ export const updateQuote = async (quote: ClientQuote) => {
     .eq("id", quote.quoteId);
 };
 
-export const deleteQuote = async (quote: ClientQuote) => {
-  return supabaseClient.from("quotes").delete().eq("id", quote.quoteId);
+export const deleteQuote = async (quoteId: string) => {
+  return supabaseClient.from("quotes").delete().eq("id", quoteId);
 };
 
 export const signUp = (user: SignUpUser) => {

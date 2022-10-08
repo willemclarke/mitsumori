@@ -56,7 +56,7 @@ view (Button ({ label, additionalStyles, isLoading, isDisabled } as config)) =
 
         classes =
             String.join " "
-                [ "py-2 px-4 shadow hover:shadow-md focus:ring focus:ring-slate-300 rounded-md bg-black text-white"
+                [ "py-2 px-4 shadow hover:shadow-md focus:ring focus:ring-slate-300 rounded-md bg-black text-white transition ease-in-out hover:-translate-y-0.5 duration-300"
                 , isDisabled_
                 , Maybe.withDefault "" additionalStyles
                 ]

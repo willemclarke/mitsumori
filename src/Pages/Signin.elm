@@ -1,9 +1,9 @@
 module Pages.Signin exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Components.Button as Button
-import Html exposing (Html, a, div, form, header, input, label, p, text)
+import Html exposing (Html, a, button, div, form, header, input, label, p, text)
 import Html.Attributes exposing (class, classList, for, href, id, placeholder, type_, value)
-import Html.Events exposing (onInput)
+import Html.Events exposing (onClick, onInput)
 import Json.Decode as JD
 import Json.Encode as JE
 import Router.Route as Route
@@ -89,6 +89,7 @@ type Msg
     | OnPasswordChange String
     | OnSubmit
     | GotSigninResponse JE.Value
+    | NavigateTo Route.Route
 
 
 update : Shared -> Msg -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
@@ -126,6 +127,9 @@ update shared msg model =
 
                 PayloadError ->
                     ( model, Cmd.none, Shared.NoUpdate )
+
+        NavigateTo route ->
+            ( model, Route.pushUrl shared.key route, Shared.NoUpdate )
 
 
 updateForm : (Form -> Form) -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
@@ -300,7 +304,11 @@ viewSigninForm form problems isLoading =
             [ Button.create { label = "Sign in", onClick = OnSubmit }
                 |> Button.withIsLoading isLoading
                 |> Button.view
-            , a [ href <| "signup", class "text-gray-700 underline underline-offset-2 hover:text-black" ] [ text "Or sign up" ]
+            , button
+                [ onClick <| NavigateTo Route.Signup
+                , class "text-gray-700 underline underline-offset-2 hover:text-black transition ease-in-out hover:-translate-y-0.5 duration-300"
+                ]
+                [ text "Or sign up" ]
             ]
         ]
 

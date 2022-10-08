@@ -371,7 +371,7 @@ viewHeader user form problems modalType visibility =
     in
     div [ class "flex flex-col mt-16" ]
         [ div [ class "flex items-center" ]
-            [ header [ class "text-4xl font-serif font-light mr-3" ] [ text <| String.join " " [ username, "quotes" ] ]
+            [ header [ class "text-3xl font-serif font-light mr-3" ] [ text <| String.join " " [ username, "quotes" ] ]
             , pencilSquareIcon
             ]
         , addQuoteButton form problems modalType visibility
@@ -400,8 +400,8 @@ addQuoteButton form problems modalType visibility =
 
 viewQuotes : List Quote -> Html Msg
 viewQuotes quotes =
-    div [ class "mx-6 text-start" ]
-        [ ul [] (List.map viewQuote quotes)
+    div [ class "mx-12 text-start" ]
+        [ div [ class "mx-72 mt-10 mb-16 grid grid-cols-3 grid-rows-4 gap-x-6 gap-y-6" ] (List.map viewQuote quotes)
         ]
 
 
@@ -419,11 +419,10 @@ viewQuote quote =
             else
                 div [ class "flex justify-end" ] [ a [ href <| quote.reference, class "text-gray-600 text-xs cursor-pointer hover:text-black" ] [ text "Quote reference" ] ]
     in
-    div [ class "items-center my-7 cursor-default border rounded-lg p-4 shadow-sm" ]
-        [ p [ class "text-lg font-normal" ] [ text quote.quote ]
-        , p [ class "text-gray-600 text-md font-medium" ]
-            [ text <| "- " ++ quote.author ]
-        , div [ class "flex items-center justify-between" ]
+    div [ class "flex flex-col cursor-default border rounded-lg p-6 shadow-sm hover:bg-gray-100/40 transition ease-in-out hover:-translate-y-0.5 duration-300" ]
+        [ p [ class "text-lg text-gray-800 font-normal" ] [ text quote.quote ]
+        , p [ class "mt-1 text-gray-600 text-md font-light" ] [ text <| "by " ++ quote.author ]
+        , div [ class "flex justify-between" ]
             [ button [ onClick <| OpenEditQuoteModal quote, class "text-gray-600 text-xs font-medium mt-4 cursor-pointer hover:text-black" ] [ text "Edit quote" ]
             , div [ class "flex justify-end space-x-1" ] quoteTags
             ]
@@ -433,7 +432,7 @@ viewQuote quote =
 
 viewQuoteTag : String -> Html msg
 viewQuoteTag tag =
-    div [ class "flex justify-center rounded-lg text-sm text-white py-0.5 px-1 bg-lime-600" ] [ text tag ]
+    div [ class "flex justify-center items-center rounded-md text-sm text-gray-100 p-1 bg-gray-800" ] [ p [ class "m-1" ] [ text tag ] ]
 
 
 viewAddQuoteModal : ModalForm -> List Problem -> ModalType -> ModalVisibility -> Html Msg

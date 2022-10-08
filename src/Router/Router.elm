@@ -2,7 +2,7 @@ module Router.Router exposing (Model, Msg(..), init, subscriptions, update, view
 
 import Browser
 import Browser.Navigation as Nav
-import Html exposing (Html, a, div, p, text)
+import Html exposing (Html, a, button, div, p, text)
 import Html.Attributes exposing (class, href)
 import Html.Events exposing (onClick)
 import Pages.Home as Home
@@ -78,7 +78,7 @@ update shared msg model =
             ( model, Cmd.batch [ Supabase.signOut (), after 500 Refresh ], Shared.NoUpdate )
 
         Refresh ->
-            ( model, Cmd.batch [ Nav.reload ], Shared.NoUpdate )
+            ( model, Cmd.batch [ Route.pushUrl shared.key Route.Signin ], Shared.NoUpdate )
 
 
 after : Float -> msg -> Cmd msg
@@ -164,15 +164,15 @@ viewNav { user } =
                 Route.toString Route.Signup
     in
     div [ class "flex mt-4 mx-6 justify-between items-end font-serif" ]
-        [ a [ href href_, class "text-3xl" ] [ text "mitsumori" ]
+        [ a [ href href_, class "text-3xl transition ease-in-out hover:-translate-y-0.5 duration-300" ] [ text "mitsumori" ]
         , div [ class "flex" ]
             [ if User.isAuthenticated user then
-                p [ onClick SignOut, class "text-lg cursor-pointer" ] [ text "signout" ]
+                p [ onClick SignOut, class "text-lg cursor-pointer transition ease-in-out hover:-translate-y-0.5 duration-300" ] [ text "signout" ]
 
               else
                 div []
-                    [ a [ href <| Route.toString Route.Signup, class "text-lg mr-4" ] [ text "signup" ]
-                    , a [ href <| Route.toString Route.Signin, class "text-lg mr-4" ] [ text "signin" ]
+                    [ button [ onClick <| NavigateTo Route.Signup, class "text-lg mr-4 transition ease-in-out hover:-translate-y-0.5 duration-300" ] [ text "signup" ]
+                    , button [ onClick <| NavigateTo Route.Signin, class "text-lg mr-4 transition ease-in-out hover:-translate-y-0.5 duration-300" ] [ text "signin" ]
                     ]
             ]
         ]

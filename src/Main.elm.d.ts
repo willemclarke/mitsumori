@@ -15,7 +15,9 @@ export namespace Elm {
           subscribe(callback: (data: ClientQuote) => Promise<void>): void;
         };
         deleteQuote: {
-          subscribe(callback: (data: ClientQuote) => Promise<void>): void;
+          subscribe(
+            callback: (data: ClientQuote | null) => Promise<void>
+          ): void;
         };
         quoteResponse: {
           send(data: any): Promise<void>;

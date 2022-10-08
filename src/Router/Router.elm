@@ -78,7 +78,7 @@ update shared msg model =
             ( model, Cmd.batch [ Supabase.signOut (), after 500 Refresh ], Shared.NoUpdate )
 
         Refresh ->
-            ( model, Cmd.batch [ Route.pushUrl shared.key Route.Signin ], Shared.NoUpdate )
+            ( model, Nav.reload, Shared.NoUpdate )
 
 
 after : Float -> msg -> Cmd msg

@@ -8,6 +8,7 @@ import Html.Extra as HE
 import Json.Decode as JD
 import Json.Encode as JE
 import Json.Encode.Extra
+import List.Extra as LE
 import Random exposing (Seed)
 import Shared exposing (Shared)
 import String.Extra as SE
@@ -57,6 +58,7 @@ type Problem
 type ModalType
     = NewQuote
     | Editing Quote
+    | Delete Quote
 
 
 type ModalVisibility
@@ -74,6 +76,10 @@ type TrimmedForm
     = Trimmed ModalForm
 
 
+
+-- TODO: QuotesError needs a new `Supabase.DbError` or something, as the auth error type differs from postgres related
+
+
 type QuoteResponse
     = QuotesOk (List Supabase.Quote)
     | QuotesError Supabase.Error
@@ -89,7 +95,7 @@ init shared =
       , modalType = NewQuote
       , modalVisibility = Hidden
       }
-    , Supabase.getQuotes <| Maybe.withDefault "" (User.userId shared.user)
+    , Supabase.getQuotes (JE.string <| Maybe.withDefault "" (User.userId shared.user))
     )
 
 
@@ -136,8 +142,10 @@ type Msg
     | OnAuthorChange String
     | OnReferenceChange String
     | OpenEditQuoteModal Quote
+    | OpenDeleteQuoteModal Quote
     | SubmitAddQuoteModal
     | SubmitEditQuoteModal String
+    | SubmitDeleteQuoteModal String
     | GotQuotesResponse JD.Value
     | NoOp
 
@@ -173,6 +181,9 @@ update shared msg model =
             , Shared.NoUpdate
             )
 
+        OpenDeleteQuoteModal quote ->
+            ( { model | modalType = Delete quote, modalVisibility = Visible }, Cmd.none, Shared.NoUpdate )
+
         SubmitAddQuoteModal ->
             case validateForm model.modalForm of
                 Ok validForm ->
@@ -196,6 +207,24 @@ update shared msg model =
 
                 Err problems ->
                     ( { model | modalFormProblems = problems }, Cmd.none, Shared.NoUpdate )
+
+        SubmitDeleteQuoteModal quoteId ->
+            let
+                matchingQuote =
+                    LE.find (\quote -> quote.id == quoteId) model.quotes
+
+                encodedQuote =
+                    matchingQuote
+                        |> Maybe.map
+                            (\quote ->
+                                JE.object
+                                    [ ( "quoteId", JE.string quote.id )
+                                    , ( "userId", Json.Encode.Extra.maybe JE.string (User.userId shared.user) )
+                                    ]
+                            )
+                        |> Maybe.withDefault JE.null
+            in
+            ( { model | modalIsLoading = True }, Supabase.deleteQuote encodedQuote, Shared.NoUpdate )
 
         GotQuotesResponse json ->
             let
@@ -394,14 +423,15 @@ addQuoteButton : ModalForm -> List Problem -> ModalType -> ModalVisibility -> Ht
 addQuoteButton form problems modalType visibility =
     div [ class "flex justify-end" ]
         [ button [ class "text-gray-700 hover:text-black", onClick OpenAddQuoteModal ] [ text "Add quote" ]
-        , viewAddQuoteModal form problems modalType visibility
+        , viewQuoteModal form problems modalType visibility
+        , viewDeleteQuoteModal modalType visibility
         ]
 
 
 viewQuotes : List Quote -> Html Msg
 viewQuotes quotes =
-    div [ class "mx-12 text-start" ]
-        [ div [ class "mx-72 mt-10 mb-16 grid grid-cols-3 grid-rows-4 gap-x-6 gap-y-6" ] (List.map viewQuote quotes)
+    div [ class "text-start px-16 mt-10" ]
+        [ div [ class "mb-12 grid grid-rows-4 sm:grid-cols-1 lg:grid-cols-3 gap-x-6 gap-y-6" ] (List.map viewQuote quotes)
         ]
 
 
@@ -419,24 +449,57 @@ viewQuote quote =
             else
                 div [ class "flex justify-end" ] [ a [ href <| quote.reference, class "text-gray-600 text-xs cursor-pointer hover:text-black" ] [ text "Quote reference" ] ]
     in
-    div [ class "flex flex-col cursor-default border rounded-lg p-6 shadow-sm hover:bg-gray-100/40 transition ease-in-out hover:-translate-y-0.5 duration-300" ]
+    div [ class "flex flex-col border rounded-lg p-6 shadow-sm hover:bg-gray-100/40 transition ease-in-out hover:-translate-y-0.5 duration-300" ]
         [ p [ class "text-lg text-gray-800 font-normal" ] [ text quote.quote ]
         , p [ class "mt-1 text-gray-600 text-md font-light" ] [ text <| "by " ++ quote.author ]
-        , div [ class "flex justify-between" ]
-            [ button [ onClick <| OpenEditQuoteModal quote, class "text-gray-600 text-xs font-medium mt-4 cursor-pointer hover:text-black" ] [ text "Edit quote" ]
-            , div [ class "flex justify-end space-x-1" ] quoteTags
+        , div [ class "flex flex-col mt-4 border rounded-md p-2" ]
+            [ quoteReference
+            , div [ class "flex space-x-1" ] quoteTags
             ]
-        , quoteReference
+        , div [ class "flex justify-between" ]
+            [ button
+                [ onClick <| OpenEditQuoteModal quote, class "text-gray-600 text-xs font-medium mt-4 cursor-pointer hover:text-black" ]
+                [ text "Edit quote" ]
+            , button [ onClick <| OpenDeleteQuoteModal quote, class "text-gray-600 text-xs font-medium mt-4 cursor-pointer hover:text-black" ]
+                [ text "Delete quote" ]
+            ]
         ]
 
 
 viewQuoteTag : String -> Html msg
 viewQuoteTag tag =
-    div [ class "flex justify-center items-center rounded-md text-sm text-gray-100 p-1 bg-gray-800" ] [ p [ class "m-1" ] [ text tag ] ]
+    div [ class "flex justify-center items-center rounded-md text-xs text-white p-0.5 bg-gray-800" ] [ p [ class "m-0.5" ] [ text tag ] ]
 
 
-viewAddQuoteModal : ModalForm -> List Problem -> ModalType -> ModalVisibility -> Html Msg
-viewAddQuoteModal form problems modalType visibility =
+
+{- This modal is responsible for both displaying the `Add new quote` & `Edit Quote` modal bodies -}
+
+
+viewDeleteQuoteModal : ModalType -> ModalVisibility -> Html Msg
+viewDeleteQuoteModal modalType visibility =
+    case visibility of
+        Visible ->
+            case modalType of
+                Delete quote ->
+                    Modal.create
+                        { title = "Delete quote"
+                        , body = p [ class "text-lg text-gray-900" ] [ text "Are you sure you want to delete the quote?" ]
+                        , actions =
+                            Modal.acceptAndDiscardActions
+                                (Modal.basicAction "Delete quote" (SubmitDeleteQuoteModal quote.id))
+                                (Modal.basicAction "Cancel" CloseModal)
+                        }
+                        |> Modal.view
+
+                _ ->
+                    HE.nothing
+
+        Hidden ->
+            HE.nothing
+
+
+viewQuoteModal : ModalForm -> List Problem -> ModalType -> ModalVisibility -> Html Msg
+viewQuoteModal form problems modalType visibility =
     case visibility of
         Visible ->
             case modalType of
@@ -461,6 +524,9 @@ viewAddQuoteModal form problems modalType visibility =
                                 (Modal.basicAction "Cancel" CloseModal)
                         }
                         |> Modal.view
+
+                _ ->
+                    HE.nothing
 
         Hidden ->
             HE.nothing

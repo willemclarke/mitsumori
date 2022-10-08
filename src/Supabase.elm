@@ -56,7 +56,7 @@ port deleteQuote : JE.Value -> Cmd msg
 port quoteResponse : (JE.Value -> msg) -> Sub msg
 
 
-port getQuotes : String -> Cmd msg
+port getQuotes : JE.Value -> Cmd msg
 
 
 port signUp : JE.Value -> Cmd msg

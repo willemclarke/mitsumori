@@ -25,8 +25,6 @@ const app = Elm.Main.init({
 app.ports.getQuotes.subscribe(async (userId) => {
   const { data: quotes, error } = await supabase.getQuotes(userId);
   if (quotes) {
-    // TODO: better name for port since it gets used for adding a quote and sending them back
-    // and also just getting quotes
     return app.ports.quoteResponse.send(quotes);
   }
 

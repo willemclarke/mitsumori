@@ -1,4 +1,4 @@
-port module Supabase exposing (Error, Quote, addQuote, editQuote, errorDecoder, getQuotes, quoteDecoder, quoteResponse, session, sessionResponse, signIn, signInResponse, signOut, signUp, signUpResponse)
+port module Supabase exposing (Error, Quote, addQuote, deleteQuote, editQuote, errorDecoder, getQuotes, quoteDecoder, quoteResponse, session, sessionResponse, signIn, signInResponse, signOut, signUp, signUpResponse)
 
 import Json.Decode as JD
 import Json.Encode as JE
@@ -44,8 +44,13 @@ port addQuote : JE.Value -> Cmd msg
 port editQuote : JE.Value -> Cmd msg
 
 
+port deleteQuote : JE.Value -> Cmd msg
 
-{- this is called `quoteResponse` as this port will be used for both adding a new quote/editing -}
+
+
+{- `quoteResponse` is the port responsible for sending back a list of quotes, regardless of whether
+   the outgoing port was `addQuote`, `editQuote` or `deleteQuote`
+-}
 
 
 port quoteResponse : (JE.Value -> msg) -> Sub msg

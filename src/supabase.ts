@@ -6,6 +6,14 @@ export const supabaseClient = createClient(
   import.meta.env.VITE_SUPABASE_KEY
 );
 
+export const getQuotes = async (userId: string) => {
+  return supabaseClient
+    .from("quotes")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+};
+
 export const insertQuote = async (quote: ClientQuote) => {
   return supabaseClient.from("quotes").insert([
     {
@@ -27,12 +35,8 @@ export const updateQuote = async (quote: ClientQuote) => {
     .eq("id", quote.quoteId);
 };
 
-export const getQuotes = async (userId: string) => {
-  return supabaseClient
-    .from("quotes")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+export const deleteQuote = async (quote: ClientQuote) => {
+  return supabaseClient.from("quotes").delete().eq("id", quote.quoteId);
 };
 
 export const signUp = (user: SignUpUser) => {

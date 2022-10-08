@@ -1,11 +1,5 @@
 import { ApiError, Session } from "@supabase/supabase-js";
-import {
-  ClientQuote,
-  SignInUser,
-  SignUpUser,
-  SupabaseFlags,
-  SupabaseQuote,
-} from "./types";
+import { ClientQuote, SignInUser, SignUpUser, SupabaseFlags } from "./types";
 
 export namespace Elm {
   export namespace Main {
@@ -18,6 +12,9 @@ export namespace Elm {
           subscribe(callback: (data: ClientQuote) => Promise<void>): void;
         };
         editQuote: {
+          subscribe(callback: (data: ClientQuote) => Promise<void>): void;
+        };
+        deleteQuote: {
           subscribe(callback: (data: ClientQuote) => Promise<void>): void;
         };
         quoteResponse: {

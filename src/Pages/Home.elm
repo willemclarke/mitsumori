@@ -1,4 +1,4 @@
-module Pages.Home exposing (Model, Msg(..), init, subscriptions, update, view)
+module Pages.Home exposing (Model, Msg(..), init, subscriptions, update, view, viewQuoteModal)
 
 import Components.Modal as Modal
 import Html exposing (Html, a, button, div, form, header, input, label, p, text, ul)
@@ -424,7 +424,6 @@ addQuoteButton form problems modalType visibility =
     div [ class "flex justify-end" ]
         [ button [ class "text-gray-700 hover:text-black", onClick OpenAddQuoteModal ] [ text "Add quote" ]
         , viewQuoteModal form problems modalType visibility
-        , viewDeleteQuoteModal modalType visibility
         ]
 
 
@@ -472,30 +471,7 @@ viewQuoteTag tag =
 
 
 
-{- This modal is responsible for both displaying the `Add new quote` & `Edit Quote` modal bodies -}
-
-
-viewDeleteQuoteModal : ModalType -> ModalVisibility -> Html Msg
-viewDeleteQuoteModal modalType visibility =
-    case visibility of
-        Visible ->
-            case modalType of
-                Delete quote ->
-                    Modal.create
-                        { title = "Delete quote"
-                        , body = p [ class "text-lg text-gray-900" ] [ text "Are you sure you want to delete the quote?" ]
-                        , actions =
-                            Modal.acceptAndDiscardActions
-                                (Modal.basicAction "Delete quote" (SubmitDeleteQuoteModal quote.id))
-                                (Modal.basicAction "Cancel" CloseModal)
-                        }
-                        |> Modal.view
-
-                _ ->
-                    HE.nothing
-
-        Hidden ->
-            HE.nothing
+{- This fn is responsible for displaying each type of Modal (adding a quote, editing, deleting) -}
 
 
 viewQuoteModal : ModalForm -> List Problem -> ModalType -> ModalVisibility -> Html Msg
@@ -525,8 +501,16 @@ viewQuoteModal form problems modalType visibility =
                         }
                         |> Modal.view
 
-                _ ->
-                    HE.nothing
+                Delete quote ->
+                    Modal.create
+                        { title = "Delete quote"
+                        , body = p [ class "text-lg text-gray-900" ] [ text "Are you sure you want to delete the quote?" ]
+                        , actions =
+                            Modal.acceptAndDiscardActions
+                                (Modal.basicAction "Delete quote" (SubmitDeleteQuoteModal quote.id))
+                                (Modal.basicAction "Cancel" CloseModal)
+                        }
+                        |> Modal.view
 
         Hidden ->
             HE.nothing

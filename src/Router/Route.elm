@@ -24,7 +24,7 @@ checkNav user route =
             Just Home
 
         ( Unauthenticated, Just Home ) ->
-            Just Signup
+            Just Signin
 
         ( Unauthenticated, Just Signin ) ->
             Just Signin

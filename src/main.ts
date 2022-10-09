@@ -103,7 +103,13 @@ app.ports.signIn.subscribe(async (user) => {
 });
 
 app.ports.signOut.subscribe(async () => {
-  await supabase.signOut();
+  const { error } = await supabase.signOut();
+
+  if (!error) {
+    return app.ports.signOutResponse.send("Success");
+  }
+
+  return app.ports.signOutResponse.send(error);
 });
 
 app.ports.session.subscribe(async () => {

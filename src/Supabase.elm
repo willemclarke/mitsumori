@@ -1,4 +1,4 @@
-port module Supabase exposing (Error, Quote, addQuote, deleteQuote, editQuote, errorDecoder, getQuotes, quoteDecoder, quoteResponse, session, sessionResponse, signIn, signInResponse, signOut, signUp, signUpResponse)
+port module Supabase exposing (Error, Quote, addQuote, deleteQuote, editQuote, errorDecoder, getQuotes, quoteDecoder, quoteResponse, session, sessionResponse, signIn, signInResponse, signOut, signOutResponse, signUp, signUpResponse)
 
 import Json.Decode as JD
 import Json.Encode as JE
@@ -72,6 +72,9 @@ port signInResponse : (JE.Value -> msg) -> Sub msg
 
 
 port signOut : () -> Cmd msg
+
+
+port signOutResponse : (JE.Value -> msg) -> Sub msg
 
 
 port session : () -> Cmd msg

@@ -5,6 +5,8 @@ import Browser.Navigation as Nav
 import Html exposing (Html, a, button, div, p, text)
 import Html.Attributes exposing (class, href)
 import Html.Events exposing (onClick)
+import Json.Decode as JD
+import Json.Encode as JE
 import Pages.Home as Home
 import Pages.Signin as SignIn
 import Pages.Signup as SignUp
@@ -25,6 +27,12 @@ type alias Model =
     }
 
 
+type SignOutResponse
+    = SignoutSuccess String
+    | SignoutError Supabase.Error
+    | PayloadError
+
+
 type Msg
     = UrlChanged Url.Url
     | NavigateTo Route
@@ -32,6 +40,7 @@ type Msg
     | SignUpMsg SignUp.Msg
     | SignInMsg SignIn.Msg
     | SignOut
+    | GotSignOutResponse JE.Value
     | Refresh
 
 
@@ -56,6 +65,16 @@ init shared url =
     )
 
 
+signOutResponseDecoder : JE.Value -> SignOutResponse
+signOutResponseDecoder json =
+    JD.decodeValue
+        (JD.oneOf
+            [ JD.map SignoutSuccess JD.string, JD.map SignoutError Supabase.errorDecoder ]
+        )
+        json
+        |> Result.withDefault PayloadError
+
+
 update : Shared -> Msg -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
 update shared msg model =
     case msg of
@@ -75,10 +94,26 @@ update shared msg model =
             updateSignIn shared model signInMsg
 
         SignOut ->
-            ( model, Cmd.batch [ Supabase.signOut (), after 500 Refresh ], Shared.NoUpdate )
+            ( model, Supabase.signOut (), Shared.NoUpdate )
+
+        GotSignOutResponse json ->
+            let
+                signOutResponse =
+                    signOutResponseDecoder json
+            in
+            case signOutResponse of
+                SignoutSuccess str ->
+                    ( model, Route.pushUrl shared.key Route.Signin, Shared.UpdateUser <| User.unauthenticated )
+
+                {- TODO, proper error handling, need some view to show to users -}
+                SignoutError error ->
+                    ( model, Cmd.none, Shared.NoUpdate )
+
+                PayloadError ->
+                    ( model, Cmd.none, Shared.NoUpdate )
 
         Refresh ->
-            ( model, Nav.reload, Shared.NoUpdate )
+            ( model, Route.pushUrl shared.key Route.Signin, Shared.NoUpdate )
 
 
 after : Float -> msg -> Cmd msg
@@ -189,15 +224,22 @@ viewNotFoundPage =
 
 subscriptions : (Msg -> msg) -> Model -> Sub msg
 subscriptions msgMapper model =
-    case model.route of
-        Just Route.Home ->
-            Sub.map HomeMsg (Home.subscriptions model.homeModel) |> Sub.map msgMapper
+    let
+        pageSubs =
+            case model.route of
+                Just Route.Home ->
+                    Sub.map HomeMsg (Home.subscriptions model.homeModel)
 
-        Just Route.Signup ->
-            Sub.map SignUpMsg (SignUp.subscriptions model.signUpModel) |> Sub.map msgMapper
+                Just Route.Signup ->
+                    Sub.map SignUpMsg (SignUp.subscriptions model.signUpModel)
 
-        Just Route.Signin ->
-            Sub.map SignInMsg (SignIn.subscriptions model.signInModel) |> Sub.map msgMapper
+                Just Route.Signin ->
+                    Sub.map SignInMsg (SignIn.subscriptions model.signInModel)
 
-        _ ->
-            Sub.none
+                _ ->
+                    Sub.none
+
+        subs =
+            List.map (Sub.map msgMapper) [ Supabase.signOutResponse GotSignOutResponse, pageSubs ]
+    in
+    Sub.batch subs

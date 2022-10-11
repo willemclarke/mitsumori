@@ -1,4 +1,4 @@
-module Components.Button exposing (create, view, withAdditionalStyles, withIsDisabled, withIsLoading)
+module Components.Button exposing (create, view, withAdditionalStyles, withIsDisabled, withIsLoading, withWhiteAppearance)
 
 import Html exposing (Html, button, div, text)
 import Html.Attributes exposing (class, disabled, style, type_)
@@ -11,6 +11,7 @@ type alias Config msg =
     , onClick : msg
     , isLoading : Bool
     , isDisabled : Bool
+    , appearence : Appearance
     , additionalStyles : Maybe String
     }
 
@@ -19,9 +20,14 @@ type Button msg
     = Button (Config msg)
 
 
+type Appearance
+    = Black
+    | White
+
+
 create : { label : String, onClick : msg } -> Button msg
 create { label, onClick } =
-    Button { label = label, onClick = onClick, isLoading = False, isDisabled = False, additionalStyles = Nothing }
+    Button { label = label, onClick = onClick, isLoading = False, isDisabled = False, appearence = Black, additionalStyles = Nothing }
 
 
 withIsLoading : Bool -> Button msg -> Button msg
@@ -39,25 +45,39 @@ withAdditionalStyles additionalStyles (Button config) =
     Button { config | additionalStyles = Just additionalStyles }
 
 
+withWhiteAppearance : Button msg -> Button msg
+withWhiteAppearance (Button config) =
+    Button { config | appearence = White }
+
+
+colourSchemeToString : Appearance -> String
+colourSchemeToString colour =
+    case colour of
+        Black ->
+            "bg-black text-white"
+
+        White ->
+            "bg-white text-black border border-gray-300 hover:border-gray-500 hover:bg-gray-100/90"
+
+
 spinner : Html msg
 spinner =
     div [ style "border-color" "rgba(255, 255, 255, 0.2)", style "border-top-color" "rgba(255,255,255, 0.8)", class "w-5 h-5 border-4 rounded-full animate-spin" ] []
 
 
 view : Button msg -> Html msg
-view (Button ({ label, additionalStyles, isLoading, isDisabled } as config)) =
+view (Button ({ label, additionalStyles, isLoading, isDisabled, appearence } as config)) =
     let
-        isDisabled_ =
-            if isDisabled then
-                "bg-black/60"
-
-            else
-                "bg-black"
+        -- TODO, fix disabled state
+        appearence_ =
+            colourSchemeToString appearence
 
         classes =
             String.join " "
-                [ "py-2 px-4 shadow hover:shadow-md focus:ring focus:ring-slate-300 rounded-md bg-black text-white transition ease-in-out hover:-translate-y-0.5 duration-300"
-                , isDisabled_
+                [ "py-2 px-4 shadow hover:shadow-md focus:ring focus:ring-slate-300 rounded-md transition ease-in-out hover:-translate-y-0.5 duration-300"
+                , appearence_
+
+                -- , isDisabled_
                 , Maybe.withDefault "" additionalStyles
                 ]
     in

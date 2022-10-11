@@ -1,6 +1,7 @@
 module Router.Router exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Browser
+import Components.Button as Button
 import Html exposing (Html, a, button, div, p, text)
 import Html.Attributes exposing (class, href)
 import Html.Events exposing (onClick)
@@ -201,12 +202,12 @@ viewNav { user } =
         [ a [ href href_, class "text-3xl transition ease-in-out hover:-translate-y-0.5 duration-300" ] [ text "mitsumori" ]
         , div [ class "flex" ]
             [ if User.isAuthenticated user then
-                p [ onClick SignOut, class "text-lg cursor-pointer transition ease-in-out hover:-translate-y-0.5 duration-300" ] [ text "signout" ]
+                div [ class "font-sans" ] [ Button.create { label = "Sign out", onClick = NavigateTo Route.Signin } |> Button.view ]
 
               else
-                div []
-                    [ button [ onClick <| NavigateTo Route.Signup, class "text-lg mr-4 transition ease-in-out hover:-translate-y-0.5 duration-300" ] [ text "signup" ]
-                    , button [ onClick <| NavigateTo Route.Signin, class "text-lg mr-4 transition ease-in-out hover:-translate-y-0.5 duration-300" ] [ text "signin" ]
+                div [ class "font-sans space-x-2" ]
+                    [ Button.create { label = "Sign in", onClick = NavigateTo Route.Signin } |> Button.withWhiteAppearance |> Button.view
+                    , Button.create { label = "Sign up", onClick = NavigateTo Route.Signup } |> Button.view
                     ]
             ]
         ]

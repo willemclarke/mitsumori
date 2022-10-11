@@ -68,6 +68,7 @@ cancelButton : Action msg -> Html msg
 cancelButton (Action { label, onClick }) =
     Button.create { label = label, onClick = onClick }
         |> Button.withAdditionalStyles "sm:my-2"
+        |> Button.withWhiteAppearance
         |> Button.view
 
 

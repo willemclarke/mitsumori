@@ -2,19 +2,16 @@ module Router.Router exposing (Model, Msg(..), init, subscriptions, update, view
 
 import Browser
 import Components.Button as Button
-import Html exposing (Html, a, button, div, p, text)
+import Html exposing (Html, a, div, text)
 import Html.Attributes exposing (class, href)
-import Html.Events exposing (onClick)
 import Json.Decode as JD
 import Json.Encode as JE
 import Pages.Home as Home
 import Pages.Signin as SignIn
 import Pages.Signup as SignUp
-import Process
 import Router.Route as Route exposing (Route)
 import Shared exposing (Shared)
 import Supabase
-import Task
 import Url
 import User exposing (UserType(..))
 
@@ -116,11 +113,6 @@ update shared msg model =
             ( model, Route.pushUrl shared.key Route.Signin, Shared.NoUpdate )
 
 
-after : Float -> msg -> Cmd msg
-after time msg =
-    Task.perform (always msg) <| Process.sleep time
-
-
 updateHome : Shared -> Model -> Home.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )
 updateHome shared model homeMsg =
     let
@@ -202,7 +194,7 @@ viewNav { user } =
         [ a [ href href_, class "text-3xl transition ease-in-out hover:-translate-y-0.5 duration-300" ] [ text "mitsumori" ]
         , div [ class "flex" ]
             [ if User.isAuthenticated user then
-                div [ class "font-sans" ] [ Button.create { label = "Sign out", onClick = NavigateTo Route.Signin } |> Button.view ]
+                div [ class "font-sans" ] [ Button.create { label = "Sign out", onClick = SignOut } |> Button.view ]
 
               else
                 div [ class "font-sans space-x-2" ]

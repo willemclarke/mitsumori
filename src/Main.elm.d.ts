@@ -45,7 +45,7 @@ export namespace Elm {
         signOutResponse: {
           send(data: string | ApiError): Promise<void>;
         };
-        session: {
+        getSession: {
           subscribe(callback: () => Promise<void>): void;
         };
         sessionResponse: {

@@ -64,7 +64,7 @@ init flagsValue url key =
                     Initialising
                         { supabase = flags.supabase, seed = flags.seed }
               }
-            , Supabase.session ()
+            , Supabase.getSession ()
             )
 
         Err _ ->
@@ -92,7 +92,7 @@ supabaseFlagsDecoder =
 type Msg
     = UrlChanged Url.Url
     | LinkClicked Browser.UrlRequest
-    | HandleSessionResponse JE.Value
+    | GotSessionResponse JE.Value
     | RouterMsg Router.Msg
 
 
@@ -105,7 +105,7 @@ update msg model =
         RouterMsg routerMsg ->
             updateRouter model routerMsg
 
-        HandleSessionResponse json ->
+        GotSessionResponse json ->
             updateUserSession model json
 
         LinkClicked urlRequest ->
@@ -218,7 +218,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     let
         commonSubs =
-            Supabase.sessionResponse HandleSessionResponse
+            Supabase.sessionResponse GotSessionResponse
     in
     case model.appState of
         Initialising _ ->

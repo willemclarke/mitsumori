@@ -112,7 +112,7 @@ app.ports.signOut.subscribe(async () => {
   return app.ports.signOutResponse.send(error);
 });
 
-app.ports.session.subscribe(async () => {
+app.ports.getSession.subscribe(async () => {
   const session = supabase.session();
   return app.ports.sessionResponse.send(session);
 });

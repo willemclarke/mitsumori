@@ -1,7 +1,6 @@
 module Router.Router exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Browser
-import Browser.Navigation as Nav
 import Html exposing (Html, a, button, div, p, text)
 import Html.Attributes exposing (class, href)
 import Html.Events exposing (onClick)
@@ -102,11 +101,11 @@ update shared msg model =
                     signOutResponseDecoder json
             in
             case signOutResponse of
-                SignoutSuccess str ->
+                SignoutSuccess _ ->
                     ( model, Route.pushUrl shared.key Route.Signin, Shared.UpdateUser <| User.unauthenticated )
 
                 {- TODO, proper error handling, need some view to show to users -}
-                SignoutError error ->
+                SignoutError _ ->
                     ( model, Cmd.none, Shared.NoUpdate )
 
                 PayloadError ->

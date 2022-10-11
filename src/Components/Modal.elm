@@ -1,9 +1,10 @@
-module Components.Modal exposing (acceptAndDiscardActions, basicAction, create, view)
+module Components.Modal exposing (acceptAndDiscardActions, asyncAction, basicAction, create, view)
 
 import Components.Button as Button
 import Html exposing (Html, div, h3, header, p, span, text)
 import Html.Attributes exposing (attribute, class, id)
 import Html.Events exposing (onClick)
+import RemoteData exposing (isLoading)
 
 
 type Modal msg
@@ -18,7 +19,7 @@ type alias Options msg =
 
 
 type Action msg
-    = Action { label : String, onClick : msg }
+    = Action { label : String, onClick : msg, isLoading : Bool }
 
 
 type Actions msg
@@ -42,7 +43,12 @@ create { title, body, actions } =
 
 basicAction : String -> msg -> Action msg
 basicAction label onClick =
-    Action { label = label, onClick = onClick }
+    Action { label = label, onClick = onClick, isLoading = False }
+
+
+asyncAction : { label : String, onClick : msg, isLoading : Bool } -> Action msg
+asyncAction { label, onClick, isLoading } =
+    Action { label = label, onClick = onClick, isLoading = isLoading }
 
 
 acceptAndDiscardActions : Action msg -> Action msg -> Actions msg
@@ -51,9 +57,10 @@ acceptAndDiscardActions accept cancel =
 
 
 acceptButton : Action msg -> Html msg
-acceptButton (Action { label, onClick }) =
+acceptButton (Action { label, onClick, isLoading }) =
     Button.create { label = label, onClick = onClick }
         |> Button.withAdditionalStyles "my-2 sm:mx-2"
+        |> Button.withIsLoading isLoading
         |> Button.view
 
 

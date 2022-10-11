@@ -1,5 +1,6 @@
 module Pages.Home exposing (Model, Msg(..), init, subscriptions, update, view, viewQuoteModal)
 
+import Components.Icons as Icons
 import Components.Modal as Modal
 import Html exposing (Html, a, button, div, form, header, input, label, p, text, ul)
 import Html.Attributes exposing (class, classList, for, href, id, placeholder, type_, value)
@@ -13,8 +14,6 @@ import Random exposing (Seed)
 import Shared exposing (Shared)
 import String.Extra as SE
 import Supabase
-import Svg
-import Svg.Attributes as SvgAttrs
 import User
 import Uuid exposing (Uuid)
 
@@ -387,43 +386,30 @@ view : Shared -> Model -> Html Msg
 view shared model =
     div
         [ class "flex flex-col h-full w-full items-center" ]
-        [ viewHeader shared.user model.modalForm model.modalFormProblems model.modalType model.modalVisibility
+        [ viewHeader shared.user model.modalForm model.modalFormProblems model.modalType model.modalVisibility model.modalIsLoading
         , viewQuotes model.quotes
         ]
 
 
-viewHeader : User.User -> ModalForm -> List Problem -> ModalType -> ModalVisibility -> Html Msg
-viewHeader user form problems modalType visibility =
+viewHeader : User.User -> ModalForm -> List Problem -> ModalType -> ModalVisibility -> Bool -> Html Msg
+viewHeader user form problems modalType visibility isLoading =
     let
         username =
             (SE.toSentenceCase <| User.username user) ++ "'s"
     in
     div [ class "flex flex-col mt-16" ]
         [ div [ class "flex items-center" ]
-            [ header [ class "text-3xl font-serif font-light mr-3" ] [ text <| String.join " " [ username, "quotes" ] ]
-            , pencilSquareIcon
+            [ header [ class "text-3xl font-serif font-light mr-2" ] [ text <| String.join " " [ username, "quotes" ] ]
+            , addQuoteButton form problems modalType visibility isLoading
             ]
-        , addQuoteButton form problems modalType visibility
         ]
 
 
-pencilSquareIcon : Html msg
-pencilSquareIcon =
-    Svg.svg
-        [ SvgAttrs.class "h-12 w-12"
-        , SvgAttrs.fill "none"
-        , SvgAttrs.viewBox "0 0 24 24"
-        , SvgAttrs.strokeWidth "1.5"
-        , SvgAttrs.stroke "currentColor"
-        ]
-        [ Svg.path [ SvgAttrs.strokeLinecap "round", SvgAttrs.strokeLinejoin "round", SvgAttrs.d "M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" ] [] ]
-
-
-addQuoteButton : ModalForm -> List Problem -> ModalType -> ModalVisibility -> Html Msg
-addQuoteButton form problems modalType visibility =
+addQuoteButton : ModalForm -> List Problem -> ModalType -> ModalVisibility -> Bool -> Html Msg
+addQuoteButton form problems modalType visibility isLoading =
     div [ class "flex justify-end" ]
-        [ button [ class "text-gray-700 hover:text-black", onClick OpenAddQuoteModal ] [ text "Add quote" ]
-        , viewQuoteModal form problems modalType visibility
+        [ button [ class "transition ease-in-out hover:-translate-y-0.5 duration-300", onClick OpenAddQuoteModal ] [ Icons.plus ]
+        , viewQuoteModal form problems modalType visibility isLoading
         ]
 
 
@@ -446,36 +432,33 @@ viewQuote quote =
                 HE.nothing
 
             else
-                div [ class "flex justify-end" ] [ a [ href <| quote.reference, class "text-gray-600 text-xs cursor-pointer hover:text-black" ] [ text "Quote reference" ] ]
+                div [ class "mt-1" ] [ a [ href <| quote.reference, class "text-gray-600 text-sm cursor-pointer hover:text-black" ] [ text "Quote reference" ] ]
     in
-    div [ class "flex flex-col border rounded-lg p-6 shadow-sm hover:bg-gray-100/40 transition ease-in-out hover:-translate-y-0.5 duration-300" ]
-        [ p [ class "text-lg text-gray-800 font-normal" ] [ text quote.quote ]
+    div [ class "flex flex-col border rounded-lg p-6 shadow-sm hover:bg-gray-100/40 transition ease-in-out hover:-translate-y-px duration-300" ]
+        [ p [ class "text-lg text-gray-800" ] [ text quote.quote ]
         , p [ class "mt-1 text-gray-600 text-md font-light" ] [ text <| "by " ++ quote.author ]
-        , div [ class "flex flex-col mt-4 border rounded-md p-2" ]
-            [ quoteReference
-            , div [ class "flex space-x-1" ] quoteTags
+        , div [ class "flex flex-col mt-2" ]
+            [ div [ class "flex space-x-2" ] quoteTags
+            , quoteReference
             ]
-        , div [ class "flex justify-between" ]
-            [ button
-                [ onClick <| OpenEditQuoteModal quote, class "text-gray-600 text-xs font-medium mt-4 cursor-pointer hover:text-black" ]
-                [ text "Edit quote" ]
-            , button [ onClick <| OpenDeleteQuoteModal quote, class "text-gray-600 text-xs font-medium mt-4 cursor-pointer hover:text-black" ]
-                [ text "Delete quote" ]
+        , div [ class "flex justify-between mt-3" ]
+            [ button [ onClick <| OpenEditQuoteModal quote ] [ Icons.edit ]
+            , button [ onClick <| OpenDeleteQuoteModal quote ] [ Icons.delete ]
             ]
         ]
 
 
 viewQuoteTag : String -> Html msg
 viewQuoteTag tag =
-    div [ class "flex justify-center items-center rounded-md text-xs text-white p-0.5 bg-gray-800" ] [ p [ class "m-0.5" ] [ text tag ] ]
+    div [ class "flex justify-center items-center rounded-lg text-xs text-white p-1 bg-gray-800" ] [ p [ class "m-1" ] [ text tag ] ]
 
 
 
 {- This fn is responsible for displaying each type of Modal (adding a quote, editing, deleting) -}
 
 
-viewQuoteModal : ModalForm -> List Problem -> ModalType -> ModalVisibility -> Html Msg
-viewQuoteModal form problems modalType visibility =
+viewQuoteModal : ModalForm -> List Problem -> ModalType -> ModalVisibility -> Bool -> Html Msg
+viewQuoteModal form problems modalType visibility isLoading =
     case visibility of
         Visible ->
             case modalType of
@@ -485,7 +468,7 @@ viewQuoteModal form problems modalType visibility =
                         , body = viewModalFormBody form problems
                         , actions =
                             Modal.acceptAndDiscardActions
-                                (Modal.basicAction "Add quote" SubmitAddQuoteModal)
+                                (Modal.asyncAction { label = "Add quote", onClick = SubmitAddQuoteModal, isLoading = isLoading })
                                 (Modal.basicAction "Cancel" CloseModal)
                         }
                         |> Modal.view
@@ -496,7 +479,7 @@ viewQuoteModal form problems modalType visibility =
                         , body = viewModalFormBody form problems
                         , actions =
                             Modal.acceptAndDiscardActions
-                                (Modal.basicAction "Edit quote" (SubmitEditQuoteModal quote.id))
+                                (Modal.asyncAction { label = "Edit quote", onClick = SubmitEditQuoteModal quote.id, isLoading = isLoading })
                                 (Modal.basicAction "Cancel" CloseModal)
                         }
                         |> Modal.view
@@ -507,7 +490,7 @@ viewQuoteModal form problems modalType visibility =
                         , body = p [ class "text-lg text-gray-900" ] [ text "Are you sure you want to delete the quote?" ]
                         , actions =
                             Modal.acceptAndDiscardActions
-                                (Modal.basicAction "Delete quote" (SubmitDeleteQuoteModal quote.id))
+                                (Modal.asyncAction { label = "Delete quote", onClick = SubmitDeleteQuoteModal quote.id, isLoading = isLoading })
                                 (Modal.basicAction "Cancel" CloseModal)
                         }
                         |> Modal.view

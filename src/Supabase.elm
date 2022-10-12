@@ -1,7 +1,11 @@
 port module Supabase exposing (Error, Quote, addQuote, deleteQuote, editQuote, errorDecoder, getQuotes, getSession, quoteDecoder, quoteResponse, sessionResponse, signIn, signInResponse, signOut, signOutResponse, signUp, signUpResponse)
 
+import Graphql.Operation exposing (RootQuery)
+import Graphql.OptionalArgument exposing (OptionalArgument(..))
+import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Json.Decode as JD
 import Json.Encode as JE
+import Mitsumori.Query as Query
 
 
 type alias Quote =
@@ -18,6 +22,12 @@ type alias Error =
     { message : String
     , status : Int
     }
+
+
+query : String -> SelectionSet Quote RootQuery
+query id =
+    Query.quotesCollection (\optionals -> { optionals | filter = { id = Present id } }) <|
+        SelectionSet.map Quote
 
 
 quoteDecoder : JD.Decoder Quote

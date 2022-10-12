@@ -194,12 +194,18 @@ viewNav { user } =
         [ a [ href href_, class "text-3xl transition ease-in-out hover:-translate-y-0.5 duration-300" ] [ text "mitsumori" ]
         , div [ class "flex" ]
             [ if User.isAuthenticated user then
-                div [ class "font-sans" ] [ Button.create { label = "Sign out", onClick = SignOut } |> Button.view ]
+                div [ class "font-sans" ]
+                    [ Button.create { label = "Sign out", onClick = SignOut }
+                        |> Button.view
+                    ]
 
               else
                 div [ class "font-sans space-x-2" ]
-                    [ Button.create { label = "Sign in", onClick = NavigateTo Route.Signin } |> Button.withWhiteAppearance |> Button.view
-                    , Button.create { label = "Sign up", onClick = NavigateTo Route.Signup } |> Button.view
+                    [ Button.create { label = "Sign in", onClick = NavigateTo Route.Signin }
+                        |> Button.withWhiteAppearance
+                        |> Button.view
+                    , Button.create { label = "Sign up", onClick = NavigateTo Route.Signup }
+                        |> Button.view
                     ]
             ]
         ]

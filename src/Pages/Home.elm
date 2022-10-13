@@ -51,7 +51,7 @@ type alias ModalForm =
 
 type Problem
     = InvalidEntry ValidatedField String
-    | ServerError Supabase.Error
+    | ServerError Supabase.AuthError
 
 
 type ModalType
@@ -81,7 +81,7 @@ type TrimmedForm
 
 type QuoteResponse
     = QuotesOk (List Supabase.Quote)
-    | QuotesError Supabase.Error
+    | QuotesError Supabase.AuthError
     | PayloadError
 
 

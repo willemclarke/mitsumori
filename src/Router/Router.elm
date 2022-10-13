@@ -26,7 +26,7 @@ type alias Model =
 
 type SignOutResponse
     = SignoutSuccess String
-    | SignoutError Supabase.Error
+    | SignoutError Supabase.AuthError
     | PayloadError
 
 

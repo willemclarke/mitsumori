@@ -32,7 +32,7 @@ type alias Form =
 
 type Problem
     = InvalidEntry ValidatedField String
-    | ServerError Supabase.Error
+    | ServerError Supabase.AuthError
 
 
 type ValidatedField
@@ -47,7 +47,7 @@ type TrimmedForm
 
 type SignupResponse
     = UserOk User.User
-    | SignupError Supabase.Error
+    | SignupError Supabase.AuthError
     | PayloadError
 
 

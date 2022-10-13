@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Mitsumori.Object.Quote_tagsEdge exposing (..)
+module MitsumoriApi.Object.QuotesEdge exposing (..)
 
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -11,21 +11,21 @@ import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
-import Mitsumori.InputObject
-import Mitsumori.Interface
-import Mitsumori.Object
-import Mitsumori.Scalar
-import Mitsumori.ScalarCodecs
-import Mitsumori.Union
+import MitsumoriApi.InputObject
+import MitsumoriApi.Interface
+import MitsumoriApi.Object
+import MitsumoriApi.Scalar
+import MitsumoriApi.ScalarCodecs
+import MitsumoriApi.Union
 
 
-cursor : SelectionSet String Mitsumori.Object.Quote_tagsEdge
+cursor : SelectionSet String MitsumoriApi.Object.QuotesEdge
 cursor =
     Object.selectionForField "String" "cursor" [] Decode.string
 
 
 node :
-    SelectionSet decodesTo Mitsumori.Object.Quote_tags
-    -> SelectionSet decodesTo Mitsumori.Object.Quote_tagsEdge
+    SelectionSet decodesTo MitsumoriApi.Object.Quotes
+    -> SelectionSet decodesTo MitsumoriApi.Object.QuotesEdge
 node object____ =
     Object.selectionForCompositeField "node" [] object____ Basics.identity

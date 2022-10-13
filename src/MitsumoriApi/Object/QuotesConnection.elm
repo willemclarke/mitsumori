@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Mitsumori.Object.QuotesConnection exposing (..)
+module MitsumoriApi.Object.QuotesConnection exposing (..)
 
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -11,23 +11,23 @@ import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
-import Mitsumori.InputObject
-import Mitsumori.Interface
-import Mitsumori.Object
-import Mitsumori.Scalar
-import Mitsumori.ScalarCodecs
-import Mitsumori.Union
+import MitsumoriApi.InputObject
+import MitsumoriApi.Interface
+import MitsumoriApi.Object
+import MitsumoriApi.Scalar
+import MitsumoriApi.ScalarCodecs
+import MitsumoriApi.Union
 
 
 edges :
-    SelectionSet decodesTo Mitsumori.Object.QuotesEdge
-    -> SelectionSet (List decodesTo) Mitsumori.Object.QuotesConnection
+    SelectionSet decodesTo MitsumoriApi.Object.QuotesEdge
+    -> SelectionSet (List decodesTo) MitsumoriApi.Object.QuotesConnection
 edges object____ =
     Object.selectionForCompositeField "edges" [] object____ (Basics.identity >> Decode.list)
 
 
 pageInfo :
-    SelectionSet decodesTo Mitsumori.Object.PageInfo
-    -> SelectionSet decodesTo Mitsumori.Object.QuotesConnection
+    SelectionSet decodesTo MitsumoriApi.Object.PageInfo
+    -> SelectionSet decodesTo MitsumoriApi.Object.QuotesConnection
 pageInfo object____ =
     Object.selectionForCompositeField "pageInfo" [] object____ Basics.identity

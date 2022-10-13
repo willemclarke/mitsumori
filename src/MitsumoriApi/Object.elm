@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Mitsumori.Object exposing (..)
+module MitsumoriApi.Object exposing (..)
 
 
 type PageInfo

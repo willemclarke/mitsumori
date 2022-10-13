@@ -2,47 +2,47 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Mitsumori.ScalarCodecs exposing (..)
+module MitsumoriApi.ScalarCodecs exposing (..)
 
 import Json.Decode as Decode exposing (Decoder)
-import Mitsumori.Scalar exposing (defaultCodecs)
+import MitsumoriApi.Scalar exposing (defaultCodecs)
 
 
 type alias BigInt =
-    Mitsumori.Scalar.BigInt
+    MitsumoriApi.Scalar.BigInt
 
 
 type alias Cursor =
-    Mitsumori.Scalar.Cursor
+    MitsumoriApi.Scalar.Cursor
 
 
 type alias Date =
-    Mitsumori.Scalar.Date
+    MitsumoriApi.Scalar.Date
 
 
 type alias Datetime =
-    Mitsumori.Scalar.Datetime
+    MitsumoriApi.Scalar.Datetime
 
 
 type alias Id =
-    Mitsumori.Scalar.Id
+    MitsumoriApi.Scalar.Id
 
 
 type alias Json =
-    Mitsumori.Scalar.Json
+    MitsumoriApi.Scalar.Json
 
 
 type alias Time =
-    Mitsumori.Scalar.Time
+    MitsumoriApi.Scalar.Time
 
 
 type alias Uuid =
-    Mitsumori.Scalar.Uuid
+    MitsumoriApi.Scalar.Uuid
 
 
-codecs : Mitsumori.Scalar.Codecs BigInt Cursor Date Datetime Id Json Time Uuid
+codecs : MitsumoriApi.Scalar.Codecs BigInt Cursor Date Datetime Id Json Time Uuid
 codecs =
-    Mitsumori.Scalar.defineCodecs
+    MitsumoriApi.Scalar.defineCodecs
         { codecBigInt = defaultCodecs.codecBigInt
         , codecCursor = defaultCodecs.codecCursor
         , codecDate = defaultCodecs.codecDate

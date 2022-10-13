@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Mitsumori.Union exposing (..)
+module MitsumoriApi.Union exposing (..)
 
 
 placeholder : String

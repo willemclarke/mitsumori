@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Mitsumori.VerifyScalarCodecs exposing (..)
+module MitsumoriApi.VerifyScalarCodecs exposing (..)
 
 
 placeholder : String

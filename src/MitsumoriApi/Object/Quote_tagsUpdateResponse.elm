@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Mitsumori.Object.Quote_tagsInsertResponse exposing (..)
+module MitsumoriApi.Object.Quote_tagsUpdateResponse exposing (..)
 
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -11,17 +11,17 @@ import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
-import Mitsumori.InputObject
-import Mitsumori.Interface
-import Mitsumori.Object
-import Mitsumori.Scalar
-import Mitsumori.ScalarCodecs
-import Mitsumori.Union
+import MitsumoriApi.InputObject
+import MitsumoriApi.Interface
+import MitsumoriApi.Object
+import MitsumoriApi.Scalar
+import MitsumoriApi.ScalarCodecs
+import MitsumoriApi.Union
 
 
 {-| Count of the records impacted by the mutation
 -}
-affectedCount : SelectionSet Int Mitsumori.Object.Quote_tagsInsertResponse
+affectedCount : SelectionSet Int MitsumoriApi.Object.Quote_tagsUpdateResponse
 affectedCount =
     Object.selectionForField "Int" "affectedCount" [] Decode.int
 
@@ -29,7 +29,7 @@ affectedCount =
 {-| Array of records impacted by the mutation
 -}
 records :
-    SelectionSet decodesTo Mitsumori.Object.Quote_tags
-    -> SelectionSet (List decodesTo) Mitsumori.Object.Quote_tagsInsertResponse
+    SelectionSet decodesTo MitsumoriApi.Object.Quote_tags
+    -> SelectionSet (List decodesTo) MitsumoriApi.Object.Quote_tagsUpdateResponse
 records object____ =
     Object.selectionForCompositeField "records" [] object____ (Basics.identity >> Decode.list)

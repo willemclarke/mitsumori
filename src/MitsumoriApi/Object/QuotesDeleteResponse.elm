@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Mitsumori.Object.QuotesInsertResponse exposing (..)
+module MitsumoriApi.Object.QuotesDeleteResponse exposing (..)
 
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -11,17 +11,17 @@ import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
-import Mitsumori.InputObject
-import Mitsumori.Interface
-import Mitsumori.Object
-import Mitsumori.Scalar
-import Mitsumori.ScalarCodecs
-import Mitsumori.Union
+import MitsumoriApi.InputObject
+import MitsumoriApi.Interface
+import MitsumoriApi.Object
+import MitsumoriApi.Scalar
+import MitsumoriApi.ScalarCodecs
+import MitsumoriApi.Union
 
 
 {-| Count of the records impacted by the mutation
 -}
-affectedCount : SelectionSet Int Mitsumori.Object.QuotesInsertResponse
+affectedCount : SelectionSet Int MitsumoriApi.Object.QuotesDeleteResponse
 affectedCount =
     Object.selectionForField "Int" "affectedCount" [] Decode.int
 
@@ -29,7 +29,7 @@ affectedCount =
 {-| Array of records impacted by the mutation
 -}
 records :
-    SelectionSet decodesTo Mitsumori.Object.Quotes
-    -> SelectionSet (List decodesTo) Mitsumori.Object.QuotesInsertResponse
+    SelectionSet decodesTo MitsumoriApi.Object.Quotes
+    -> SelectionSet (List decodesTo) MitsumoriApi.Object.QuotesDeleteResponse
 records object____ =
     Object.selectionForCompositeField "records" [] object____ (Basics.identity >> Decode.list)

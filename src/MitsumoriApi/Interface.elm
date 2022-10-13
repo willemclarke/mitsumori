@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Mitsumori.Interface exposing (..)
+module MitsumoriApi.Interface exposing (..)
 
 
 placeholder : String

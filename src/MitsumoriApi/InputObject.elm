@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Mitsumori.InputObject exposing (..)
+module MitsumoriApi.InputObject exposing (..)
 
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -10,12 +10,12 @@ import Graphql.Internal.Encode as Encode exposing (Value)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
-import Mitsumori.Enum.OrderByDirection
-import Mitsumori.Interface
-import Mitsumori.Object
-import Mitsumori.Scalar
-import Mitsumori.ScalarCodecs
-import Mitsumori.Union
+import MitsumoriApi.Enum.OrderByDirection
+import MitsumoriApi.Interface
+import MitsumoriApi.Object
+import MitsumoriApi.Scalar
+import MitsumoriApi.ScalarCodecs
+import MitsumoriApi.Union
 
 
 buildBigIntFilter :
@@ -31,26 +31,26 @@ buildBigIntFilter fillOptionals____ =
 
 
 type alias BigIntFilterOptionalFields =
-    { eq : OptionalArgument Mitsumori.ScalarCodecs.BigInt
-    , gt : OptionalArgument Mitsumori.ScalarCodecs.BigInt
-    , gte : OptionalArgument Mitsumori.ScalarCodecs.BigInt
-    , in_ : OptionalArgument (List Mitsumori.ScalarCodecs.BigInt)
-    , lt : OptionalArgument Mitsumori.ScalarCodecs.BigInt
-    , lte : OptionalArgument Mitsumori.ScalarCodecs.BigInt
-    , neq : OptionalArgument Mitsumori.ScalarCodecs.BigInt
+    { eq : OptionalArgument MitsumoriApi.ScalarCodecs.BigInt
+    , gt : OptionalArgument MitsumoriApi.ScalarCodecs.BigInt
+    , gte : OptionalArgument MitsumoriApi.ScalarCodecs.BigInt
+    , in_ : OptionalArgument (List MitsumoriApi.ScalarCodecs.BigInt)
+    , lt : OptionalArgument MitsumoriApi.ScalarCodecs.BigInt
+    , lte : OptionalArgument MitsumoriApi.ScalarCodecs.BigInt
+    , neq : OptionalArgument MitsumoriApi.ScalarCodecs.BigInt
     }
 
 
 {-| Type for the BigIntFilter input object.
 -}
 type alias BigIntFilter =
-    { eq : OptionalArgument Mitsumori.ScalarCodecs.BigInt
-    , gt : OptionalArgument Mitsumori.ScalarCodecs.BigInt
-    , gte : OptionalArgument Mitsumori.ScalarCodecs.BigInt
-    , in_ : OptionalArgument (List Mitsumori.ScalarCodecs.BigInt)
-    , lt : OptionalArgument Mitsumori.ScalarCodecs.BigInt
-    , lte : OptionalArgument Mitsumori.ScalarCodecs.BigInt
-    , neq : OptionalArgument Mitsumori.ScalarCodecs.BigInt
+    { eq : OptionalArgument MitsumoriApi.ScalarCodecs.BigInt
+    , gt : OptionalArgument MitsumoriApi.ScalarCodecs.BigInt
+    , gte : OptionalArgument MitsumoriApi.ScalarCodecs.BigInt
+    , in_ : OptionalArgument (List MitsumoriApi.ScalarCodecs.BigInt)
+    , lt : OptionalArgument MitsumoriApi.ScalarCodecs.BigInt
+    , lte : OptionalArgument MitsumoriApi.ScalarCodecs.BigInt
+    , neq : OptionalArgument MitsumoriApi.ScalarCodecs.BigInt
     }
 
 
@@ -59,7 +59,7 @@ type alias BigIntFilter =
 encodeBigIntFilter : BigIntFilter -> Value
 encodeBigIntFilter input____ =
     Encode.maybeObject
-        [ ( "eq", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.eq ), ( "gt", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.gt ), ( "gte", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.gte ), ( "in", ((Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecBigInt) |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.lt ), ( "lte", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.lte ), ( "neq", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.neq ) ]
+        [ ( "eq", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.eq ), ( "gt", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.gt ), ( "gte", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.gte ), ( "in", ((MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.lt ), ( "lte", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.lte ), ( "neq", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.neq ) ]
 
 
 buildBooleanFilter :
@@ -119,26 +119,26 @@ buildDateFilter fillOptionals____ =
 
 
 type alias DateFilterOptionalFields =
-    { eq : OptionalArgument Mitsumori.ScalarCodecs.Date
-    , gt : OptionalArgument Mitsumori.ScalarCodecs.Date
-    , gte : OptionalArgument Mitsumori.ScalarCodecs.Date
-    , in_ : OptionalArgument (List Mitsumori.ScalarCodecs.Date)
-    , lt : OptionalArgument Mitsumori.ScalarCodecs.Date
-    , lte : OptionalArgument Mitsumori.ScalarCodecs.Date
-    , neq : OptionalArgument Mitsumori.ScalarCodecs.Date
+    { eq : OptionalArgument MitsumoriApi.ScalarCodecs.Date
+    , gt : OptionalArgument MitsumoriApi.ScalarCodecs.Date
+    , gte : OptionalArgument MitsumoriApi.ScalarCodecs.Date
+    , in_ : OptionalArgument (List MitsumoriApi.ScalarCodecs.Date)
+    , lt : OptionalArgument MitsumoriApi.ScalarCodecs.Date
+    , lte : OptionalArgument MitsumoriApi.ScalarCodecs.Date
+    , neq : OptionalArgument MitsumoriApi.ScalarCodecs.Date
     }
 
 
 {-| Type for the DateFilter input object.
 -}
 type alias DateFilter =
-    { eq : OptionalArgument Mitsumori.ScalarCodecs.Date
-    , gt : OptionalArgument Mitsumori.ScalarCodecs.Date
-    , gte : OptionalArgument Mitsumori.ScalarCodecs.Date
-    , in_ : OptionalArgument (List Mitsumori.ScalarCodecs.Date)
-    , lt : OptionalArgument Mitsumori.ScalarCodecs.Date
-    , lte : OptionalArgument Mitsumori.ScalarCodecs.Date
-    , neq : OptionalArgument Mitsumori.ScalarCodecs.Date
+    { eq : OptionalArgument MitsumoriApi.ScalarCodecs.Date
+    , gt : OptionalArgument MitsumoriApi.ScalarCodecs.Date
+    , gte : OptionalArgument MitsumoriApi.ScalarCodecs.Date
+    , in_ : OptionalArgument (List MitsumoriApi.ScalarCodecs.Date)
+    , lt : OptionalArgument MitsumoriApi.ScalarCodecs.Date
+    , lte : OptionalArgument MitsumoriApi.ScalarCodecs.Date
+    , neq : OptionalArgument MitsumoriApi.ScalarCodecs.Date
     }
 
 
@@ -147,7 +147,7 @@ type alias DateFilter =
 encodeDateFilter : DateFilter -> Value
 encodeDateFilter input____ =
     Encode.maybeObject
-        [ ( "eq", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.eq ), ( "gt", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.gt ), ( "gte", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.gte ), ( "in", ((Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDate) |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.lt ), ( "lte", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.lte ), ( "neq", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.neq ) ]
+        [ ( "eq", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.eq ), ( "gt", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.gt ), ( "gte", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.gte ), ( "in", ((MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.lt ), ( "lte", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.lte ), ( "neq", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.neq ) ]
 
 
 buildDatetimeFilter :
@@ -163,26 +163,26 @@ buildDatetimeFilter fillOptionals____ =
 
 
 type alias DatetimeFilterOptionalFields =
-    { eq : OptionalArgument Mitsumori.ScalarCodecs.Datetime
-    , gt : OptionalArgument Mitsumori.ScalarCodecs.Datetime
-    , gte : OptionalArgument Mitsumori.ScalarCodecs.Datetime
-    , in_ : OptionalArgument (List Mitsumori.ScalarCodecs.Datetime)
-    , lt : OptionalArgument Mitsumori.ScalarCodecs.Datetime
-    , lte : OptionalArgument Mitsumori.ScalarCodecs.Datetime
-    , neq : OptionalArgument Mitsumori.ScalarCodecs.Datetime
+    { eq : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
+    , gt : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
+    , gte : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
+    , in_ : OptionalArgument (List MitsumoriApi.ScalarCodecs.Datetime)
+    , lt : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
+    , lte : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
+    , neq : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
     }
 
 
 {-| Type for the DatetimeFilter input object.
 -}
 type alias DatetimeFilter =
-    { eq : OptionalArgument Mitsumori.ScalarCodecs.Datetime
-    , gt : OptionalArgument Mitsumori.ScalarCodecs.Datetime
-    , gte : OptionalArgument Mitsumori.ScalarCodecs.Datetime
-    , in_ : OptionalArgument (List Mitsumori.ScalarCodecs.Datetime)
-    , lt : OptionalArgument Mitsumori.ScalarCodecs.Datetime
-    , lte : OptionalArgument Mitsumori.ScalarCodecs.Datetime
-    , neq : OptionalArgument Mitsumori.ScalarCodecs.Datetime
+    { eq : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
+    , gt : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
+    , gte : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
+    , in_ : OptionalArgument (List MitsumoriApi.ScalarCodecs.Datetime)
+    , lt : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
+    , lte : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
+    , neq : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
     }
 
 
@@ -191,7 +191,7 @@ type alias DatetimeFilter =
 encodeDatetimeFilter : DatetimeFilter -> Value
 encodeDatetimeFilter input____ =
     Encode.maybeObject
-        [ ( "eq", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.eq ), ( "gt", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.gt ), ( "gte", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.gte ), ( "in", ((Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDatetime) |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.lt ), ( "lte", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.lte ), ( "neq", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.neq ) ]
+        [ ( "eq", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.eq ), ( "gt", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.gt ), ( "gte", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.gte ), ( "in", ((MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.lt ), ( "lte", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.lte ), ( "neq", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.neq ) ]
 
 
 buildFloatFilter :
@@ -295,16 +295,16 @@ buildJSONFilter fillOptionals____ =
 
 
 type alias JSONFilterOptionalFields =
-    { eq : OptionalArgument Mitsumori.ScalarCodecs.Json
-    , neq : OptionalArgument Mitsumori.ScalarCodecs.Json
+    { eq : OptionalArgument MitsumoriApi.ScalarCodecs.Json
+    , neq : OptionalArgument MitsumoriApi.ScalarCodecs.Json
     }
 
 
 {-| Type for the JSONFilter input object.
 -}
 type alias JSONFilter =
-    { eq : OptionalArgument Mitsumori.ScalarCodecs.Json
-    , neq : OptionalArgument Mitsumori.ScalarCodecs.Json
+    { eq : OptionalArgument MitsumoriApi.ScalarCodecs.Json
+    , neq : OptionalArgument MitsumoriApi.ScalarCodecs.Json
     }
 
 
@@ -313,7 +313,7 @@ type alias JSONFilter =
 encodeJSONFilter : JSONFilter -> Value
 encodeJSONFilter input____ =
     Encode.maybeObject
-        [ ( "eq", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecJson) |> Encode.optional input____.eq ), ( "neq", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecJson) |> Encode.optional input____.neq ) ]
+        [ ( "eq", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecJson) |> Encode.optional input____.eq ), ( "neq", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecJson) |> Encode.optional input____.neq ) ]
 
 
 buildQuote_tagsFilter :
@@ -366,8 +366,8 @@ buildQuote_tagsInsertInput fillOptionals____ =
 
 type alias Quote_tagsInsertInputOptionalFields =
     { text : OptionalArgument String
-    , quote_id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
-    , id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
+    , quote_id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
+    , id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
     }
 
 
@@ -375,8 +375,8 @@ type alias Quote_tagsInsertInputOptionalFields =
 -}
 type alias Quote_tagsInsertInput =
     { text : OptionalArgument String
-    , quote_id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
-    , id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
+    , quote_id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
+    , id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
     }
 
 
@@ -385,7 +385,7 @@ type alias Quote_tagsInsertInput =
 encodeQuote_tagsInsertInput : Quote_tagsInsertInput -> Value
 encodeQuote_tagsInsertInput input____ =
     Encode.maybeObject
-        [ ( "text", Encode.string |> Encode.optional input____.text ), ( "quote_id", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.quote_id ), ( "id", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ) ]
+        [ ( "text", Encode.string |> Encode.optional input____.text ), ( "quote_id", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.quote_id ), ( "id", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ) ]
 
 
 buildQuote_tagsOrderBy :
@@ -401,18 +401,18 @@ buildQuote_tagsOrderBy fillOptionals____ =
 
 
 type alias Quote_tagsOrderByOptionalFields =
-    { text : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
-    , quote_id : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
-    , id : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
+    { text : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , quote_id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     }
 
 
 {-| Type for the Quote\_tagsOrderBy input object.
 -}
 type alias Quote_tagsOrderBy =
-    { text : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
-    , quote_id : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
-    , id : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
+    { text : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , quote_id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     }
 
 
@@ -421,7 +421,7 @@ type alias Quote_tagsOrderBy =
 encodeQuote_tagsOrderBy : Quote_tagsOrderBy -> Value
 encodeQuote_tagsOrderBy input____ =
     Encode.maybeObject
-        [ ( "text", Encode.enum Mitsumori.Enum.OrderByDirection.toString |> Encode.optional input____.text ), ( "quote_id", Encode.enum Mitsumori.Enum.OrderByDirection.toString |> Encode.optional input____.quote_id ), ( "id", Encode.enum Mitsumori.Enum.OrderByDirection.toString |> Encode.optional input____.id ) ]
+        [ ( "text", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.text ), ( "quote_id", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.quote_id ), ( "id", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.id ) ]
 
 
 buildQuote_tagsUpdateInput :
@@ -438,8 +438,8 @@ buildQuote_tagsUpdateInput fillOptionals____ =
 
 type alias Quote_tagsUpdateInputOptionalFields =
     { text : OptionalArgument String
-    , quote_id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
-    , id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
+    , quote_id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
+    , id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
     }
 
 
@@ -447,8 +447,8 @@ type alias Quote_tagsUpdateInputOptionalFields =
 -}
 type alias Quote_tagsUpdateInput =
     { text : OptionalArgument String
-    , quote_id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
-    , id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
+    , quote_id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
+    , id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
     }
 
 
@@ -457,7 +457,7 @@ type alias Quote_tagsUpdateInput =
 encodeQuote_tagsUpdateInput : Quote_tagsUpdateInput -> Value
 encodeQuote_tagsUpdateInput input____ =
     Encode.maybeObject
-        [ ( "text", Encode.string |> Encode.optional input____.text ), ( "quote_id", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.quote_id ), ( "id", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ) ]
+        [ ( "text", Encode.string |> Encode.optional input____.text ), ( "quote_id", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.quote_id ), ( "id", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ) ]
 
 
 buildQuotesFilter :
@@ -515,11 +515,11 @@ buildQuotesInsertInput fillOptionals____ =
 
 
 type alias QuotesInsertInputOptionalFields =
-    { id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
+    { id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
     , quote_text : OptionalArgument String
     , quote_author : OptionalArgument String
-    , user_id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
-    , created_at : OptionalArgument Mitsumori.ScalarCodecs.Datetime
+    , user_id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
+    , created_at : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
     , quote_reference : OptionalArgument String
     }
 
@@ -527,11 +527,11 @@ type alias QuotesInsertInputOptionalFields =
 {-| Type for the QuotesInsertInput input object.
 -}
 type alias QuotesInsertInput =
-    { id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
+    { id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
     , quote_text : OptionalArgument String
     , quote_author : OptionalArgument String
-    , user_id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
-    , created_at : OptionalArgument Mitsumori.ScalarCodecs.Datetime
+    , user_id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
+    , created_at : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
     , quote_reference : OptionalArgument String
     }
 
@@ -541,7 +541,7 @@ type alias QuotesInsertInput =
 encodeQuotesInsertInput : QuotesInsertInput -> Value
 encodeQuotesInsertInput input____ =
     Encode.maybeObject
-        [ ( "id", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ), ( "quote_text", Encode.string |> Encode.optional input____.quote_text ), ( "quote_author", Encode.string |> Encode.optional input____.quote_author ), ( "user_id", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.user_id ), ( "created_at", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.created_at ), ( "quote_reference", Encode.string |> Encode.optional input____.quote_reference ) ]
+        [ ( "id", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ), ( "quote_text", Encode.string |> Encode.optional input____.quote_text ), ( "quote_author", Encode.string |> Encode.optional input____.quote_author ), ( "user_id", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.user_id ), ( "created_at", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.created_at ), ( "quote_reference", Encode.string |> Encode.optional input____.quote_reference ) ]
 
 
 buildQuotesOrderBy :
@@ -557,24 +557,24 @@ buildQuotesOrderBy fillOptionals____ =
 
 
 type alias QuotesOrderByOptionalFields =
-    { id : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
-    , quote_text : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
-    , quote_author : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
-    , user_id : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
-    , created_at : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
-    , quote_reference : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
+    { id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , quote_text : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , quote_author : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , user_id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , created_at : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , quote_reference : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     }
 
 
 {-| Type for the QuotesOrderBy input object.
 -}
 type alias QuotesOrderBy =
-    { id : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
-    , quote_text : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
-    , quote_author : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
-    , user_id : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
-    , created_at : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
-    , quote_reference : OptionalArgument Mitsumori.Enum.OrderByDirection.OrderByDirection
+    { id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , quote_text : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , quote_author : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , user_id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , created_at : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , quote_reference : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     }
 
 
@@ -583,7 +583,7 @@ type alias QuotesOrderBy =
 encodeQuotesOrderBy : QuotesOrderBy -> Value
 encodeQuotesOrderBy input____ =
     Encode.maybeObject
-        [ ( "id", Encode.enum Mitsumori.Enum.OrderByDirection.toString |> Encode.optional input____.id ), ( "quote_text", Encode.enum Mitsumori.Enum.OrderByDirection.toString |> Encode.optional input____.quote_text ), ( "quote_author", Encode.enum Mitsumori.Enum.OrderByDirection.toString |> Encode.optional input____.quote_author ), ( "user_id", Encode.enum Mitsumori.Enum.OrderByDirection.toString |> Encode.optional input____.user_id ), ( "created_at", Encode.enum Mitsumori.Enum.OrderByDirection.toString |> Encode.optional input____.created_at ), ( "quote_reference", Encode.enum Mitsumori.Enum.OrderByDirection.toString |> Encode.optional input____.quote_reference ) ]
+        [ ( "id", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.id ), ( "quote_text", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.quote_text ), ( "quote_author", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.quote_author ), ( "user_id", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.user_id ), ( "created_at", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.created_at ), ( "quote_reference", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.quote_reference ) ]
 
 
 buildQuotesUpdateInput :
@@ -599,11 +599,11 @@ buildQuotesUpdateInput fillOptionals____ =
 
 
 type alias QuotesUpdateInputOptionalFields =
-    { id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
+    { id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
     , quote_text : OptionalArgument String
     , quote_author : OptionalArgument String
-    , user_id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
-    , created_at : OptionalArgument Mitsumori.ScalarCodecs.Datetime
+    , user_id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
+    , created_at : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
     , quote_reference : OptionalArgument String
     }
 
@@ -611,11 +611,11 @@ type alias QuotesUpdateInputOptionalFields =
 {-| Type for the QuotesUpdateInput input object.
 -}
 type alias QuotesUpdateInput =
-    { id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
+    { id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
     , quote_text : OptionalArgument String
     , quote_author : OptionalArgument String
-    , user_id : OptionalArgument Mitsumori.ScalarCodecs.Uuid
-    , created_at : OptionalArgument Mitsumori.ScalarCodecs.Datetime
+    , user_id : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
+    , created_at : OptionalArgument MitsumoriApi.ScalarCodecs.Datetime
     , quote_reference : OptionalArgument String
     }
 
@@ -625,7 +625,7 @@ type alias QuotesUpdateInput =
 encodeQuotesUpdateInput : QuotesUpdateInput -> Value
 encodeQuotesUpdateInput input____ =
     Encode.maybeObject
-        [ ( "id", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ), ( "quote_text", Encode.string |> Encode.optional input____.quote_text ), ( "quote_author", Encode.string |> Encode.optional input____.quote_author ), ( "user_id", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.user_id ), ( "created_at", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.created_at ), ( "quote_reference", Encode.string |> Encode.optional input____.quote_reference ) ]
+        [ ( "id", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ), ( "quote_text", Encode.string |> Encode.optional input____.quote_text ), ( "quote_author", Encode.string |> Encode.optional input____.quote_author ), ( "user_id", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.user_id ), ( "created_at", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.created_at ), ( "quote_reference", Encode.string |> Encode.optional input____.quote_reference ) ]
 
 
 buildStringFilter :
@@ -685,26 +685,26 @@ buildTimeFilter fillOptionals____ =
 
 
 type alias TimeFilterOptionalFields =
-    { eq : OptionalArgument Mitsumori.ScalarCodecs.Time
-    , gt : OptionalArgument Mitsumori.ScalarCodecs.Time
-    , gte : OptionalArgument Mitsumori.ScalarCodecs.Time
-    , in_ : OptionalArgument (List Mitsumori.ScalarCodecs.Time)
-    , lt : OptionalArgument Mitsumori.ScalarCodecs.Time
-    , lte : OptionalArgument Mitsumori.ScalarCodecs.Time
-    , neq : OptionalArgument Mitsumori.ScalarCodecs.Time
+    { eq : OptionalArgument MitsumoriApi.ScalarCodecs.Time
+    , gt : OptionalArgument MitsumoriApi.ScalarCodecs.Time
+    , gte : OptionalArgument MitsumoriApi.ScalarCodecs.Time
+    , in_ : OptionalArgument (List MitsumoriApi.ScalarCodecs.Time)
+    , lt : OptionalArgument MitsumoriApi.ScalarCodecs.Time
+    , lte : OptionalArgument MitsumoriApi.ScalarCodecs.Time
+    , neq : OptionalArgument MitsumoriApi.ScalarCodecs.Time
     }
 
 
 {-| Type for the TimeFilter input object.
 -}
 type alias TimeFilter =
-    { eq : OptionalArgument Mitsumori.ScalarCodecs.Time
-    , gt : OptionalArgument Mitsumori.ScalarCodecs.Time
-    , gte : OptionalArgument Mitsumori.ScalarCodecs.Time
-    , in_ : OptionalArgument (List Mitsumori.ScalarCodecs.Time)
-    , lt : OptionalArgument Mitsumori.ScalarCodecs.Time
-    , lte : OptionalArgument Mitsumori.ScalarCodecs.Time
-    , neq : OptionalArgument Mitsumori.ScalarCodecs.Time
+    { eq : OptionalArgument MitsumoriApi.ScalarCodecs.Time
+    , gt : OptionalArgument MitsumoriApi.ScalarCodecs.Time
+    , gte : OptionalArgument MitsumoriApi.ScalarCodecs.Time
+    , in_ : OptionalArgument (List MitsumoriApi.ScalarCodecs.Time)
+    , lt : OptionalArgument MitsumoriApi.ScalarCodecs.Time
+    , lte : OptionalArgument MitsumoriApi.ScalarCodecs.Time
+    , neq : OptionalArgument MitsumoriApi.ScalarCodecs.Time
     }
 
 
@@ -713,7 +713,7 @@ type alias TimeFilter =
 encodeTimeFilter : TimeFilter -> Value
 encodeTimeFilter input____ =
     Encode.maybeObject
-        [ ( "eq", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.eq ), ( "gt", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.gt ), ( "gte", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.gte ), ( "in", ((Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecTime) |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.lt ), ( "lte", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.lte ), ( "neq", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.neq ) ]
+        [ ( "eq", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.eq ), ( "gt", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.gt ), ( "gte", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.gte ), ( "in", ((MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.lt ), ( "lte", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.lte ), ( "neq", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.neq ) ]
 
 
 buildUUIDFilter :
@@ -729,18 +729,18 @@ buildUUIDFilter fillOptionals____ =
 
 
 type alias UUIDFilterOptionalFields =
-    { eq : OptionalArgument Mitsumori.ScalarCodecs.Uuid
-    , in_ : OptionalArgument (List Mitsumori.ScalarCodecs.Uuid)
-    , neq : OptionalArgument Mitsumori.ScalarCodecs.Uuid
+    { eq : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
+    , in_ : OptionalArgument (List MitsumoriApi.ScalarCodecs.Uuid)
+    , neq : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
     }
 
 
 {-| Type for the UUIDFilter input object.
 -}
 type alias UUIDFilter =
-    { eq : OptionalArgument Mitsumori.ScalarCodecs.Uuid
-    , in_ : OptionalArgument (List Mitsumori.ScalarCodecs.Uuid)
-    , neq : OptionalArgument Mitsumori.ScalarCodecs.Uuid
+    { eq : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
+    , in_ : OptionalArgument (List MitsumoriApi.ScalarCodecs.Uuid)
+    , neq : OptionalArgument MitsumoriApi.ScalarCodecs.Uuid
     }
 
 
@@ -749,4 +749,4 @@ type alias UUIDFilter =
 encodeUUIDFilter : UUIDFilter -> Value
 encodeUUIDFilter input____ =
     Encode.maybeObject
-        [ ( "eq", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.eq ), ( "in", ((Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecUuid) |> Encode.list) |> Encode.optional input____.in_ ), ( "neq", (Mitsumori.ScalarCodecs.codecs |> Mitsumori.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.neq ) ]
+        [ ( "eq", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.eq ), ( "in", ((MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.list) |> Encode.optional input____.in_ ), ( "neq", (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.neq ) ]

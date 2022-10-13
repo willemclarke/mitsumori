@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Mitsumori.Enum.OrderByDirection exposing (..)
+module MitsumoriApi.Enum.OrderByDirection exposing (..)
 
 import Json.Decode as Decode exposing (Decoder)
 

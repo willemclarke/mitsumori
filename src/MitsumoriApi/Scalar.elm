@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Mitsumori.Scalar exposing (BigInt(..), Codecs, Cursor(..), Date(..), Datetime(..), Id(..), Json(..), Time(..), Uuid(..), defaultCodecs, defineCodecs, unwrapCodecs, unwrapEncoder)
+module MitsumoriApi.Scalar exposing (BigInt(..), Codecs, Cursor(..), Date(..), Datetime(..), Id(..), Json(..), Time(..), Uuid(..), defaultCodecs, defineCodecs, unwrapCodecs, unwrapEncoder)
 
 import Graphql.Codec exposing (Codec)
 import Graphql.Internal.Builder.Object as Object

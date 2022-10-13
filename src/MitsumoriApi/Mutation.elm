@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Mitsumori.Mutation exposing (..)
+module MitsumoriApi.Mutation exposing (..)
 
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -11,16 +11,16 @@ import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode exposing (Decoder)
-import Mitsumori.InputObject
-import Mitsumori.Interface
-import Mitsumori.Object
-import Mitsumori.Scalar
-import Mitsumori.ScalarCodecs
-import Mitsumori.Union
+import MitsumoriApi.InputObject
+import MitsumoriApi.Interface
+import MitsumoriApi.Object
+import MitsumoriApi.Scalar
+import MitsumoriApi.ScalarCodecs
+import MitsumoriApi.Union
 
 
 type alias DeleteFromquoteTagsCollectionOptionalArguments =
-    { filter : OptionalArgument Mitsumori.InputObject.Quote_tagsFilter }
+    { filter : OptionalArgument MitsumoriApi.InputObject.Quote_tagsFilter }
 
 
 type alias DeleteFromquoteTagsCollectionRequiredArguments =
@@ -36,7 +36,7 @@ type alias DeleteFromquoteTagsCollectionRequiredArguments =
 deleteFromquote_tagsCollection :
     (DeleteFromquoteTagsCollectionOptionalArguments -> DeleteFromquoteTagsCollectionOptionalArguments)
     -> DeleteFromquoteTagsCollectionRequiredArguments
-    -> SelectionSet decodesTo Mitsumori.Object.Quote_tagsDeleteResponse
+    -> SelectionSet decodesTo MitsumoriApi.Object.Quote_tagsDeleteResponse
     -> SelectionSet decodesTo RootMutation
 deleteFromquote_tagsCollection fillInOptionals____ requiredArgs____ object____ =
     let
@@ -44,14 +44,14 @@ deleteFromquote_tagsCollection fillInOptionals____ requiredArgs____ object____ =
             fillInOptionals____ { filter = Absent }
 
         optionalArgs____ =
-            [ Argument.optional "filter" filledInOptionals____.filter Mitsumori.InputObject.encodeQuote_tagsFilter ]
+            [ Argument.optional "filter" filledInOptionals____.filter MitsumoriApi.InputObject.encodeQuote_tagsFilter ]
                 |> List.filterMap Basics.identity
     in
     Object.selectionForCompositeField "deleteFromquote_tagsCollection" (optionalArgs____ ++ [ Argument.required "atMost" requiredArgs____.atMost Encode.int ]) object____ Basics.identity
 
 
 type alias DeleteFromquotesCollectionOptionalArguments =
-    { filter : OptionalArgument Mitsumori.InputObject.QuotesFilter }
+    { filter : OptionalArgument MitsumoriApi.InputObject.QuotesFilter }
 
 
 type alias DeleteFromquotesCollectionRequiredArguments =
@@ -67,7 +67,7 @@ type alias DeleteFromquotesCollectionRequiredArguments =
 deleteFromquotesCollection :
     (DeleteFromquotesCollectionOptionalArguments -> DeleteFromquotesCollectionOptionalArguments)
     -> DeleteFromquotesCollectionRequiredArguments
-    -> SelectionSet decodesTo Mitsumori.Object.QuotesDeleteResponse
+    -> SelectionSet decodesTo MitsumoriApi.Object.QuotesDeleteResponse
     -> SelectionSet decodesTo RootMutation
 deleteFromquotesCollection fillInOptionals____ requiredArgs____ object____ =
     let
@@ -75,46 +75,46 @@ deleteFromquotesCollection fillInOptionals____ requiredArgs____ object____ =
             fillInOptionals____ { filter = Absent }
 
         optionalArgs____ =
-            [ Argument.optional "filter" filledInOptionals____.filter Mitsumori.InputObject.encodeQuotesFilter ]
+            [ Argument.optional "filter" filledInOptionals____.filter MitsumoriApi.InputObject.encodeQuotesFilter ]
                 |> List.filterMap Basics.identity
     in
     Object.selectionForCompositeField "deleteFromquotesCollection" (optionalArgs____ ++ [ Argument.required "atMost" requiredArgs____.atMost Encode.int ]) object____ Basics.identity
 
 
 type alias InsertIntoquoteTagsCollectionRequiredArguments =
-    { objects : List Mitsumori.InputObject.Quote_tagsInsertInput }
+    { objects : List MitsumoriApi.InputObject.Quote_tagsInsertInput }
 
 
 {-| Adds one or more `quote_tagsInsertResponse` records to the collection
 -}
 insertIntoquote_tagsCollection :
     InsertIntoquoteTagsCollectionRequiredArguments
-    -> SelectionSet decodesTo Mitsumori.Object.Quote_tagsInsertResponse
+    -> SelectionSet decodesTo MitsumoriApi.Object.Quote_tagsInsertResponse
     -> SelectionSet (Maybe decodesTo) RootMutation
 insertIntoquote_tagsCollection requiredArgs____ object____ =
-    Object.selectionForCompositeField "insertIntoquote_tagsCollection" [ Argument.required "objects" requiredArgs____.objects (Mitsumori.InputObject.encodeQuote_tagsInsertInput |> Encode.list) ] object____ (Basics.identity >> Decode.nullable)
+    Object.selectionForCompositeField "insertIntoquote_tagsCollection" [ Argument.required "objects" requiredArgs____.objects (MitsumoriApi.InputObject.encodeQuote_tagsInsertInput |> Encode.list) ] object____ (Basics.identity >> Decode.nullable)
 
 
 type alias InsertIntoquotesCollectionRequiredArguments =
-    { objects : List Mitsumori.InputObject.QuotesInsertInput }
+    { objects : List MitsumoriApi.InputObject.QuotesInsertInput }
 
 
 {-| Adds one or more `quotesInsertResponse` records to the collection
 -}
 insertIntoquotesCollection :
     InsertIntoquotesCollectionRequiredArguments
-    -> SelectionSet decodesTo Mitsumori.Object.QuotesInsertResponse
+    -> SelectionSet decodesTo MitsumoriApi.Object.QuotesInsertResponse
     -> SelectionSet (Maybe decodesTo) RootMutation
 insertIntoquotesCollection requiredArgs____ object____ =
-    Object.selectionForCompositeField "insertIntoquotesCollection" [ Argument.required "objects" requiredArgs____.objects (Mitsumori.InputObject.encodeQuotesInsertInput |> Encode.list) ] object____ (Basics.identity >> Decode.nullable)
+    Object.selectionForCompositeField "insertIntoquotesCollection" [ Argument.required "objects" requiredArgs____.objects (MitsumoriApi.InputObject.encodeQuotesInsertInput |> Encode.list) ] object____ (Basics.identity >> Decode.nullable)
 
 
 type alias UpdatequoteTagsCollectionOptionalArguments =
-    { filter : OptionalArgument Mitsumori.InputObject.Quote_tagsFilter }
+    { filter : OptionalArgument MitsumoriApi.InputObject.Quote_tagsFilter }
 
 
 type alias UpdatequoteTagsCollectionRequiredArguments =
-    { set : Mitsumori.InputObject.Quote_tagsUpdateInput
+    { set : MitsumoriApi.InputObject.Quote_tagsUpdateInput
     , atMost : Int
     }
 
@@ -129,7 +129,7 @@ type alias UpdatequoteTagsCollectionRequiredArguments =
 updatequote_tagsCollection :
     (UpdatequoteTagsCollectionOptionalArguments -> UpdatequoteTagsCollectionOptionalArguments)
     -> UpdatequoteTagsCollectionRequiredArguments
-    -> SelectionSet decodesTo Mitsumori.Object.Quote_tagsUpdateResponse
+    -> SelectionSet decodesTo MitsumoriApi.Object.Quote_tagsUpdateResponse
     -> SelectionSet decodesTo RootMutation
 updatequote_tagsCollection fillInOptionals____ requiredArgs____ object____ =
     let
@@ -137,18 +137,18 @@ updatequote_tagsCollection fillInOptionals____ requiredArgs____ object____ =
             fillInOptionals____ { filter = Absent }
 
         optionalArgs____ =
-            [ Argument.optional "filter" filledInOptionals____.filter Mitsumori.InputObject.encodeQuote_tagsFilter ]
+            [ Argument.optional "filter" filledInOptionals____.filter MitsumoriApi.InputObject.encodeQuote_tagsFilter ]
                 |> List.filterMap Basics.identity
     in
-    Object.selectionForCompositeField "updatequote_tagsCollection" (optionalArgs____ ++ [ Argument.required "set" requiredArgs____.set Mitsumori.InputObject.encodeQuote_tagsUpdateInput, Argument.required "atMost" requiredArgs____.atMost Encode.int ]) object____ Basics.identity
+    Object.selectionForCompositeField "updatequote_tagsCollection" (optionalArgs____ ++ [ Argument.required "set" requiredArgs____.set MitsumoriApi.InputObject.encodeQuote_tagsUpdateInput, Argument.required "atMost" requiredArgs____.atMost Encode.int ]) object____ Basics.identity
 
 
 type alias UpdatequotesCollectionOptionalArguments =
-    { filter : OptionalArgument Mitsumori.InputObject.QuotesFilter }
+    { filter : OptionalArgument MitsumoriApi.InputObject.QuotesFilter }
 
 
 type alias UpdatequotesCollectionRequiredArguments =
-    { set : Mitsumori.InputObject.QuotesUpdateInput
+    { set : MitsumoriApi.InputObject.QuotesUpdateInput
     , atMost : Int
     }
 
@@ -163,7 +163,7 @@ type alias UpdatequotesCollectionRequiredArguments =
 updatequotesCollection :
     (UpdatequotesCollectionOptionalArguments -> UpdatequotesCollectionOptionalArguments)
     -> UpdatequotesCollectionRequiredArguments
-    -> SelectionSet decodesTo Mitsumori.Object.QuotesUpdateResponse
+    -> SelectionSet decodesTo MitsumoriApi.Object.QuotesUpdateResponse
     -> SelectionSet decodesTo RootMutation
 updatequotesCollection fillInOptionals____ requiredArgs____ object____ =
     let
@@ -171,7 +171,7 @@ updatequotesCollection fillInOptionals____ requiredArgs____ object____ =
             fillInOptionals____ { filter = Absent }
 
         optionalArgs____ =
-            [ Argument.optional "filter" filledInOptionals____.filter Mitsumori.InputObject.encodeQuotesFilter ]
+            [ Argument.optional "filter" filledInOptionals____.filter MitsumoriApi.InputObject.encodeQuotesFilter ]
                 |> List.filterMap Basics.identity
     in
-    Object.selectionForCompositeField "updatequotesCollection" (optionalArgs____ ++ [ Argument.required "set" requiredArgs____.set Mitsumori.InputObject.encodeQuotesUpdateInput, Argument.required "atMost" requiredArgs____.atMost Encode.int ]) object____ Basics.identity
+    Object.selectionForCompositeField "updatequotesCollection" (optionalArgs____ ++ [ Argument.required "set" requiredArgs____.set MitsumoriApi.InputObject.encodeQuotesUpdateInput, Argument.required "atMost" requiredArgs____.atMost Encode.int ]) object____ Basics.identity

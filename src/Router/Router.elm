@@ -66,7 +66,7 @@ signOutResponseDecoder : JE.Value -> SignOutResponse
 signOutResponseDecoder json =
     JD.decodeValue
         (JD.oneOf
-            [ JD.map SignoutSuccess JD.string, JD.map SignoutError Supabase.errorDecoder ]
+            [ JD.map SignoutSuccess JD.string, JD.map SignoutError Supabase.authErrorDecoder ]
         )
         json
         |> Result.withDefault PayloadError

@@ -12,7 +12,6 @@ import Json.Decode as JD
 import Json.Encode as JE
 import Json.Encode.Extra
 import List.Extra as LE
-import Quotes
 import Random exposing (Seed)
 import RemoteData exposing (RemoteData(..))
 import Shared exposing (Shared)
@@ -37,7 +36,7 @@ type alias Model =
 
 
 type alias QuotesResponse =
-    RemoteData (Graphql.Http.Error Quotes.Response) Quotes.Response
+    RemoteData (Graphql.Http.Error Supabase.Quotes) Supabase.Quotes
 
 
 type alias Quote =
@@ -64,8 +63,8 @@ type Problem
 
 type ModalType
     = NewQuote
-    | Editing Quotes.Quote
-    | Delete Quotes.Quote
+    | Editing Supabase.Quote
+    | Delete Supabase.Quote
 
 
 type ModalVisibility
@@ -102,30 +101,29 @@ init shared =
       , modalType = NewQuote
       , modalVisibility = Hidden
       }
-    , Quotes.makeRequest GotQuotesResponse shared
+    , Supabase.makeRequest GotQuotesResponse shared
       -- , Supabase.getQuotes (JE.string <| Maybe.withDefault "" (User.userId shared.user))
     )
 
 
-quoteResponseDecoder : JE.Value -> QuoteResponse
-quoteResponseDecoder json =
-    JD.decodeValue
-        (JD.oneOf
-            [ JD.map QuotesOk (JD.list Supabase.quoteDecoder), JD.map QuotesError Supabase.errorDecoder ]
-        )
-        json
-        |> Result.withDefault PayloadError
 
-
-quoteFromSupabaseQuote : Supabase.Quote -> Quote
-quoteFromSupabaseQuote quote =
-    { id = quote.id
-    , quote = quote.quote_text
-    , author = quote.quote_author
-    , createdAt = quote.created_at
-    , userId = quote.user_id
-    , reference = Maybe.withDefault "" quote.quote_reference
-    }
+-- quoteResponseDecoder : JE.Value -> QuoteResponse
+-- quoteResponseDecoder json =
+--     JD.decodeValue
+--         (JD.oneOf
+--             [ JD.map QuotesOk (JD.list Supabase.quoteDecoder), JD.map QuotesError Supabase.authErrorDecoder ]
+--         )
+--         json
+--         |> Result.withDefault PayloadError
+-- quoteFromSupabaseQuote : Supabase.Quote -> Quote
+-- quoteFromSupabaseQuote quote =
+--     { id = quote.id
+--     , quote = quote.quote_text
+--     , author = quote.quote_author
+--     , createdAt = quote.created_at
+--     , userId = quote.user_id
+--     , reference = Maybe.withDefault "" quote.quote_reference
+--     }
 
 
 encodeQuote : TrimmedForm -> Maybe Uuid.Uuid -> User.User -> JE.Value
@@ -149,8 +147,8 @@ type Msg
     | OnQuoteChange String
     | OnAuthorChange String
     | OnReferenceChange String
-    | OpenEditQuoteModal Quotes.Quote
-    | OpenDeleteQuoteModal Quotes.Quote
+    | OpenEditQuoteModal Supabase.Quote
+    | OpenDeleteQuoteModal Supabase.Quote
     | SubmitAddQuoteModal
     | SubmitEditQuoteModal Uuid.Uuid
       -- | SubmitDeleteQuoteModal String
@@ -440,7 +438,7 @@ viewQuotes quotesData =
         ]
 
 
-viewQuote : Quotes.Quote -> Html Msg
+viewQuote : Supabase.Quote -> Html Msg
 viewQuote quote =
     let
         quoteTags =

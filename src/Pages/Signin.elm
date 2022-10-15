@@ -74,7 +74,7 @@ signInResponseDecoder : JE.Value -> SigninResponse
 signInResponseDecoder json =
     JD.decodeValue
         (JD.oneOf
-            [ JD.map UserOk User.decoder, JD.map SignupError Supabase.errorDecoder ]
+            [ JD.map UserOk User.decoder, JD.map SignupError Supabase.authErrorDecoder ]
         )
         json
         |> Result.withDefault PayloadError

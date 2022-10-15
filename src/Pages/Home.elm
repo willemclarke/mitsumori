@@ -457,7 +457,7 @@ viewQuote quote =
             else
                 div [ class "mt-1" ] [ a [ href <| reference, class "text-gray-600 text-sm cursor-pointer hover:text-black" ] [ text "Quote reference" ] ]
     in
-    div [ class "flex flex-col border rounded-lg p-6 shadow-sm hover:bg-gray-100/40 transition ease-in-out hover:-translate-y-px duration-300" ]
+    div [ class "flex flex-col border rounded-lg p-6 shadow-sm hover:bg-gray-100/30 transition ease-in-out hover:-translate-y-px duration-300" ]
         [ p [ class "text-lg text-gray-800" ] [ text quote.quote ]
         , p [ class "mt-1 text-gray-600 text-md font-light" ] [ text <| "by " ++ quote.author ]
         , div [ class "flex flex-col mt-2" ]

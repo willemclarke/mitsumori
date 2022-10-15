@@ -22,7 +22,8 @@
             "elm-community/list-extra": "8.6.0",
             "elm-community/string-extra": "4.0.1",
             "hmsk/elm-vite-plugin-helper": "1.0.1",
-            "krisajenkins/remotedata": "6.0.1"
+            "krisajenkins/remotedata": "6.0.1",
+            "rtfeldman/elm-iso8601-date-strings": "1.1.4"
         },
         "indirect": {
             "elm/bytes": "1.0.8",
@@ -31,8 +32,7 @@
             "elm/regex": "1.0.0",
             "elm/virtual-dom": "1.0.2",
             "j-maas/elm-ordered-containers": "1.0.0",
-            "lukewestby/elm-string-interpolate": "1.0.4",
-            "rtfeldman/elm-iso8601-date-strings": "1.1.4"
+            "lukewestby/elm-string-interpolate": "1.0.4"
         }
     },
     "test-dependencies": {

@@ -13,6 +13,7 @@ import MitsumoriApi.Query as Query
 import MitsumoriApi.Scalar
 import RemoteData exposing (RemoteData)
 import Shared exposing (Shared)
+import Time
 import User
 import Uuid
 
@@ -29,7 +30,7 @@ type alias Quote =
     { id : Uuid.Uuid
     , quote : String
     , author : String
-    , createdAt : String
+    , createdAt : Time.Posix
     , userId : Uuid.Uuid
     , reference : Maybe String
     }
@@ -94,13 +95,6 @@ quotesNode =
         Quotes.id
         Quotes.quote_text
         Quotes.quote_author
-        (SelectionSet.map
-            (\date ->
-                case date of
-                    MitsumoriApi.Scalar.Datetime string ->
-                        string
-            )
-            Quotes.created_at
-        )
+        Quotes.created_at
         Quotes.user_id
         Quotes.quote_reference

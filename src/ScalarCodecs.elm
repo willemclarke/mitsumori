@@ -1,8 +1,6 @@
 module ScalarCodecs exposing (..)
 
 import Iso8601
-import Json.Decode as JD exposing (Decoder)
-import Json.Encode as JE
 import MitsumoriApi.Scalar exposing (defaultCodecs)
 import Time
 import Uuid exposing (Uuid)

@@ -79,10 +79,7 @@ quotesCollection =
 
 quotesEdges : SelectionSet (List Quote) MitsumoriApi.Object.QuotesConnection
 quotesEdges =
-    QuotesConnection.edges
-        (QuotesEdge.node quotesNode
-         -- |> SelectionSet.nonNullOrFail
-        )
+    QuotesConnection.edges (QuotesEdge.node quotesNode)
 
 
 

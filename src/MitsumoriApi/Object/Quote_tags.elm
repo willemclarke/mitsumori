@@ -15,8 +15,8 @@ import MitsumoriApi.InputObject
 import MitsumoriApi.Interface
 import MitsumoriApi.Object
 import MitsumoriApi.Scalar
-import MitsumoriApi.ScalarCodecs
 import MitsumoriApi.Union
+import ScalarCodecs
 
 
 text : SelectionSet String MitsumoriApi.Object.Quote_tags
@@ -24,14 +24,14 @@ text =
     Object.selectionForField "String" "text" [] Decode.string
 
 
-quote_id : SelectionSet (Maybe MitsumoriApi.ScalarCodecs.Uuid) MitsumoriApi.Object.Quote_tags
+quote_id : SelectionSet (Maybe ScalarCodecs.Uuid) MitsumoriApi.Object.Quote_tags
 quote_id =
-    Object.selectionForField "(Maybe ScalarCodecs.Uuid)" "quote_id" [] (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecUuid |> .decoder |> Decode.nullable)
+    Object.selectionForField "(Maybe ScalarCodecs.Uuid)" "quote_id" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecUuid |> .decoder |> Decode.nullable)
 
 
-id : SelectionSet MitsumoriApi.ScalarCodecs.Uuid MitsumoriApi.Object.Quote_tags
+id : SelectionSet ScalarCodecs.Uuid MitsumoriApi.Object.Quote_tags
 id =
-    Object.selectionForField "ScalarCodecs.Uuid" "id" [] (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
+    Object.selectionForField "ScalarCodecs.Uuid" "id" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
 
 
 quotes :

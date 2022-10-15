@@ -16,22 +16,22 @@ const app = Elm.Main.init({
   flags: {
     seed: Math.floor(Math.random() * 0x0fffffff),
     supabase: {
-      supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+      supabaseUrl: import.meta.env.VITE_SUPABASE_URL_GRAPHQL,
       supabaseKey: import.meta.env.VITE_SUPABASE_KEY,
     },
   },
 });
 
-app.ports.getQuotes.subscribe(async (userId) => {
-  const { data: quotes, error } = await supabase.getQuotes(userId);
-  if (quotes) {
-    return app.ports.quoteResponse.send(quotes);
-  }
+// app.ports.getQuotes.subscribe(async (userId) => {
+//   const { data: quotes, error } = await supabase.getQuotes(userId);
+//   if (quotes) {
+//     return app.ports.quoteResponse.send(quotes);
+//   }
 
-  if (error) {
-    return app.ports.quoteResponse.send(error);
-  }
-});
+//   if (error) {
+//     return app.ports.quoteResponse.send(error);
+//   }
+// });
 
 app.ports.editQuote.subscribe(async (clientQuote) => {
   const { data, error } = await supabase.updateQuote(clientQuote);
@@ -47,22 +47,22 @@ app.ports.editQuote.subscribe(async (clientQuote) => {
   }
 });
 
-app.ports.deleteQuote.subscribe(async (data) => {
-  if (!data) {
-    return;
-  }
+// app.ports.deleteQuote.subscribe(async (data) => {
+//   if (!data) {
+//     return;
+//   }
 
-  const { data: result, error } = await supabase.deleteQuote(data.quoteId);
+//   const { data: result, error } = await supabase.deleteQuote(data.quoteId);
 
-  if (result) {
-    const { data: quotes, error } = await supabase.getQuotes(data.userId ?? "");
-    return app.ports.quoteResponse.send(quotes ?? error);
-  }
+//   if (result) {
+//     const { data: quotes, error } = await supabase.getQuotes(data.userId ?? "");
+//     return app.ports.quoteResponse.send(quotes ?? error);
+//   }
 
-  if (error) {
-    return app.ports.quoteResponse.send(error);
-  }
-});
+//   if (error) {
+//     return app.ports.quoteResponse.send(error);
+//   }
+// });
 
 app.ports.addQuote.subscribe(async (clientQuote) => {
   const { data, error } = await supabase.insertQuote(clientQuote);

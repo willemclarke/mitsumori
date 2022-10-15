@@ -15,13 +15,13 @@ import MitsumoriApi.InputObject
 import MitsumoriApi.Interface
 import MitsumoriApi.Object
 import MitsumoriApi.Scalar
-import MitsumoriApi.ScalarCodecs
 import MitsumoriApi.Union
+import ScalarCodecs
 
 
-id : SelectionSet MitsumoriApi.ScalarCodecs.Uuid MitsumoriApi.Object.Quotes
+id : SelectionSet ScalarCodecs.Uuid MitsumoriApi.Object.Quotes
 id =
-    Object.selectionForField "ScalarCodecs.Uuid" "id" [] (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
+    Object.selectionForField "ScalarCodecs.Uuid" "id" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
 
 
 quote_text : SelectionSet String MitsumoriApi.Object.Quotes
@@ -34,14 +34,14 @@ quote_author =
     Object.selectionForField "String" "quote_author" [] Decode.string
 
 
-user_id : SelectionSet MitsumoriApi.ScalarCodecs.Uuid MitsumoriApi.Object.Quotes
+user_id : SelectionSet ScalarCodecs.Uuid MitsumoriApi.Object.Quotes
 user_id =
-    Object.selectionForField "ScalarCodecs.Uuid" "user_id" [] (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
+    Object.selectionForField "ScalarCodecs.Uuid" "user_id" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
 
 
-created_at : SelectionSet MitsumoriApi.ScalarCodecs.Datetime MitsumoriApi.Object.Quotes
+created_at : SelectionSet ScalarCodecs.Datetime MitsumoriApi.Object.Quotes
 created_at =
-    Object.selectionForField "ScalarCodecs.Datetime" "created_at" [] (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecDatetime |> .decoder)
+    Object.selectionForField "ScalarCodecs.Datetime" "created_at" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecDatetime |> .decoder)
 
 
 quote_reference : SelectionSet (Maybe String) MitsumoriApi.Object.Quotes
@@ -52,8 +52,8 @@ quote_reference =
 type alias QuoteTagsCollectionOptionalArguments =
     { first : OptionalArgument Int
     , last : OptionalArgument Int
-    , before : OptionalArgument MitsumoriApi.ScalarCodecs.Cursor
-    , after : OptionalArgument MitsumoriApi.ScalarCodecs.Cursor
+    , before : OptionalArgument ScalarCodecs.Cursor
+    , after : OptionalArgument ScalarCodecs.Cursor
     , filter : OptionalArgument MitsumoriApi.InputObject.Quote_tagsFilter
     , orderBy : OptionalArgument (List MitsumoriApi.InputObject.Quote_tagsOrderBy)
     }
@@ -79,7 +79,7 @@ quote_tagsCollection fillInOptionals____ object____ =
             fillInOptionals____ { first = Absent, last = Absent, before = Absent, after = Absent, filter = Absent, orderBy = Absent }
 
         optionalArgs____ =
-            [ Argument.optional "first" filledInOptionals____.first Encode.int, Argument.optional "last" filledInOptionals____.last Encode.int, Argument.optional "before" filledInOptionals____.before (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "after" filledInOptionals____.after (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "filter" filledInOptionals____.filter MitsumoriApi.InputObject.encodeQuote_tagsFilter, Argument.optional "orderBy" filledInOptionals____.orderBy (MitsumoriApi.InputObject.encodeQuote_tagsOrderBy |> Encode.list) ]
+            [ Argument.optional "first" filledInOptionals____.first Encode.int, Argument.optional "last" filledInOptionals____.last Encode.int, Argument.optional "before" filledInOptionals____.before (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "after" filledInOptionals____.after (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "filter" filledInOptionals____.filter MitsumoriApi.InputObject.encodeQuote_tagsFilter, Argument.optional "orderBy" filledInOptionals____.orderBy (MitsumoriApi.InputObject.encodeQuote_tagsOrderBy |> Encode.list) ]
                 |> List.filterMap Basics.identity
     in
     Object.selectionForCompositeField "quote_tagsCollection" optionalArgs____ object____ (Basics.identity >> Decode.nullable)

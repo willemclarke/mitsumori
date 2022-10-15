@@ -15,15 +15,15 @@ import MitsumoriApi.InputObject
 import MitsumoriApi.Interface
 import MitsumoriApi.Object
 import MitsumoriApi.Scalar
-import MitsumoriApi.ScalarCodecs
 import MitsumoriApi.Union
+import ScalarCodecs
 
 
 type alias QuoteTagsCollectionOptionalArguments =
     { first : OptionalArgument Int
     , last : OptionalArgument Int
-    , before : OptionalArgument MitsumoriApi.ScalarCodecs.Cursor
-    , after : OptionalArgument MitsumoriApi.ScalarCodecs.Cursor
+    , before : OptionalArgument ScalarCodecs.Cursor
+    , after : OptionalArgument ScalarCodecs.Cursor
     , filter : OptionalArgument MitsumoriApi.InputObject.Quote_tagsFilter
     , orderBy : OptionalArgument (List MitsumoriApi.InputObject.Quote_tagsOrderBy)
     }
@@ -49,7 +49,7 @@ quote_tagsCollection fillInOptionals____ object____ =
             fillInOptionals____ { first = Absent, last = Absent, before = Absent, after = Absent, filter = Absent, orderBy = Absent }
 
         optionalArgs____ =
-            [ Argument.optional "first" filledInOptionals____.first Encode.int, Argument.optional "last" filledInOptionals____.last Encode.int, Argument.optional "before" filledInOptionals____.before (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "after" filledInOptionals____.after (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "filter" filledInOptionals____.filter MitsumoriApi.InputObject.encodeQuote_tagsFilter, Argument.optional "orderBy" filledInOptionals____.orderBy (MitsumoriApi.InputObject.encodeQuote_tagsOrderBy |> Encode.list) ]
+            [ Argument.optional "first" filledInOptionals____.first Encode.int, Argument.optional "last" filledInOptionals____.last Encode.int, Argument.optional "before" filledInOptionals____.before (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "after" filledInOptionals____.after (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "filter" filledInOptionals____.filter MitsumoriApi.InputObject.encodeQuote_tagsFilter, Argument.optional "orderBy" filledInOptionals____.orderBy (MitsumoriApi.InputObject.encodeQuote_tagsOrderBy |> Encode.list) ]
                 |> List.filterMap Basics.identity
     in
     Object.selectionForCompositeField "quote_tagsCollection" optionalArgs____ object____ (Basics.identity >> Decode.nullable)
@@ -58,8 +58,8 @@ quote_tagsCollection fillInOptionals____ object____ =
 type alias QuotesCollectionOptionalArguments =
     { first : OptionalArgument Int
     , last : OptionalArgument Int
-    , before : OptionalArgument MitsumoriApi.ScalarCodecs.Cursor
-    , after : OptionalArgument MitsumoriApi.ScalarCodecs.Cursor
+    , before : OptionalArgument ScalarCodecs.Cursor
+    , after : OptionalArgument ScalarCodecs.Cursor
     , filter : OptionalArgument MitsumoriApi.InputObject.QuotesFilter
     , orderBy : OptionalArgument (List MitsumoriApi.InputObject.QuotesOrderBy)
     }
@@ -85,7 +85,7 @@ quotesCollection fillInOptionals____ object____ =
             fillInOptionals____ { first = Absent, last = Absent, before = Absent, after = Absent, filter = Absent, orderBy = Absent }
 
         optionalArgs____ =
-            [ Argument.optional "first" filledInOptionals____.first Encode.int, Argument.optional "last" filledInOptionals____.last Encode.int, Argument.optional "before" filledInOptionals____.before (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "after" filledInOptionals____.after (MitsumoriApi.ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "filter" filledInOptionals____.filter MitsumoriApi.InputObject.encodeQuotesFilter, Argument.optional "orderBy" filledInOptionals____.orderBy (MitsumoriApi.InputObject.encodeQuotesOrderBy |> Encode.list) ]
+            [ Argument.optional "first" filledInOptionals____.first Encode.int, Argument.optional "last" filledInOptionals____.last Encode.int, Argument.optional "before" filledInOptionals____.before (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "after" filledInOptionals____.after (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "filter" filledInOptionals____.filter MitsumoriApi.InputObject.encodeQuotesFilter, Argument.optional "orderBy" filledInOptionals____.orderBy (MitsumoriApi.InputObject.encodeQuotesOrderBy |> Encode.list) ]
                 |> List.filterMap Basics.identity
     in
     Object.selectionForCompositeField "quotesCollection" optionalArgs____ object____ (Basics.identity >> Decode.nullable)

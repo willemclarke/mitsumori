@@ -15,8 +15,8 @@ import MitsumoriApi.InputObject
 import MitsumoriApi.Interface
 import MitsumoriApi.Object
 import MitsumoriApi.Scalar
-import MitsumoriApi.ScalarCodecs
 import MitsumoriApi.Union
+import ScalarCodecs
 
 
 endCursor : SelectionSet (Maybe String) MitsumoriApi.Object.PageInfo

@@ -1,6 +1,7 @@
-module User exposing (User, UserInfo, UserType(..), decoder, isAuthenticated, unauthenticated, userId, userType, username)
+module User exposing (User, UserInfo, UserType(..), decoder, isAuthenticated, unauthenticated, userId, userJwt, userType, username)
 
 import Json.Decode as JD
+import Uuid
 
 
 type User
@@ -16,7 +17,7 @@ type alias UserInfo =
     { jwt : String
     , email : String
     , username : String
-    , id : String
+    , id : Uuid.Uuid
     }
 
 
@@ -40,7 +41,17 @@ userDecoder =
         (JD.field "access_token" JD.string)
         (JD.field "user" (JD.field "email" JD.string))
         (JD.field "user" (JD.field "user_metadata" (JD.field "username" JD.string)))
-        (JD.field "user" (JD.field "id" JD.string))
+        (JD.field "user" (JD.field "id" Uuid.decoder))
+
+
+userJwt : User -> String
+userJwt (User type_) =
+    case type_ of
+        Authenticated userInfo ->
+            userInfo.jwt
+
+        Unauthenticated ->
+            ""
 
 
 userType : User -> UserType
@@ -52,7 +63,7 @@ userId : User -> Maybe String
 userId (User type_) =
     case type_ of
         Authenticated userInfo ->
-            Just userInfo.id
+            Just <| Uuid.toString userInfo.id
 
         Unauthenticated ->
             Nothing

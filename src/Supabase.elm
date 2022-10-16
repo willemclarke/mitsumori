@@ -11,6 +11,7 @@ import MitsumoriApi.Mutation as Mutation
 import MitsumoriApi.Object
 import MitsumoriApi.Object.Quotes as Quotes
 import MitsumoriApi.Object.QuotesConnection as QuotesConnection
+import MitsumoriApi.Object.QuotesDeleteResponse
 import MitsumoriApi.Object.QuotesEdge as QuotesEdge
 import MitsumoriApi.Object.QuotesInsertResponse
 import MitsumoriApi.Query as Query
@@ -67,6 +68,19 @@ insertQuote gotResponseMsg quote { user, supabase } =
         |> Graphql.Http.send (RemoteData.fromResult >> gotResponseMsg)
 
 
+deleteQuote :
+    (RemoteData (Graphql.Http.Error (List Quote)) (List Quote) -> msg)
+    -> String
+    -> Shared
+    -> Cmd msg
+deleteQuote gotResponseMsg quoteId { user, supabase } =
+    deleteQuoteMutation quoteId
+        |> Graphql.Http.mutationRequest supabase.supabaseUrl
+        |> Graphql.Http.withHeader "apikey" supabase.supabaseKey
+        |> Graphql.Http.withHeader "Authorization" ("Bearer " ++ User.userJwt user)
+        |> Graphql.Http.send (RemoteData.fromResult >> gotResponseMsg)
+
+
 insertQuoteMutation : PartialQuote -> SelectionSet (List Quote) RootMutation
 insertQuoteMutation quote =
     Mutation.insertIntoquotesCollection
@@ -82,6 +96,26 @@ insertQuoteMutation quote =
         }
         (MitsumoriApi.Object.QuotesInsertResponse.records quotesNode)
         |> SelectionSet.nonNullOrFail
+
+
+deleteQuoteMutation : String -> SelectionSet (List Quote) RootMutation
+deleteQuoteMutation quoteId =
+    Mutation.deleteFromquotesCollection
+        (\optionals ->
+            { optionals
+                | filter =
+                    Present
+                        { id = Present { eq = Present quoteId, in_ = Absent, neq = Absent }
+                        , quote_text = Absent
+                        , quote_author = Absent
+                        , user_id = Absent
+                        , created_at = Absent
+                        , quote_reference = Absent
+                        }
+            }
+        )
+        { atMost = 1 }
+        (MitsumoriApi.Object.QuotesDeleteResponse.records quotesNode)
 
 
 getQuotes : (RemoteData (Graphql.Http.Error Quotes) Quotes -> msg) -> Shared -> Cmd msg
@@ -166,9 +200,6 @@ port addQuote : JE.Value -> Cmd msg
 
 
 port editQuote : JE.Value -> Cmd msg
-
-
-port deleteQuote : JE.Value -> Cmd msg
 
 
 

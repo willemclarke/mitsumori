@@ -8,10 +8,8 @@ import Html exposing (Html, a, button, div, form, header, input, label, p, text,
 import Html.Attributes exposing (class, classList, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Html.Extra as HE
-import Json.Decode as JD
 import Json.Encode as JE
 import Json.Encode.Extra
-import List.Extra as LE
 import Random exposing (Seed)
 import RemoteData exposing (RemoteData(..))
 import Shared exposing (Shared)
@@ -72,16 +70,6 @@ type TrimmedForm
     = Trimmed ModalForm
 
 
-
--- TODO: QuotesError needs a new `Supabase.DbError` or something, as the auth error type differs from postgres related
-
-
-type QuoteResponse
-    = QuotesOk (List Supabase.Quote)
-    | QuotesError Supabase.AuthError
-    | PayloadError
-
-
 init : Shared -> ( Model, Cmd Msg )
 init shared =
     ( { quotes = RemoteData.Loading
@@ -92,7 +80,6 @@ init shared =
       , modalVisibility = Hidden
       }
     , Supabase.getQuotes GotQuotesResponse shared
-      -- , Supabase.getQuotes (JE.string <| Maybe.withDefault "" (User.userId shared.user))
     )
 
 
@@ -121,9 +108,10 @@ type Msg
     | OpenDeleteQuoteModal Supabase.Quote
     | SubmitAddQuoteModal
     | SubmitEditQuoteModal String
-      -- | SubmitDeleteQuoteModal String
+    | SubmitDeleteQuoteModal String
     | GotQuotesResponse QuotesResponse
     | GotInsertQuoteResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
+    | GotDeleteQuoteResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
     | NoOp
 
 
@@ -159,7 +147,10 @@ update shared msg model =
             )
 
         OpenDeleteQuoteModal quote ->
-            ( { model | modalType = Delete quote, modalVisibility = Visible }, Cmd.none, Shared.NoUpdate )
+            ( { model | modalType = Delete quote, modalVisibility = Visible }
+            , Cmd.none
+            , Shared.NoUpdate
+            )
 
         SubmitAddQuoteModal ->
             case validateForm model.modalForm of
@@ -192,28 +183,35 @@ update shared msg model =
                 Err problems ->
                     ( { model | modalFormProblems = problems }, Cmd.none, Shared.NoUpdate )
 
+        SubmitDeleteQuoteModal quoteId ->
+            ( { model | modalIsLoading = True, modalForm = emptyModalForm }, Supabase.deleteQuote GotDeleteQuoteResponse quoteId shared, Shared.NoUpdate )
+
         GotQuotesResponse quotesResponse ->
             ( { model | quotes = quotesResponse }, Cmd.none, Shared.NoUpdate )
 
-        GotInsertQuoteResponse _ ->
-            ( { model | quotes = RemoteData.Loading, modalVisibility = Hidden }, Supabase.getQuotes GotQuotesResponse shared, Shared.NoUpdate )
+        -- TODO: handle case of error here better
+        GotInsertQuoteResponse quotesResponse ->
+            case quotesResponse of
+                RemoteData.Success _ ->
+                    ( { model | quotes = RemoteData.Loading, modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
+                    , Supabase.getQuotes GotQuotesResponse shared
+                    , Shared.NoUpdate
+                    )
 
-        -- SubmitDeleteQuoteModal quoteId ->
-        --     let
-        --         matchingQuote =
-        --             LE.find (\quote -> quote.id == quoteId) model.quotes
-        --         encodedQuote =
-        --             matchingQuote
-        --                 |> Maybe.map
-        --                     (\quote ->
-        --                         JE.object
-        --                             [ ( "quoteId", JE.string quote.id )
-        --                             , ( "userId", Json.Encode.Extra.maybe JE.string (User.userId shared.user) )
-        --                             ]
-        --                     )
-        --                 |> Maybe.withDefault JE.null
-        --     in
-        --     ( { model | modalIsLoading = True }, Supabase.deleteQuote encodedQuote, Shared.NoUpdate )
+                _ ->
+                    ( model, Cmd.none, Shared.NoUpdate )
+
+        GotDeleteQuoteResponse quotesResponse ->
+            case quotesResponse of
+                RemoteData.Success _ ->
+                    ( { model | quotes = RemoteData.Loading, modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
+                    , Supabase.getQuotes GotQuotesResponse shared
+                    , Shared.NoUpdate
+                    )
+
+                _ ->
+                    ( model, Cmd.none, Shared.NoUpdate )
+
         -- GotQuotesResponse json ->
         --     let
         --         quoteResponse =
@@ -501,19 +499,17 @@ viewQuoteModal form problems modalType visibility isLoading =
                         }
                         |> Modal.view
 
-                _ ->
-                    HE.nothing
+                Delete quote ->
+                    Modal.create
+                        { title = "Delete quote"
+                        , body = p [ class "text-lg text-gray-900" ] [ text "Are you sure you want to delete the quote?" ]
+                        , actions =
+                            Modal.acceptAndDiscardActions
+                                (Modal.asyncAction { label = "Delete quote", onClick = SubmitDeleteQuoteModal quote.id, isLoading = isLoading })
+                                (Modal.basicAction "Cancel" CloseModal)
+                        }
+                        |> Modal.view
 
-        -- Delete quote ->
-        --     Modal.create
-        --         { title = "Delete quote"
-        --         , body = p [ class "text-lg text-gray-900" ] [ text "Are you sure you want to delete the quote?" ]
-        --         , actions =
-        --             Modal.acceptAndDiscardActions
-        --                 (Modal.asyncAction { label = "Delete quote", onClick = SubmitDeleteQuoteModal quote.id, isLoading = isLoading })
-        --                 (Modal.basicAction "Cancel" CloseModal)
-        --         }
-        --         |> Modal.view
         Hidden ->
             HE.nothing
 

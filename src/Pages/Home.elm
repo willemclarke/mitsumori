@@ -196,7 +196,7 @@ update shared msg model =
                 RemoteData.Success _ ->
                     ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False, modalForm = emptyModalForm }
                     , Supabase.getQuotes GotQuotesResponse shared
-                    , Shared.ShowToast <| Toast.Success "Quote added successfully"
+                    , Shared.ShowToast <| Toast.Success "Quote added successfully."
                     )
 
                 _ ->
@@ -207,7 +207,7 @@ update shared msg model =
                 RemoteData.Success _ ->
                     ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
                     , Supabase.getQuotes GotQuotesResponse shared
-                    , Shared.NoUpdate
+                    , Shared.ShowToast <| Toast.Success "Quote deleted successfully."
                     )
 
                 _ ->

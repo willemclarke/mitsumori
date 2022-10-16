@@ -48,7 +48,7 @@ update shared sharedUpdate =
             { shared | supabase = supabaseFlags }
 
         ShowToast toastType ->
-            { shared | toasts = ( toastType, generateUuid shared.seed ) :: shared.toasts }
+            { shared | toasts = ( toastType, generateUuid shared.seed ) :: shared.toasts, seed = stepSeed shared.seed }
 
         CloseToast toastId ->
             { shared | toasts = List.filter (\( _, uuid_ ) -> uuid_ /= toastId) shared.toasts }
@@ -62,6 +62,6 @@ generateUuid seed =
     Tuple.first <| Random.step Uuid.uuidGenerator seed
 
 
-step : Seed -> Seed
-step =
+stepSeed : Seed -> Seed
+stepSeed =
     Tuple.second << Random.step (Random.int Random.minInt Random.maxInt)

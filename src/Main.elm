@@ -169,7 +169,7 @@ updateUserSession model json =
                 Initialising flags ->
                     let
                         initSharedState =
-                            { key = model.key, url = model.url, user = user, supabase = flags.supabase, seed = Random.initialSeed flags.seed }
+                            { key = model.key, url = model.url, user = user, supabase = flags.supabase, toasts = [], seed = Random.initialSeed flags.seed }
 
                         ( initRouterModel, routerCmd ) =
                             Router.init initSharedState model.url

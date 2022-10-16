@@ -3,6 +3,7 @@ module Pages.Home exposing (Model, Msg(..), init, subscriptions, update, view, v
 import Components.Icons as Icons
 import Components.Modal as Modal
 import Components.Spinner as Spinner
+import Components.Toast as Toast
 import Graphql.Http
 import Html exposing (Html, a, button, div, form, header, input, label, p, text)
 import Html.Attributes exposing (class, classList, for, href, id, placeholder, type_, value)
@@ -193,9 +194,9 @@ update shared msg model =
         GotInsertQuoteResponse quotesResponse ->
             case quotesResponse of
                 RemoteData.Success _ ->
-                    ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
+                    ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False, modalForm = emptyModalForm }
                     , Supabase.getQuotes GotQuotesResponse shared
-                    , Shared.NoUpdate
+                    , Shared.ShowToast <| Toast.Success "Quote added successfully"
                     )
 
                 _ ->
@@ -235,16 +236,6 @@ emptyModalForm =
 updateModalForm : (ModalForm -> ModalForm) -> Model -> ( Model, Cmd msg, Shared.SharedUpdate )
 updateModalForm transform model =
     ( { model | modalForm = transform model.modalForm }, Cmd.none, Shared.NoUpdate )
-
-
-generateUuid : Seed -> Uuid
-generateUuid seed =
-    Tuple.first <| Random.step Uuid.uuidGenerator seed
-
-
-step : Seed -> Seed
-step =
-    Tuple.second << Random.step (Random.int Random.minInt Random.maxInt)
 
 
 

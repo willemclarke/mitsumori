@@ -2,6 +2,7 @@ module Router.Router exposing (Model, Msg(..), init, subscriptions, update, view
 
 import Browser
 import Components.Button as Button
+import Components.Toast as Toast
 import Html exposing (Html, a, div, text)
 import Html.Attributes exposing (class, href)
 import Json.Decode as JD
@@ -14,6 +15,7 @@ import Shared exposing (Shared)
 import Supabase
 import Url
 import User exposing (UserType(..))
+import Uuid
 
 
 type alias Model =
@@ -39,6 +41,7 @@ type Msg
     | SignOut
     | GotSignOutResponse JE.Value
     | Refresh
+    | CloseToast Uuid.Uuid
 
 
 init : Shared -> Url.Url -> ( Model, Cmd Msg )
@@ -109,6 +112,9 @@ update shared msg model =
                 PayloadError ->
                     ( model, Cmd.none, Shared.NoUpdate )
 
+        CloseToast id ->
+            ( model, Cmd.none, Shared.CloseToast id )
+
         Refresh ->
             ( model, Route.pushUrl shared.key Route.Signin, Shared.NoUpdate )
 
@@ -146,11 +152,16 @@ view msgMapper shared model =
         title =
             Route.toTitleString (Maybe.withDefault Route.NotFound model.route)
 
+        toasts =
+            shared.toasts
+                |> List.map
+                    (\( toastType, id ) -> Toast.view toastType (CloseToast id))
+
         content =
             div [ class "flex flex-col h-full w-full" ]
                 [ viewNav shared
                 , div [ class "flex flex-col items-center justify-center h-full w-full" ]
-                    [ pageView shared model ]
+                    [ pageView shared model, Toast.region toasts ]
                 ]
     in
     { title = title ++ " - Mitsumori"

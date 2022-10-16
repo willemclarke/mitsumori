@@ -22,20 +22,6 @@ const app = Elm.Main.init({
   },
 });
 
-app.ports.editQuote.subscribe(async (clientQuote) => {
-  const { data, error } = await supabase.updateQuote(clientQuote);
-  if (data) {
-    const { data: quotes, error } = await supabase.getQuotes(
-      clientQuote.userId ?? ""
-    );
-    return app.ports.quoteResponse.send(quotes ?? error);
-  }
-
-  if (error) {
-    return app.ports.quoteResponse.send(error);
-  }
-});
-
 app.ports.signUp.subscribe(async (user) => {
   const { session, error } = await supabase.signUp(user);
 

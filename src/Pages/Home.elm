@@ -4,12 +4,10 @@ import Components.Icons as Icons
 import Components.Modal as Modal
 import Components.Spinner as Spinner
 import Graphql.Http
-import Html exposing (Html, a, button, div, form, header, input, label, p, text, ul)
+import Html exposing (Html, a, button, div, form, header, input, label, p, text)
 import Html.Attributes exposing (class, classList, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Html.Extra as HE
-import Json.Encode as JE
-import Json.Encode.Extra
 import Random exposing (Seed)
 import RemoteData exposing (RemoteData(..))
 import Shared exposing (Shared)
@@ -83,17 +81,6 @@ init shared =
     )
 
 
-encodeQuote : TrimmedForm -> Maybe String -> User.User -> JE.Value
-encodeQuote (Trimmed form) quoteId user =
-    JE.object
-        [ ( "quote", JE.string form.quote )
-        , ( "author", JE.string form.author )
-        , ( "reference", Json.Encode.Extra.maybe JE.string form.reference )
-        , ( "userId", Json.Encode.Extra.maybe JE.string (User.userId user) )
-        , ( "quoteId", Json.Encode.Extra.maybe JE.string quoteId )
-        ]
-
-
 
 -- UPDATE
 
@@ -107,11 +94,12 @@ type Msg
     | OpenEditQuoteModal Supabase.Quote
     | OpenDeleteQuoteModal Supabase.Quote
     | SubmitAddQuoteModal
-    | SubmitEditQuoteModal String
+    | SubmitEditQuoteModal Supabase.Quote
     | SubmitDeleteQuoteModal String
     | GotQuotesResponse QuotesResponse
     | GotInsertQuoteResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
     | GotDeleteQuoteResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
+    | GotEditQuotesResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
     | NoOp
 
 
@@ -171,20 +159,32 @@ update shared msg model =
                 Err problems ->
                     ( { model | modalFormProblems = problems }, Cmd.none, Shared.NoUpdate )
 
-        SubmitEditQuoteModal quoteId ->
+        SubmitEditQuoteModal quote ->
             case validateForm model.modalForm of
-                Ok validForm ->
+                Ok (Trimmed validForm) ->
                     let
-                        encodedQuote =
-                            encodeQuote validForm (Just quoteId) shared.user
+                        quote_ =
+                            { id = quote.id
+                            , quote = validForm.quote
+                            , author = validForm.author
+                            , reference = validForm.reference
+                            , userId = quote.userId
+                            , createdAt = quote.createdAt
+                            }
                     in
-                    ( { model | modalFormProblems = [], modalIsLoading = True, modalForm = emptyModalForm }, Supabase.editQuote encodedQuote, Shared.NoUpdate )
+                    ( { model | modalFormProblems = [], modalIsLoading = True, modalForm = emptyModalForm }
+                    , Supabase.editQuote GotEditQuotesResponse quote_ shared
+                    , Shared.NoUpdate
+                    )
 
                 Err problems ->
                     ( { model | modalFormProblems = problems }, Cmd.none, Shared.NoUpdate )
 
         SubmitDeleteQuoteModal quoteId ->
-            ( { model | modalIsLoading = True, modalForm = emptyModalForm }, Supabase.deleteQuote GotDeleteQuoteResponse quoteId shared, Shared.NoUpdate )
+            ( { model | modalIsLoading = True, modalForm = emptyModalForm }
+            , Supabase.deleteQuote GotDeleteQuoteResponse quoteId shared
+            , Shared.NoUpdate
+            )
 
         GotQuotesResponse quotesResponse ->
             ( { model | quotes = quotesResponse }, Cmd.none, Shared.NoUpdate )
@@ -193,7 +193,7 @@ update shared msg model =
         GotInsertQuoteResponse quotesResponse ->
             case quotesResponse of
                 RemoteData.Success _ ->
-                    ( { model | quotes = RemoteData.Loading, modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
+                    ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
                     , Supabase.getQuotes GotQuotesResponse shared
                     , Shared.NoUpdate
                     )
@@ -204,7 +204,7 @@ update shared msg model =
         GotDeleteQuoteResponse quotesResponse ->
             case quotesResponse of
                 RemoteData.Success _ ->
-                    ( { model | quotes = RemoteData.Loading, modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
+                    ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
                     , Supabase.getQuotes GotQuotesResponse shared
                     , Shared.NoUpdate
                     )
@@ -212,26 +212,17 @@ update shared msg model =
                 _ ->
                     ( model, Cmd.none, Shared.NoUpdate )
 
-        -- GotQuotesResponse json ->
-        --     let
-        --         quoteResponse =
-        --             quoteResponseDecoder json
-        --     in
-        --     case quoteResponse of
-        --         QuotesOk supabaseQuotes ->
-        --             let
-        --                 mappedQuotes =
-        --                     List.map quoteFromSupabaseQuote supabaseQuotes
-        --             in
-        --             ( { model | quotes = mappedQuotes, modalIsLoading = False, modalForm = emptyModalForm, modalType = NewQuote, modalVisibility = Hidden }, Cmd.none, Shared.NoUpdate )
-        --         QuotesError error ->
-        --             let
-        --                 serverErrors =
-        --                     List.map ServerError [ error ]
-        --             in
-        --             ( { model | modalFormProblems = List.append model.modalFormProblems serverErrors, modalIsLoading = False }, Cmd.none, Shared.NoUpdate )
-        --         PayloadError ->
-        --             ( model, Cmd.none, Shared.NoUpdate )
+        GotEditQuotesResponse quotesResponse ->
+            case quotesResponse of
+                RemoteData.Success _ ->
+                    ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
+                    , Supabase.getQuotes GotQuotesResponse shared
+                    , Shared.NoUpdate
+                    )
+
+                _ ->
+                    ( model, Cmd.none, Shared.NoUpdate )
+
         NoOp ->
             ( model, Cmd.none, Shared.NoUpdate )
 
@@ -403,17 +394,16 @@ viewQuotes quotesData shared =
         content =
             case quotesData of
                 RemoteData.Loading ->
-                    [ Spinner.spinner ]
+                    Spinner.spinner
 
                 RemoteData.Success quotes ->
-                    List.map (\quote -> viewQuote shared quote) quotes.quotes
+                    div [ class "grid grid-rows-4 sm:grid-cols-1 lg:grid-cols-3 gap-x-6 gap-y-6" ]
+                        (List.map (\quote -> viewQuote shared quote) quotes.quotes)
 
                 _ ->
-                    [ HE.nothing ]
+                    HE.nothing
     in
-    div [ class "text-start px-16 mt-10" ]
-        [ div [ class "mb-12 grid grid-rows-4 sm:grid-cols-1 lg:grid-cols-3 gap-x-6 gap-y-6" ] content
-        ]
+    div [ class "mt-12 text-start px-16 mt-10 h-full w-full" ] [ content ]
 
 
 viewEditAndDeleteIconButtons : Shared -> Supabase.Quote -> Html Msg
@@ -494,7 +484,7 @@ viewQuoteModal form problems modalType visibility isLoading =
                         , body = viewModalFormBody form problems
                         , actions =
                             Modal.acceptAndDiscardActions
-                                (Modal.asyncAction { label = "Edit quote", onClick = SubmitEditQuoteModal quote.id, isLoading = isLoading })
+                                (Modal.asyncAction { label = "Edit quote", onClick = SubmitEditQuoteModal quote, isLoading = isLoading })
                                 (Modal.basicAction "Cancel" CloseModal)
                         }
                         |> Modal.view

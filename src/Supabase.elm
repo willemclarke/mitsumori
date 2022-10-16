@@ -14,6 +14,7 @@ import MitsumoriApi.Object.QuotesConnection as QuotesConnection
 import MitsumoriApi.Object.QuotesDeleteResponse
 import MitsumoriApi.Object.QuotesEdge as QuotesEdge
 import MitsumoriApi.Object.QuotesInsertResponse
+import MitsumoriApi.Object.QuotesUpdateResponse
 import MitsumoriApi.Query as Query
 import RemoteData exposing (RemoteData)
 import Shared exposing (Shared)
@@ -55,6 +56,15 @@ type alias PartialQuote =
     }
 
 
+getQuotes : (RemoteData (Graphql.Http.Error Quotes) Quotes -> msg) -> Shared -> Cmd msg
+getQuotes gotResponseMsg { user, supabase } =
+    quotesQuery
+        |> Graphql.Http.queryRequest supabase.supabaseUrl
+        |> Graphql.Http.withHeader "apikey" supabase.supabaseKey
+        |> Graphql.Http.withHeader "Authorization" ("Bearer " ++ User.userJwt user)
+        |> Graphql.Http.send (RemoteData.fromResult >> gotResponseMsg)
+
+
 insertQuote :
     (RemoteData (Graphql.Http.Error (List Quote)) (List Quote) -> msg)
     -> PartialQuote
@@ -75,6 +85,19 @@ deleteQuote :
     -> Cmd msg
 deleteQuote gotResponseMsg quoteId { user, supabase } =
     deleteQuoteMutation quoteId
+        |> Graphql.Http.mutationRequest supabase.supabaseUrl
+        |> Graphql.Http.withHeader "apikey" supabase.supabaseKey
+        |> Graphql.Http.withHeader "Authorization" ("Bearer " ++ User.userJwt user)
+        |> Graphql.Http.send (RemoteData.fromResult >> gotResponseMsg)
+
+
+editQuote :
+    (RemoteData (Graphql.Http.Error (List Quote)) (List Quote) -> msg)
+    -> Quote
+    -> Shared
+    -> Cmd msg
+editQuote gotResponseMsg quote { user, supabase } =
+    editQuoteMutation quote
         |> Graphql.Http.mutationRequest supabase.supabaseUrl
         |> Graphql.Http.withHeader "apikey" supabase.supabaseKey
         |> Graphql.Http.withHeader "Authorization" ("Bearer " ++ User.userJwt user)
@@ -118,13 +141,33 @@ deleteQuoteMutation quoteId =
         (MitsumoriApi.Object.QuotesDeleteResponse.records quotesNode)
 
 
-getQuotes : (RemoteData (Graphql.Http.Error Quotes) Quotes -> msg) -> Shared -> Cmd msg
-getQuotes gotResponseMsg { user, supabase } =
-    quotesQuery
-        |> Graphql.Http.queryRequest supabase.supabaseUrl
-        |> Graphql.Http.withHeader "apikey" supabase.supabaseKey
-        |> Graphql.Http.withHeader "Authorization" ("Bearer " ++ User.userJwt user)
-        |> Graphql.Http.send (RemoteData.fromResult >> gotResponseMsg)
+editQuoteMutation : Quote -> SelectionSet (List Quote) RootMutation
+editQuoteMutation quote =
+    Mutation.updatequotesCollection
+        (\optionals ->
+            { optionals
+                | filter =
+                    Present
+                        { id = Present { eq = Present quote.id, in_ = Absent, neq = Absent }
+                        , quote_text = Absent
+                        , quote_author = Absent
+                        , user_id = Absent
+                        , created_at = Absent
+                        , quote_reference = Absent
+                        }
+            }
+        )
+        { set =
+            { id = Absent
+            , quote_text = Present quote.quote
+            , quote_author = Present quote.author
+            , user_id = Absent
+            , created_at = Absent
+            , quote_reference = Present <| Maybe.withDefault "" quote.reference
+            }
+        , atMost = 1
+        }
+        (MitsumoriApi.Object.QuotesUpdateResponse.records quotesNode)
 
 
 
@@ -197,9 +240,6 @@ authErrorDecoder =
 
 
 port addQuote : JE.Value -> Cmd msg
-
-
-port editQuote : JE.Value -> Cmd msg
 
 
 

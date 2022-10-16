@@ -1,4 +1,4 @@
-port module Supabase exposing (AuthError, Quote, Quotes, addQuote, authErrorDecoder, deleteQuote, editQuote, getQuotes, getSession, insertQuote, quoteResponse, quotesQuery, sessionResponse, signIn, signInResponse, signOut, signOutResponse, signUp, signUpResponse)
+port module Supabase exposing (AuthError, Quote, Quotes, authErrorDecoder, deleteQuote, editQuote, getQuotes, getSession, insertQuote, quotesQuery, sessionResponse, signIn, signInResponse, signOut, signOutResponse, signUp, signUpResponse)
 
 import Graphql.Http
 import Graphql.Operation exposing (RootMutation, RootQuery)
@@ -237,18 +237,6 @@ authErrorDecoder =
     JD.map2 AuthError
         (JD.field "message" JD.string)
         (JD.field "status" JD.int)
-
-
-port addQuote : JE.Value -> Cmd msg
-
-
-
-{- `quoteResponse` is the port responsible for sending back a list of quotes, regardless of whether
-   the outgoing port was `addQuote`, `editQuote` or `deleteQuote`
--}
-
-
-port quoteResponse : (JE.Value -> msg) -> Sub msg
 
 
 port signUp : JE.Value -> Cmd msg

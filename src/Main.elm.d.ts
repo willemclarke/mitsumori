@@ -5,22 +5,6 @@ export namespace Elm {
   export namespace Main {
     export interface App {
       ports: {
-        editQuote: {
-          subscribe(callback: (data: ClientQuote) => Promise<void>): void;
-        };
-        deleteQuote: {
-          subscribe(
-            callback: (
-              data: {
-                quoteId: string;
-                userId: string | null;
-              } | null
-            ) => Promise<void>
-          ): void;
-        };
-        quoteResponse: {
-          send(data: any): Promise<void>;
-        };
         signUp: {
           subscribe(callback: (user: SignUpUser) => Promise<void>): void;
         };

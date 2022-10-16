@@ -17,7 +17,7 @@ type alias UserInfo =
     { jwt : String
     , email : String
     , username : String
-    , id : Uuid.Uuid
+    , id : String
     }
 
 
@@ -41,7 +41,7 @@ userDecoder =
         (JD.field "access_token" JD.string)
         (JD.field "user" (JD.field "email" JD.string))
         (JD.field "user" (JD.field "user_metadata" (JD.field "username" JD.string)))
-        (JD.field "user" (JD.field "id" Uuid.decoder))
+        (JD.field "user" (JD.field "id" JD.string))
 
 
 userJwt : User -> String
@@ -63,7 +63,7 @@ userId : User -> Maybe String
 userId (User type_) =
     case type_ of
         Authenticated userInfo ->
-            Just <| Uuid.toString userInfo.id
+            Just userInfo.id
 
         Unauthenticated ->
             Nothing

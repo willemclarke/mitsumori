@@ -1,6 +1,8 @@
 module ScalarCodecs exposing (..)
 
 import Iso8601
+import Json.Decode as JD
+import Json.Encode as JE
 import MitsumoriApi.Scalar exposing (defaultCodecs)
 import Time
 import Uuid exposing (Uuid)
@@ -17,7 +19,7 @@ type alias Datetime =
 
 
 type alias Uuid =
-    Uuid.Uuid
+    String
 
 
 type alias BigInt =
@@ -58,7 +60,7 @@ codecs =
         , codecJson = defaultCodecs.codecJson
         , codecTime = defaultCodecs.codecTime
         , codecUuid =
-            { encoder = \uuid -> Uuid.encode uuid
-            , decoder = Uuid.decoder
+            { encoder = \stringUuid -> JE.string stringUuid
+            , decoder = JD.string
             }
         }

@@ -2,7 +2,7 @@ module Pages.Signin exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Components.Button as Button
 import Html exposing (Html, a, button, div, form, header, input, label, p, text)
-import Html.Attributes exposing (class, classList, for, href, id, placeholder, type_, value)
+import Html.Attributes exposing (class, classList, for, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode as JD
 import Json.Encode as JE

@@ -39,16 +39,6 @@ type alias QuotesResponse =
     RemoteData (Graphql.Http.Error Supabase.Quotes) Supabase.Quotes
 
 
-type alias Quote =
-    { id : String
-    , quote : String
-    , author : String
-    , createdAt : String
-    , userId : String
-    , reference : String
-    }
-
-
 type alias ModalForm =
     { quote : String
     , author : String
@@ -101,39 +91,19 @@ init shared =
       , modalType = NewQuote
       , modalVisibility = Hidden
       }
-    , Supabase.makeRequest GotQuotesResponse shared
+    , Supabase.getQuotes GotQuotesResponse shared
       -- , Supabase.getQuotes (JE.string <| Maybe.withDefault "" (User.userId shared.user))
     )
 
 
-
--- quoteResponseDecoder : JE.Value -> QuoteResponse
--- quoteResponseDecoder json =
---     JD.decodeValue
---         (JD.oneOf
---             [ JD.map QuotesOk (JD.list Supabase.quoteDecoder), JD.map QuotesError Supabase.authErrorDecoder ]
---         )
---         json
---         |> Result.withDefault PayloadError
--- quoteFromSupabaseQuote : Supabase.Quote -> Quote
--- quoteFromSupabaseQuote quote =
---     { id = quote.id
---     , quote = quote.quote_text
---     , author = quote.quote_author
---     , createdAt = quote.created_at
---     , userId = quote.user_id
---     , reference = Maybe.withDefault "" quote.quote_reference
---     }
-
-
-encodeQuote : TrimmedForm -> Maybe Uuid.Uuid -> User.User -> JE.Value
+encodeQuote : TrimmedForm -> Maybe String -> User.User -> JE.Value
 encodeQuote (Trimmed form) quoteId user =
     JE.object
         [ ( "quote", JE.string form.quote )
         , ( "author", JE.string form.author )
         , ( "reference", Json.Encode.Extra.maybe JE.string form.reference )
         , ( "userId", Json.Encode.Extra.maybe JE.string (User.userId user) )
-        , ( "quoteId", Json.Encode.Extra.maybe Uuid.encode quoteId )
+        , ( "quoteId", Json.Encode.Extra.maybe JE.string quoteId )
         ]
 
 
@@ -150,14 +120,14 @@ type Msg
     | OpenEditQuoteModal Supabase.Quote
     | OpenDeleteQuoteModal Supabase.Quote
     | SubmitAddQuoteModal
-    | SubmitEditQuoteModal Uuid.Uuid
+    | SubmitEditQuoteModal String
       -- | SubmitDeleteQuoteModal String
     | GotQuotesResponse QuotesResponse
-      -- | GotQuotesResponse JD.Value
+    | GotInsertQuoteResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
     | NoOp
 
 
-update : Shared -> Msg -> Model -> ( Model, Cmd msg, Shared.SharedUpdate )
+update : Shared -> Msg -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
 update shared msg model =
     case msg of
         OpenAddQuoteModal ->
@@ -193,12 +163,19 @@ update shared msg model =
 
         SubmitAddQuoteModal ->
             case validateForm model.modalForm of
-                Ok validForm ->
+                Ok (Trimmed validForm) ->
                     let
-                        encodedQuote =
-                            encodeQuote validForm Nothing shared.user
+                        quote =
+                            { quote = validForm.quote
+                            , author = validForm.author
+                            , reference = validForm.reference
+                            , userId = Maybe.withDefault "" (User.userId shared.user)
+                            }
                     in
-                    ( { model | modalFormProblems = [], modalIsLoading = True }, Supabase.addQuote encodedQuote, Shared.NoUpdate )
+                    ( { model | modalFormProblems = [], modalIsLoading = True }
+                    , Supabase.insertQuote GotInsertQuoteResponse quote shared
+                    , Shared.NoUpdate
+                    )
 
                 Err problems ->
                     ( { model | modalFormProblems = problems }, Cmd.none, Shared.NoUpdate )
@@ -210,13 +187,16 @@ update shared msg model =
                         encodedQuote =
                             encodeQuote validForm (Just quoteId) shared.user
                     in
-                    ( { model | modalFormProblems = [], modalIsLoading = True }, Supabase.editQuote encodedQuote, Shared.NoUpdate )
+                    ( { model | modalFormProblems = [], modalIsLoading = True, modalForm = emptyModalForm }, Supabase.editQuote encodedQuote, Shared.NoUpdate )
 
                 Err problems ->
                     ( { model | modalFormProblems = problems }, Cmd.none, Shared.NoUpdate )
 
         GotQuotesResponse quotesResponse ->
             ( { model | quotes = quotesResponse }, Cmd.none, Shared.NoUpdate )
+
+        GotInsertQuoteResponse _ ->
+            ( { model | quotes = RemoteData.Loading, modalVisibility = Hidden }, Supabase.getQuotes GotQuotesResponse shared, Shared.NoUpdate )
 
         -- SubmitDeleteQuoteModal quoteId ->
         --     let
@@ -393,7 +373,7 @@ view shared model =
     div
         [ class "flex flex-col h-full w-full items-center" ]
         [ viewHeader shared.user model.modalForm model.modalFormProblems model.modalType model.modalVisibility model.modalIsLoading
-        , viewQuotes model.quotes
+        , viewQuotes model.quotes shared
         ]
 
 
@@ -419,8 +399,8 @@ addQuoteButton form problems modalType visibility isLoading =
         ]
 
 
-viewQuotes : QuotesResponse -> Html Msg
-viewQuotes quotesData =
+viewQuotes : QuotesResponse -> Shared -> Html Msg
+viewQuotes quotesData shared =
     let
         content =
             case quotesData of
@@ -428,7 +408,7 @@ viewQuotes quotesData =
                     [ Spinner.spinner ]
 
                 RemoteData.Success quotes ->
-                    List.map viewQuote quotes.quotes
+                    List.map (\quote -> viewQuote shared quote) quotes.quotes
 
                 _ ->
                     [ HE.nothing ]
@@ -438,8 +418,27 @@ viewQuotes quotesData =
         ]
 
 
-viewQuote : Supabase.Quote -> Html Msg
-viewQuote quote =
+viewEditAndDeleteIconButtons : Shared -> Supabase.Quote -> Html Msg
+viewEditAndDeleteIconButtons shared quote =
+    let
+        userId =
+            User.userId shared.user
+
+        quoteUserId =
+            Just quote.userId
+    in
+    if userId == quoteUserId then
+        div [ class "flex justify-between mt-3" ]
+            [ button [ onClick <| OpenEditQuoteModal quote ] [ Icons.edit ]
+            , button [ onClick <| OpenDeleteQuoteModal quote ] [ Icons.delete ]
+            ]
+
+    else
+        HE.nothing
+
+
+viewQuote : Shared -> Supabase.Quote -> Html Msg
+viewQuote shared quote =
     let
         quoteTags =
             [ "Stoicism", "Roman" ]
@@ -462,10 +461,7 @@ viewQuote quote =
             [ div [ class "flex space-x-2" ] quoteTags
             , viewQuoteReference
             ]
-        , div [ class "flex justify-between mt-3" ]
-            [ button [ onClick <| OpenEditQuoteModal quote ] [ Icons.edit ]
-            , button [ onClick <| OpenDeleteQuoteModal quote ] [ Icons.delete ]
-            ]
+        , viewEditAndDeleteIconButtons shared quote
         ]
 
 

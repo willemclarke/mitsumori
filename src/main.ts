@@ -22,17 +22,6 @@ const app = Elm.Main.init({
   },
 });
 
-// app.ports.getQuotes.subscribe(async (userId) => {
-//   const { data: quotes, error } = await supabase.getQuotes(userId);
-//   if (quotes) {
-//     return app.ports.quoteResponse.send(quotes);
-//   }
-
-//   if (error) {
-//     return app.ports.quoteResponse.send(error);
-//   }
-// });
-
 app.ports.editQuote.subscribe(async (clientQuote) => {
   const { data, error } = await supabase.updateQuote(clientQuote);
   if (data) {
@@ -44,37 +33,6 @@ app.ports.editQuote.subscribe(async (clientQuote) => {
 
   if (error) {
     return app.ports.quoteResponse.send(error);
-  }
-});
-
-// app.ports.deleteQuote.subscribe(async (data) => {
-//   if (!data) {
-//     return;
-//   }
-
-//   const { data: result, error } = await supabase.deleteQuote(data.quoteId);
-
-//   if (result) {
-//     const { data: quotes, error } = await supabase.getQuotes(data.userId ?? "");
-//     return app.ports.quoteResponse.send(quotes ?? error);
-//   }
-
-//   if (error) {
-//     return app.ports.quoteResponse.send(error);
-//   }
-// });
-
-app.ports.addQuote.subscribe(async (clientQuote) => {
-  const { data, error } = await supabase.insertQuote(clientQuote);
-  if (data) {
-    const { data: quotes, error } = await supabase.getQuotes(
-      clientQuote.userId ?? ""
-    );
-    return app.ports.quoteResponse.send(quotes ?? error);
-  }
-
-  if (error) {
-    app.ports.quoteResponse.send(error);
   }
 });
 

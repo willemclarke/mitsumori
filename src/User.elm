@@ -1,6 +1,7 @@
-module User exposing (User, UserInfo, UserType(..), decoder, isAuthenticated, unauthenticated, userId, userType, username)
+module User exposing (User, UserInfo, UserType(..), decoder, isAuthenticated, unauthenticated, userId, userJwt, userType, username)
 
 import Json.Decode as JD
+import Uuid
 
 
 type User
@@ -41,6 +42,16 @@ userDecoder =
         (JD.field "user" (JD.field "email" JD.string))
         (JD.field "user" (JD.field "user_metadata" (JD.field "username" JD.string)))
         (JD.field "user" (JD.field "id" JD.string))
+
+
+userJwt : User -> String
+userJwt (User type_) =
+    case type_ of
+        Authenticated userInfo ->
+            userInfo.jwt
+
+        Unauthenticated ->
+            ""
 
 
 userType : User -> UserType

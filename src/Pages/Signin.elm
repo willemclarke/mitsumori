@@ -2,7 +2,7 @@ module Pages.Signin exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Components.Button as Button
 import Html exposing (Html, a, button, div, form, header, input, label, p, text)
-import Html.Attributes exposing (class, classList, for, href, id, placeholder, type_, value)
+import Html.Attributes exposing (class, classList, for, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode as JD
 import Json.Encode as JE
@@ -31,7 +31,7 @@ type alias Form =
 
 type Problem
     = InvalidEntry ValidatedField String
-    | ServerError Supabase.Error
+    | ServerError Supabase.AuthError
 
 
 type ValidatedField
@@ -45,7 +45,7 @@ type TrimmedForm
 
 type SigninResponse
     = UserOk User.User
-    | SignupError Supabase.Error
+    | SignupError Supabase.AuthError
     | PayloadError
 
 
@@ -74,7 +74,7 @@ signInResponseDecoder : JE.Value -> SigninResponse
 signInResponseDecoder json =
     JD.decodeValue
         (JD.oneOf
-            [ JD.map UserOk User.decoder, JD.map SignupError Supabase.errorDecoder ]
+            [ JD.map UserOk User.decoder, JD.map SignupError Supabase.authErrorDecoder ]
         )
         json
         |> Result.withDefault PayloadError

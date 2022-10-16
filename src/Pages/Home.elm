@@ -2,15 +2,14 @@ module Pages.Home exposing (Model, Msg(..), init, subscriptions, update, view, v
 
 import Components.Icons as Icons
 import Components.Modal as Modal
-import Html exposing (Html, a, button, div, form, header, input, label, p, text, ul)
+import Components.Spinner as Spinner
+import Graphql.Http
+import Html exposing (Html, a, button, div, form, header, input, label, p, text)
 import Html.Attributes exposing (class, classList, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Html.Extra as HE
-import Json.Decode as JD
-import Json.Encode as JE
-import Json.Encode.Extra
-import List.Extra as LE
 import Random exposing (Seed)
+import RemoteData exposing (RemoteData(..))
 import Shared exposing (Shared)
 import String.Extra as SE
 import Supabase
@@ -23,7 +22,7 @@ import Uuid exposing (Uuid)
 
 
 type alias Model =
-    { quotes : List Quote
+    { quotes : QuotesResponse
     , modalForm : ModalForm
     , modalFormProblems : List Problem
     , modalIsLoading : Bool
@@ -32,32 +31,26 @@ type alias Model =
     }
 
 
-type alias Quote =
-    { id : String
-    , quote : String
-    , author : String
-    , createdAt : String
-    , userId : String
-    , reference : String
-    }
+type alias QuotesResponse =
+    RemoteData (Graphql.Http.Error Supabase.Quotes) Supabase.Quotes
 
 
 type alias ModalForm =
     { quote : String
     , author : String
-    , reference : String
+    , reference : Maybe String
     }
 
 
 type Problem
     = InvalidEntry ValidatedField String
-    | ServerError Supabase.Error
+    | ServerError Supabase.AuthError
 
 
 type ModalType
     = NewQuote
-    | Editing Quote
-    | Delete Quote
+    | Editing Supabase.Quote
+    | Delete Supabase.Quote
 
 
 type ModalVisibility
@@ -75,59 +68,17 @@ type TrimmedForm
     = Trimmed ModalForm
 
 
-
--- TODO: QuotesError needs a new `Supabase.DbError` or something, as the auth error type differs from postgres related
-
-
-type QuoteResponse
-    = QuotesOk (List Supabase.Quote)
-    | QuotesError Supabase.Error
-    | PayloadError
-
-
 init : Shared -> ( Model, Cmd Msg )
 init shared =
-    ( { quotes = []
-      , modalForm = { quote = "", author = "", reference = "" }
+    ( { quotes = RemoteData.Loading
+      , modalForm = { quote = "", author = "", reference = Nothing }
       , modalFormProblems = []
       , modalIsLoading = False
       , modalType = NewQuote
       , modalVisibility = Hidden
       }
-    , Supabase.getQuotes (JE.string <| Maybe.withDefault "" (User.userId shared.user))
+    , Supabase.getQuotes GotQuotesResponse shared
     )
-
-
-quoteResponseDecoder : JE.Value -> QuoteResponse
-quoteResponseDecoder json =
-    JD.decodeValue
-        (JD.oneOf
-            [ JD.map QuotesOk (JD.list Supabase.quoteDecoder), JD.map QuotesError Supabase.errorDecoder ]
-        )
-        json
-        |> Result.withDefault PayloadError
-
-
-quoteFromSupabaseQuote : Supabase.Quote -> Quote
-quoteFromSupabaseQuote quote =
-    { id = quote.id
-    , quote = quote.quote_text
-    , author = quote.quote_author
-    , createdAt = quote.created_at
-    , userId = quote.user_id
-    , reference = Maybe.withDefault "" quote.quote_reference
-    }
-
-
-encodeQuote : TrimmedForm -> Maybe String -> User.User -> JE.Value
-encodeQuote (Trimmed form) id user =
-    JE.object
-        [ ( "quote", JE.string form.quote )
-        , ( "author", JE.string form.author )
-        , ( "reference", JE.string form.reference )
-        , ( "userId", Json.Encode.Extra.maybe JE.string (User.userId user) )
-        , ( "quoteId", Json.Encode.Extra.maybe JE.string id )
-        ]
 
 
 
@@ -140,16 +91,19 @@ type Msg
     | OnQuoteChange String
     | OnAuthorChange String
     | OnReferenceChange String
-    | OpenEditQuoteModal Quote
-    | OpenDeleteQuoteModal Quote
+    | OpenEditQuoteModal Supabase.Quote
+    | OpenDeleteQuoteModal Supabase.Quote
     | SubmitAddQuoteModal
-    | SubmitEditQuoteModal String
+    | SubmitEditQuoteModal Supabase.Quote
     | SubmitDeleteQuoteModal String
-    | GotQuotesResponse JD.Value
+    | GotQuotesResponse QuotesResponse
+    | GotInsertQuoteResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
+    | GotDeleteQuoteResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
+    | GotEditQuotesResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
     | NoOp
 
 
-update : Shared -> Msg -> Model -> ( Model, Cmd msg, Shared.SharedUpdate )
+update : Shared -> Msg -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
 update shared msg model =
     case msg of
         OpenAddQuoteModal ->
@@ -165,7 +119,7 @@ update shared msg model =
             updateModalForm (\form -> { form | author = author }) model
 
         OnReferenceChange reference ->
-            updateModalForm (\form -> { form | reference = reference }) model
+            updateModalForm (\form -> { form | reference = Just reference }) model
 
         {- If we edit a quote, update the modalForm with the quotes values, also pass the Quote to the `Editing`
            constructor so when we submit the modal, we have the ID of the quote for supabase to use.
@@ -181,71 +135,92 @@ update shared msg model =
             )
 
         OpenDeleteQuoteModal quote ->
-            ( { model | modalType = Delete quote, modalVisibility = Visible }, Cmd.none, Shared.NoUpdate )
+            ( { model | modalType = Delete quote, modalVisibility = Visible }
+            , Cmd.none
+            , Shared.NoUpdate
+            )
 
         SubmitAddQuoteModal ->
             case validateForm model.modalForm of
-                Ok validForm ->
+                Ok (Trimmed validForm) ->
                     let
-                        encodedQuote =
-                            encodeQuote validForm Nothing shared.user
+                        quote =
+                            { quote = validForm.quote
+                            , author = validForm.author
+                            , reference = validForm.reference
+                            , userId = Maybe.withDefault "" (User.userId shared.user)
+                            }
                     in
-                    ( { model | modalFormProblems = [], modalIsLoading = True }, Supabase.addQuote encodedQuote, Shared.NoUpdate )
+                    ( { model | modalFormProblems = [], modalIsLoading = True }
+                    , Supabase.insertQuote GotInsertQuoteResponse quote shared
+                    , Shared.NoUpdate
+                    )
 
                 Err problems ->
                     ( { model | modalFormProblems = problems }, Cmd.none, Shared.NoUpdate )
 
-        SubmitEditQuoteModal quoteId ->
+        SubmitEditQuoteModal quote ->
             case validateForm model.modalForm of
-                Ok validForm ->
+                Ok (Trimmed validForm) ->
                     let
-                        encodedQuote =
-                            encodeQuote validForm (Just quoteId) shared.user
+                        quote_ =
+                            { id = quote.id
+                            , quote = validForm.quote
+                            , author = validForm.author
+                            , reference = validForm.reference
+                            , userId = quote.userId
+                            , createdAt = quote.createdAt
+                            }
                     in
-                    ( { model | modalFormProblems = [], modalIsLoading = True }, Supabase.editQuote encodedQuote, Shared.NoUpdate )
+                    ( { model | modalFormProblems = [], modalIsLoading = True, modalForm = emptyModalForm }
+                    , Supabase.editQuote GotEditQuotesResponse quote_ shared
+                    , Shared.NoUpdate
+                    )
 
                 Err problems ->
                     ( { model | modalFormProblems = problems }, Cmd.none, Shared.NoUpdate )
 
         SubmitDeleteQuoteModal quoteId ->
-            let
-                matchingQuote =
-                    LE.find (\quote -> quote.id == quoteId) model.quotes
+            ( { model | modalIsLoading = True, modalForm = emptyModalForm }
+            , Supabase.deleteQuote GotDeleteQuoteResponse quoteId shared
+            , Shared.NoUpdate
+            )
 
-                encodedQuote =
-                    matchingQuote
-                        |> Maybe.map
-                            (\quote ->
-                                JE.object
-                                    [ ( "quoteId", JE.string quote.id )
-                                    , ( "userId", Json.Encode.Extra.maybe JE.string (User.userId shared.user) )
-                                    ]
-                            )
-                        |> Maybe.withDefault JE.null
-            in
-            ( { model | modalIsLoading = True }, Supabase.deleteQuote encodedQuote, Shared.NoUpdate )
+        GotQuotesResponse quotesResponse ->
+            ( { model | quotes = quotesResponse }, Cmd.none, Shared.NoUpdate )
 
-        GotQuotesResponse json ->
-            let
-                quoteResponse =
-                    quoteResponseDecoder json
-            in
-            case quoteResponse of
-                QuotesOk supabaseQuotes ->
-                    let
-                        mappedQuotes =
-                            List.map quoteFromSupabaseQuote supabaseQuotes
-                    in
-                    ( { model | quotes = mappedQuotes, modalIsLoading = False, modalForm = emptyModalForm, modalType = NewQuote, modalVisibility = Hidden }, Cmd.none, Shared.NoUpdate )
+        -- TODO: handle case of error here better
+        GotInsertQuoteResponse quotesResponse ->
+            case quotesResponse of
+                RemoteData.Success _ ->
+                    ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
+                    , Supabase.getQuotes GotQuotesResponse shared
+                    , Shared.NoUpdate
+                    )
 
-                QuotesError error ->
-                    let
-                        serverErrors =
-                            List.map ServerError [ error ]
-                    in
-                    ( { model | modalFormProblems = List.append model.modalFormProblems serverErrors, modalIsLoading = False }, Cmd.none, Shared.NoUpdate )
+                _ ->
+                    ( model, Cmd.none, Shared.NoUpdate )
 
-                PayloadError ->
+        GotDeleteQuoteResponse quotesResponse ->
+            case quotesResponse of
+                RemoteData.Success _ ->
+                    ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
+                    , Supabase.getQuotes GotQuotesResponse shared
+                    , Shared.NoUpdate
+                    )
+
+                _ ->
+                    ( model, Cmd.none, Shared.NoUpdate )
+
+        GotEditQuotesResponse quotesResponse ->
+            case quotesResponse of
+                RemoteData.Success _ ->
+                    ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
+                    , Supabase.getQuotes GotQuotesResponse shared
+                    , Shared.NoUpdate
+                    )
+
+                _ ->
                     ( model, Cmd.none, Shared.NoUpdate )
 
         NoOp ->
@@ -254,7 +229,7 @@ update shared msg model =
 
 emptyModalForm : ModalForm
 emptyModalForm =
-    { quote = "", author = "", reference = "" }
+    { quote = "", author = "", reference = Nothing }
 
 
 updateModalForm : (ModalForm -> ModalForm) -> Model -> ( Model, Cmd msg, Shared.SharedUpdate )
@@ -322,7 +297,7 @@ trimFields form =
     Trimmed
         { quote = String.trim form.quote
         , author = String.trim form.author
-        , reference = String.trim form.reference
+        , reference = Just (String.trim <| Maybe.withDefault "" form.reference)
         }
 
 
@@ -387,7 +362,7 @@ view shared model =
     div
         [ class "flex flex-col h-full w-full items-center" ]
         [ viewHeader shared.user model.modalForm model.modalFormProblems model.modalType model.modalVisibility model.modalIsLoading
-        , viewQuotes model.quotes
+        , viewQuotes model.quotes shared
         ]
 
 
@@ -413,38 +388,68 @@ addQuoteButton form problems modalType visibility isLoading =
         ]
 
 
-viewQuotes : List Quote -> Html Msg
-viewQuotes quotes =
-    div [ class "text-start px-16 mt-10" ]
-        [ div [ class "mb-12 grid grid-rows-4 sm:grid-cols-1 lg:grid-cols-3 gap-x-6 gap-y-6" ] (List.map viewQuote quotes)
-        ]
+viewQuotes : QuotesResponse -> Shared -> Html Msg
+viewQuotes quotesData shared =
+    let
+        content =
+            case quotesData of
+                RemoteData.Loading ->
+                    Spinner.spinner
+
+                RemoteData.Success quotes ->
+                    div [ class "grid grid-rows-4 sm:grid-cols-1 lg:grid-cols-3 gap-x-6 gap-y-6" ]
+                        (List.map (\quote -> viewQuote shared quote) quotes.quotes)
+
+                _ ->
+                    HE.nothing
+    in
+    div [ class "mt-12 text-start px-16 mt-10 h-full w-full" ] [ content ]
 
 
-viewQuote : Quote -> Html Msg
-viewQuote quote =
+viewEditAndDeleteIconButtons : Shared -> Supabase.Quote -> Html Msg
+viewEditAndDeleteIconButtons shared quote =
+    let
+        userId =
+            User.userId shared.user
+
+        quoteUserId =
+            Just quote.userId
+    in
+    if userId == quoteUserId then
+        div [ class "flex justify-between mt-3" ]
+            [ button [ onClick <| OpenEditQuoteModal quote ] [ Icons.edit ]
+            , button [ onClick <| OpenDeleteQuoteModal quote ] [ Icons.delete ]
+            ]
+
+    else
+        HE.nothing
+
+
+viewQuote : Shared -> Supabase.Quote -> Html Msg
+viewQuote shared quote =
     let
         quoteTags =
             [ "Stoicism", "Roman" ]
                 |> List.map viewQuoteTag
 
-        quoteReference =
-            if String.isEmpty quote.reference then
+        reference =
+            Maybe.withDefault "" quote.reference
+
+        viewQuoteReference =
+            if String.isEmpty reference then
                 HE.nothing
 
             else
-                div [ class "mt-1" ] [ a [ href <| quote.reference, class "text-gray-600 text-sm cursor-pointer hover:text-black" ] [ text "Quote reference" ] ]
+                div [ class "mt-1" ] [ a [ href <| reference, class "text-gray-600 text-sm cursor-pointer hover:text-black" ] [ text "Quote reference" ] ]
     in
-    div [ class "flex flex-col border rounded-lg p-6 shadow-sm hover:bg-gray-100/40 transition ease-in-out hover:-translate-y-px duration-300" ]
+    div [ class "flex flex-col border rounded-lg p-6 shadow-sm hover:bg-gray-100/30 transition ease-in-out hover:-translate-y-px duration-300" ]
         [ p [ class "text-lg text-gray-800" ] [ text quote.quote ]
         , p [ class "mt-1 text-gray-600 text-md font-light" ] [ text <| "by " ++ quote.author ]
         , div [ class "flex flex-col mt-2" ]
             [ div [ class "flex space-x-2" ] quoteTags
-            , quoteReference
+            , viewQuoteReference
             ]
-        , div [ class "flex justify-between mt-3" ]
-            [ button [ onClick <| OpenEditQuoteModal quote ] [ Icons.edit ]
-            , button [ onClick <| OpenDeleteQuoteModal quote ] [ Icons.delete ]
-            ]
+        , viewEditAndDeleteIconButtons shared quote
         ]
 
 
@@ -479,7 +484,7 @@ viewQuoteModal form problems modalType visibility isLoading =
                         , body = viewModalFormBody form problems
                         , actions =
                             Modal.acceptAndDiscardActions
-                                (Modal.asyncAction { label = "Edit quote", onClick = SubmitEditQuoteModal quote.id, isLoading = isLoading })
+                                (Modal.asyncAction { label = "Edit quote", onClick = SubmitEditQuoteModal quote, isLoading = isLoading })
                                 (Modal.basicAction "Cancel" CloseModal)
                         }
                         |> Modal.view
@@ -539,7 +544,7 @@ viewModalFormBody form problems =
                 , input
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
                     , id "reference"
-                    , value form.reference
+                    , value <| Maybe.withDefault "" form.reference
                     , placeholder "https://link-to-the-quote.com"
                     , type_ "text"
                     , onInput OnReferenceChange
@@ -567,4 +572,8 @@ viewFormServerError problems =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Supabase.quoteResponse GotQuotesResponse
+    Sub.none
+
+
+
+-- Supabase.quoteResponse GotQuotesResponse

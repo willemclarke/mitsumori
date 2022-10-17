@@ -123,7 +123,7 @@ update shared msg model =
             let
                 closeToastCmds =
                     shared.toasts
-                        |> List.map (\( _, uuid ) -> after 3000 (CloseToast uuid))
+                        |> List.map (\( _, uuid ) -> after 5000 (CloseToast uuid))
                         |> Cmd.batch
             in
             ( model, closeToastCmds, Shared.NoUpdate )

@@ -5,8 +5,8 @@ import Components.Modal as Modal
 import Components.Spinner as Spinner
 import Components.Toast as Toast
 import Graphql.Http
-import Html exposing (Html, a, button, div, form, header, input, label, p, text)
-import Html.Attributes exposing (class, classList, for, href, id, placeholder, type_, value)
+import Html exposing (Html, a, button, div, form, header, input, label, p, text, textarea)
+import Html.Attributes exposing (class, classList, for, href, id, maxlength, placeholder, rows, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Html.Extra as HE
 import Random exposing (Seed)
@@ -218,7 +218,7 @@ update shared msg model =
                 RemoteData.Success _ ->
                     ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
                     , Supabase.getQuotes GotQuotesResponse shared
-                    , Shared.NoUpdate
+                    , Shared.ShowToast <| Toast.Success "Quote edited successfully."
                     )
 
                 _ ->
@@ -385,35 +385,16 @@ viewQuotes quotesData shared =
         content =
             case quotesData of
                 RemoteData.Loading ->
-                    Spinner.spinner
+                    div [ class "flex w-full h-full justify-center items-center" ] [ Spinner.spinner ]
 
                 RemoteData.Success quotes ->
-                    div [ class "grid grid-rows-4 sm:grid-cols-1 lg:grid-cols-3 gap-x-6 gap-y-6" ]
+                    div [ class "grid grid-rows-4 sm:grid-cols-1 lg:grid-cols-3 gap-x-6 gap-y-6 content-center" ]
                         (List.map (\quote -> viewQuote shared quote) quotes.quotes)
 
                 _ ->
                     HE.nothing
     in
-    div [ class "mt-12 text-start px-16 mt-10 h-full w-full" ] [ content ]
-
-
-viewEditAndDeleteIconButtons : Shared -> Supabase.Quote -> Html Msg
-viewEditAndDeleteIconButtons shared quote =
-    let
-        userId =
-            User.userId shared.user
-
-        quoteUserId =
-            Just quote.userId
-    in
-    if userId == quoteUserId then
-        div [ class "flex justify-between mt-3" ]
-            [ button [ onClick <| OpenEditQuoteModal quote ] [ Icons.edit ]
-            , button [ onClick <| OpenDeleteQuoteModal quote ] [ Icons.delete ]
-            ]
-
-    else
-        HE.nothing
+    div [ class "mt-12 text-start px-6 md:px-12 lg:px-16 h-full w-full" ] [ content ]
 
 
 viewQuote : Shared -> Supabase.Quote -> Html Msg
@@ -442,6 +423,25 @@ viewQuote shared quote =
             ]
         , viewEditAndDeleteIconButtons shared quote
         ]
+
+
+viewEditAndDeleteIconButtons : Shared -> Supabase.Quote -> Html Msg
+viewEditAndDeleteIconButtons shared quote =
+    let
+        userId =
+            User.userId shared.user
+
+        quoteUserId =
+            Just quote.userId
+    in
+    if userId == quoteUserId then
+        div [ class "flex justify-between mt-3" ]
+            [ button [ onClick <| OpenEditQuoteModal quote ] [ Icons.edit ]
+            , button [ onClick <| OpenDeleteQuoteModal quote ] [ Icons.delete ]
+            ]
+
+    else
+        HE.nothing
 
 
 viewQuoteTag : String -> Html msg
@@ -502,13 +502,14 @@ viewModalFormBody form problems =
             [ div [ class "flex flex-col mt-2" ]
                 [ label [ class "text-gray-900", for "quote" ]
                     [ text "Quote body" ]
-                , input
+                , textarea
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
                     , classList [ ( "border-red-500", not (String.isEmpty <| invalidEntryToString problems Quote_) ) ]
                     , id "quote"
+                    , rows 5
+                    , maxlength 250
                     , value form.quote
                     , placeholder "Type quote here"
-                    , type_ "text"
                     , onInput OnQuoteChange
                     ]
                     [ text form.quote ]

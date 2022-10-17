@@ -26,20 +26,33 @@ messageToBody message =
     p [] [ text message ]
 
 
-viewSuccess : String -> msg -> Html msg
-viewSuccess message onClose =
-    viewToast Icons.delete (messageToBody message) onClose
+viewSuccess : ToastType -> String -> msg -> Html msg
+viewSuccess type_ message onClose =
+    viewToast type_ Icons.checkCircle (messageToBody message) onClose
 
 
-viewError : String -> msg -> Html msg
-viewError message onClose =
-    viewToast Icons.delete (messageToBody message) onClose
+viewError : ToastType -> String -> msg -> Html msg
+viewError type_ message onClose =
+    viewToast type_ Icons.checkCircle (messageToBody message) onClose
 
 
-viewToast : Html msg -> Html msg -> msg -> Html msg
-viewToast icon body onClose =
+
+--
+
+
+viewToast : ToastType -> Html msg -> Html msg -> msg -> Html msg
+viewToast type_ icon body onClose =
+    let
+        appearance =
+            case type_ of
+                Success _ ->
+                    "bg-gray-800 text-white"
+
+                Error _ ->
+                    "bg-red-400 text-white"
+    in
     div
-        [ class "transform translate-y-2 animate-slide-in bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden"
+        [ class <| appearance ++ " animate-in ease-in slide-in-from-bottom duration-400 shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden"
         ]
         [ div
             [ class "p-4"
@@ -65,7 +78,7 @@ viewToast icon body onClose =
                         , onClick onClose
                         ]
                         [ span [ class "sr-only" ] [ text "Close" ]
-                        , Icons.delete
+                        , Icons.x
                         ]
                     ]
                 ]
@@ -87,7 +100,7 @@ view : ToastType -> msg -> Html msg
 view toastType onClose =
     case toastType of
         Success message ->
-            viewSuccess message onClose
+            viewSuccess toastType message onClose
 
         Error message ->
-            viewError message onClose
+            viewError toastType message onClose

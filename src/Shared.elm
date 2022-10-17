@@ -1,9 +1,11 @@
 module Shared exposing (Shared, SharedUpdate(..), SupabaseFlags, update)
 
 import Browser.Navigation as Nav
+import Components.Toast exposing (ToastType)
 import Random exposing (Seed)
 import Url
 import User exposing (User)
+import Uuid
 
 
 
@@ -18,6 +20,7 @@ type alias Shared =
     , user : User
     , seed : Seed
     , supabase : SupabaseFlags
+    , toasts : List ( ToastType, Uuid.Uuid )
     }
 
 
@@ -31,6 +34,8 @@ type SharedUpdate
     = NoUpdate
     | UpdateUser User
     | UpdateSupabase SupabaseFlags
+    | ShowToast ToastType
+    | CloseToast Uuid.Uuid
 
 
 update : Shared -> SharedUpdate -> Shared
@@ -42,5 +47,21 @@ update shared sharedUpdate =
         UpdateSupabase supabaseFlags ->
             { shared | supabase = supabaseFlags }
 
+        ShowToast toastType ->
+            { shared | toasts = ( toastType, generateUuid shared.seed ) :: shared.toasts, seed = stepSeed shared.seed }
+
+        CloseToast toastId ->
+            { shared | toasts = List.filter (\( _, uuid_ ) -> uuid_ /= toastId) shared.toasts }
+
         NoUpdate ->
             shared
+
+
+generateUuid : Seed -> Uuid.Uuid
+generateUuid seed =
+    Tuple.first <| Random.step Uuid.uuidGenerator seed
+
+
+stepSeed : Seed -> Seed
+stepSeed =
+    Tuple.second << Random.step (Random.int Random.minInt Random.maxInt)

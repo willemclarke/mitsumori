@@ -1,7 +1,9 @@
 module Router.Router exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Browser
+import Browser.Events
 import Components.Button as Button
+import Components.Toast as Toast
 import Html exposing (Html, a, div, text)
 import Html.Attributes exposing (class, href)
 import Json.Decode as JD
@@ -9,11 +11,15 @@ import Json.Encode as JE
 import Pages.Home as Home
 import Pages.Signin as SignIn
 import Pages.Signup as SignUp
+import Process
 import Router.Route as Route exposing (Route)
 import Shared exposing (Shared)
 import Supabase
+import Task
+import Time
 import Url
 import User exposing (UserType(..))
+import Uuid
 
 
 type alias Model =
@@ -38,7 +44,8 @@ type Msg
     | SignInMsg SignIn.Msg
     | SignOut
     | GotSignOutResponse JE.Value
-    | Refresh
+    | CloseToast Uuid.Uuid
+    | Tick Time.Posix
 
 
 init : Shared -> Url.Url -> ( Model, Cmd Msg )
@@ -109,8 +116,22 @@ update shared msg model =
                 PayloadError ->
                     ( model, Cmd.none, Shared.NoUpdate )
 
-        Refresh ->
-            ( model, Route.pushUrl shared.key Route.Signin, Shared.NoUpdate )
+        CloseToast id ->
+            ( model, Cmd.none, Shared.CloseToast id )
+
+        Tick _ ->
+            let
+                closeToastCmds =
+                    shared.toasts
+                        |> List.map (\( _, uuid ) -> after 5000 (CloseToast uuid))
+                        |> Cmd.batch
+            in
+            ( model, closeToastCmds, Shared.NoUpdate )
+
+
+after : Float -> msg -> Cmd msg
+after time msg =
+    Task.perform (always msg) <| Process.sleep time
 
 
 updateHome : Shared -> Model -> Home.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )
@@ -146,11 +167,16 @@ view msgMapper shared model =
         title =
             Route.toTitleString (Maybe.withDefault Route.NotFound model.route)
 
+        toasts =
+            shared.toasts
+                |> List.map
+                    (\( toastType, id ) -> Toast.view toastType (CloseToast id))
+
         content =
             div [ class "flex flex-col h-full w-full" ]
                 [ viewNav shared
                 , div [ class "flex flex-col items-center justify-center h-full w-full" ]
-                    [ pageView shared model ]
+                    [ pageView shared model, Toast.region toasts ]
                 ]
     in
     { title = title ++ " - Mitsumori"
@@ -237,7 +263,10 @@ subscriptions msgMapper model =
                 _ ->
                     Sub.none
 
+        closeToastSub =
+            Time.every 2000 Tick
+
         subs =
-            List.map (Sub.map msgMapper) [ Supabase.signOutResponse GotSignOutResponse, pageSubs ]
+            List.map (Sub.map msgMapper) [ Supabase.signOutResponse GotSignOutResponse, pageSubs, closeToastSub ]
     in
     Sub.batch subs

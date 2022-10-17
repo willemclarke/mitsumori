@@ -1,4 +1,4 @@
-module Components.Icons exposing (delete, edit, plus)
+module Components.Icons exposing (checkCircle, delete, edit, plus, x)
 
 import Html exposing (Html)
 import Svg
@@ -18,6 +18,42 @@ plus =
             [ SvgAttrs.strokeLinecap "round"
             , SvgAttrs.strokeLinejoin "round"
             , SvgAttrs.d "M12 6v12m6-6H6"
+            ]
+            []
+        ]
+
+
+x : Html msg
+x =
+    Svg.svg
+        [ SvgAttrs.class "h-4 w-4"
+        , SvgAttrs.fill "none"
+        , SvgAttrs.viewBox "0 0 24 24"
+        , SvgAttrs.strokeWidth "1.5"
+        , SvgAttrs.stroke "currentColor"
+        ]
+        [ Svg.path
+            [ SvgAttrs.strokeLinecap "round"
+            , SvgAttrs.strokeLinejoin "round"
+            , SvgAttrs.d "M6 18L18 6M6 6l12 12"
+            ]
+            []
+        ]
+
+
+checkCircle : Html msg
+checkCircle =
+    Svg.svg
+        [ SvgAttrs.class "h-6 w-6"
+        , SvgAttrs.fill "none"
+        , SvgAttrs.viewBox "0 0 24 24"
+        , SvgAttrs.strokeWidth "1.5"
+        , SvgAttrs.stroke "currentColor"
+        ]
+        [ Svg.path
+            [ SvgAttrs.strokeLinecap "round"
+            , SvgAttrs.strokeLinejoin "round"
+            , SvgAttrs.d "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             ]
             []
         ]

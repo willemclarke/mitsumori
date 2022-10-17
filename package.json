@@ -6,18 +6,21 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "elm-tooling install",
-    "dev": "vite",
+    "dev": "vite && tailwind:run",
     "prebuild": "elm-tooling install",
     "build": "vite build",
     "serve": "vite preview",
     "lint": "elm-review",
     "test": "elm-test-rs",
-    "graphql:gen": "VITE_SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mbW1tbG1ibWhvZ3lid2NmaHFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NjI0NjQ0MzQsImV4cCI6MTk3ODA0MDQzNH0.UMgK0VTp_QhOUQsj1FO7hB8S3_FRHerT6t5hyBES4tE npx @dillonkearns/elm-graphql https://mfmmmlmbmhogybwcfhqm.supabase.co/graphql/v1 --base MitsumoriGql  --header 'apikey:  $VITE_SUPABASE_KEY'"
+    "graphql:gen": "VITE_SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mbW1tbG1ibWhvZ3lid2NmaHFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NjI0NjQ0MzQsImV4cCI6MTk3ODA0MDQzNH0.UMgK0VTp_QhOUQsj1FO7hB8S3_FRHerT6t5hyBES4tE npx @dillonkearns/elm-graphql https://mfmmmlmbmhogybwcfhqm.supabase.co/graphql/v1 --base MitsumoriGql  --header 'apikey:  $VITE_SUPABASE_KEY'",
+    "tailwind:run": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch"
   },
   "devDependencies": {
     "@dillonkearns/elm-graphql": "^4.3.0",
     "elm-review": "^2.7.4",
     "elm-tooling": "^1.8.0",
+    "tailwindcss-animate": "^1.0.5",
+    "tailwindcss": "^3.1.8",
     "typescript": "^4.8.2",
     "vite": "^3.0.9",
     "vite-plugin-elm": "^2.7.2"
@@ -27,7 +30,6 @@
     "devcert": "^1.2.2",
     "dotenv": "^16.0.3",
     "dotenv-cli": "^6.0.0",
-    "elm-debug-transformer": "^1.1.2",
-    "idb": "^7.0.2"
+    "elm-debug-transformer": "^1.1.2"
   }
 }

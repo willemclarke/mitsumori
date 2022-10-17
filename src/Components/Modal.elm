@@ -1,7 +1,7 @@
 module Components.Modal exposing (acceptAndDiscardActions, asyncAction, basicAction, create, view)
 
 import Components.Button as Button
-import Html exposing (Html, div, h3, header, p, span, text)
+import Html exposing (Html, div, header, p, span, text)
 import Html.Attributes exposing (attribute, class, id)
 import Html.Events exposing (onClick)
 import RemoteData exposing (isLoading)

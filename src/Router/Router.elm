@@ -1,7 +1,6 @@
 module Router.Router exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Browser
-import Browser.Events
 import Components.Button as Button
 import Components.Toast as Toast
 import Html exposing (Html, a, div, text)

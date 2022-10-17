@@ -36,10 +36,6 @@ viewError type_ message onClose =
     viewToast type_ Icons.checkCircle (messageToBody message) onClose
 
 
-
---
-
-
 viewToast : ToastType -> Html msg -> Html msg -> msg -> Html msg
 viewToast type_ icon body onClose =
     let

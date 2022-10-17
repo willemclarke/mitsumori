@@ -190,7 +190,7 @@ update shared msg model =
         GotQuotesResponse quotesResponse ->
             ( { model | quotes = quotesResponse }, Cmd.none, Shared.NoUpdate )
 
-        -- TODO: handle case of error here better
+        -- TODO: handle case of error here better via toasts
         GotInsertQuoteResponse quotesResponse ->
             case quotesResponse of
                 RemoteData.Success _ ->
@@ -388,13 +388,13 @@ viewQuotes quotesData shared =
                     div [ class "flex w-full h-full justify-center items-center" ] [ Spinner.spinner ]
 
                 RemoteData.Success quotes ->
-                    div [ class "grid grid-rows-4 sm:grid-cols-1 lg:grid-cols-3 gap-x-6 gap-y-6 content-center" ]
+                    div [ class "grid grid-rows-4 sm:grid-cols-1 lg:grid-cols-3 gap-x-6 gap-y-6" ]
                         (List.map (\quote -> viewQuote shared quote) quotes.quotes)
 
                 _ ->
                     HE.nothing
     in
-    div [ class "mt-12 text-start px-6 md:px-12 lg:px-16 h-full w-full" ] [ content ]
+    div [ class "mt-12 text-start px-6 md:px-12 lg:px-16 xl:px-16 2xl:px-18 h-full w-full" ] [ content ]
 
 
 viewQuote : Shared -> Supabase.Quote -> Html Msg

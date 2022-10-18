@@ -2,13 +2,16 @@ port module Supabase exposing (AuthError, Quote, Quotes, authErrorDecoder, delet
 
 import Graphql.Http
 import Graphql.Operation exposing (RootMutation, RootQuery)
-import Graphql.OptionalArgument exposing (OptionalArgument(..))
+import Graphql.OptionalArgument as OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Json.Decode as JD
 import Json.Encode as JE
 import MitsumoriApi.Enum.OrderByDirection exposing (OrderByDirection(..))
 import MitsumoriApi.Mutation as Mutation
 import MitsumoriApi.Object
+import MitsumoriApi.Object.Quote_tags as QuoteTags
+import MitsumoriApi.Object.Quote_tagsConnection as QuoteTagsConnection
+import MitsumoriApi.Object.Quote_tagsEdge as QuoteTagsEdge
 import MitsumoriApi.Object.Quotes as Quotes
 import MitsumoriApi.Object.QuotesConnection as QuotesConnection
 import MitsumoriApi.Object.QuotesDeleteResponse
@@ -39,7 +42,12 @@ type alias Quote =
     , createdAt : Time.Posix
     , userId : String
     , reference : Maybe String
+    , tags : Tags
     }
+
+
+type alias Tags =
+    Maybe (List String)
 
 
 
@@ -113,7 +121,7 @@ insertQuoteMutation quote =
               , quote_author = Present quote.author
               , user_id = Present quote.userId
               , created_at = Absent
-              , quote_reference = Present <| Maybe.withDefault "" quote.reference
+              , quote_reference = OptionalArgument.fromMaybe quote.reference
               }
             ]
         }
@@ -163,7 +171,7 @@ editQuoteMutation quote =
             , quote_author = Present quote.author
             , user_id = Absent
             , created_at = Absent
-            , quote_reference = Present <| Maybe.withDefault "" quote.reference
+            , quote_reference = OptionalArgument.fromMaybe quote.reference
             }
         , atMost = 1
         }
@@ -209,13 +217,59 @@ quotesEdges =
 
 quotesNode : SelectionSet Quote MitsumoriApi.Object.Quotes
 quotesNode =
-    SelectionSet.map6 Quote
+    SelectionSet.map7 Quote
         Quotes.id
         Quotes.quote_text
         Quotes.quote_author
         Quotes.created_at
         Quotes.user_id
         Quotes.quote_reference
+        quoteTagsCollection
+
+
+quotesNodeForMutation : String -> SelectionSet Quote MitsumoriApi.Object.Quotes
+quotesNodeForMutation quoteId =
+    SelectionSet.map7 Quote
+        Quotes.id
+        Quotes.quote_text
+        Quotes.quote_author
+        Quotes.created_at
+        Quotes.user_id
+        Quotes.quote_reference
+        (quoteTagsCollectionFromId quoteId)
+
+
+quoteTagsCollectionFromId : String -> SelectionSet Tags MitsumoriApi.Object.Quotes
+quoteTagsCollectionFromId quoteId =
+    Quotes.quote_tagsCollection
+        (\optionals ->
+            { optionals
+                | filter =
+                    Present
+                        { quote_id =
+                            Present
+                                { eq = Present quoteId, in_ = Absent, neq = Absent }
+                        , text = Absent
+                        , id = Absent
+                        }
+            }
+        )
+        quoteTagEdges
+
+
+quoteTagsCollection : SelectionSet Tags MitsumoriApi.Object.Quotes
+quoteTagsCollection =
+    Quotes.quote_tagsCollection (\optionals -> optionals) quoteTagEdges
+
+
+quoteTagEdges : SelectionSet (List String) MitsumoriApi.Object.Quote_tagsConnection
+quoteTagEdges =
+    QuoteTagsConnection.edges (QuoteTagsEdge.node quoteTagsNode)
+
+
+quoteTagsNode : SelectionSet String MitsumoriApi.Object.Quote_tags
+quoteTagsNode =
+    QuoteTags.text
 
 
 

@@ -1,6 +1,7 @@
 module Router.Router exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Browser
+import Browser.Navigation
 import Components.Button as Button
 import Components.Toast as Toast
 import Html exposing (Html, a, div, text)
@@ -82,7 +83,19 @@ update : Shared -> Msg -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
 update shared msg model =
     case msg of
         UrlChanged url ->
-            ( { model | route = Route.fromUrl url }, Cmd.none, Shared.NoUpdate )
+            let
+                route =
+                    Route.fromUrl url
+
+                cmd =
+                    case route of
+                        Just Route.Home ->
+                            Browser.Navigation.reload
+
+                        _ ->
+                            Cmd.none
+            in
+            ( { model | route = Route.fromUrl url }, cmd, Shared.NoUpdate )
 
         NavigateTo route ->
             ( model, Route.pushUrl shared.key route, Shared.NoUpdate )

@@ -9,13 +9,11 @@ import Html exposing (Html, a, button, div, form, header, input, label, p, text,
 import Html.Attributes exposing (class, classList, for, href, id, maxlength, placeholder, rows, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Html.Extra as HE
-import Random exposing (Seed)
 import RemoteData exposing (RemoteData(..))
 import Shared exposing (Shared)
 import String.Extra as SE
 import Supabase
 import User
-import Uuid exposing (Uuid)
 
 
 
@@ -40,6 +38,7 @@ type alias ModalForm =
     { quote : String
     , author : String
     , reference : Maybe String
+    , tags : Maybe (List String)
     }
 
 
@@ -72,7 +71,7 @@ type TrimmedForm
 init : Shared -> ( Model, Cmd Msg )
 init shared =
     ( { quotes = RemoteData.Loading
-      , modalForm = { quote = "", author = "", reference = Nothing }
+      , modalForm = { quote = "", author = "", reference = Nothing, tags = Nothing }
       , modalFormProblems = []
       , modalIsLoading = False
       , modalType = NewQuote
@@ -127,7 +126,7 @@ update shared msg model =
         -}
         OpenEditQuoteModal quote ->
             ( { model
-                | modalForm = { quote = quote.quote, author = quote.author, reference = quote.reference }
+                | modalForm = { quote = quote.quote, author = quote.author, reference = quote.reference, tags = quote.tags }
                 , modalType = Editing quote
                 , modalVisibility = Visible
               }
@@ -171,6 +170,7 @@ update shared msg model =
                             , reference = validForm.reference
                             , userId = quote.userId
                             , createdAt = quote.createdAt
+                            , tags = Nothing
                             }
                     in
                     ( { model | modalFormProblems = [], modalIsLoading = True, modalForm = emptyModalForm }
@@ -230,7 +230,7 @@ update shared msg model =
 
 emptyModalForm : ModalForm
 emptyModalForm =
-    { quote = "", author = "", reference = Nothing }
+    { quote = "", author = "", reference = Nothing, tags = Nothing }
 
 
 updateModalForm : (ModalForm -> ModalForm) -> Model -> ( Model, Cmd msg, Shared.SharedUpdate )
@@ -269,6 +269,9 @@ validateField (Trimmed form) field =
                 if String.isEmpty form.quote then
                     [ "Quote can't be blank" ]
 
+                else if String.length form.quote >= 250 then
+                    [ "Quote cannot exceed 250 characters" ]
+
                 else
                     []
 
@@ -288,7 +291,8 @@ trimFields form =
     Trimmed
         { quote = String.trim form.quote
         , author = String.trim form.author
-        , reference = Just (String.trim <| Maybe.withDefault "" form.reference)
+        , reference = Maybe.map (\ref -> String.trim ref) form.reference
+        , tags = Maybe.map (\tags -> List.map String.trim tags) form.tags
         }
 
 
@@ -538,6 +542,19 @@ viewModalFormBody form problems =
                     , id "reference"
                     , value <| Maybe.withDefault "" form.reference
                     , placeholder "https://link-to-the-quote.com"
+                    , type_ "text"
+                    , onInput OnReferenceChange
+                    ]
+                    [ text form.author ]
+                ]
+            , div [ class "flex flex-col mt-6" ]
+                [ label [ class "text-gray-900 mt-2", for "reference" ]
+                    [ text "Tags" ]
+                , input
+                    [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
+                    , id "tags"
+                    , value ""
+                    , placeholder "e.g. Stoic"
                     , type_ "text"
                     , onInput OnReferenceChange
                     ]

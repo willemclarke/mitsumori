@@ -1,7 +1,6 @@
 module User exposing (User, UserInfo, UserType(..), decoder, isAuthenticated, unauthenticated, userId, userJwt, userType, username)
 
 import Json.Decode as JD
-import Uuid
 
 
 type User

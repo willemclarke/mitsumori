@@ -1,6 +1,7 @@
 module Pages.Signup exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Components.Button as Button
+import Dict
 import Html exposing (Html, a, button, div, form, header, input, label, p, text)
 import Html.Attributes exposing (class, classList, for, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
@@ -10,6 +11,10 @@ import Router.Route as Route
 import Shared exposing (Shared, SharedUpdate(..))
 import Supabase
 import User
+import Validator
+import Validator.Bool
+import Validator.Named exposing (Validated)
+import Validator.String
 
 
 
@@ -18,7 +23,7 @@ import User
 
 type alias Model =
     { form : Form
-    , problems : List Problem
+    , validated : Validated Problem ValidForm
     , isLoading : Bool
     }
 
@@ -30,19 +35,19 @@ type alias Form =
     }
 
 
+type alias ValidForm =
+    { email : String, username : String, password : String }
+
+
 type Problem
-    = InvalidEntry ValidatedField String
+    = InvalidEntry Field String
     | ServerError Supabase.AuthError
 
 
-type ValidatedField
+type Field
     = Username
     | Email
     | Password
-
-
-type TrimmedForm
-    = Trimmed Form
 
 
 type SignupResponse
@@ -58,15 +63,15 @@ init _ =
             , username = ""
             , password = ""
             }
-      , problems = []
+      , validated = Err Dict.empty
       , isLoading = False
       }
     , Cmd.none
     )
 
 
-encodeForm : TrimmedForm -> JE.Value
-encodeForm (Trimmed form) =
+encodeForm : ValidForm -> JE.Value
+encodeForm form =
     JE.object
         [ ( "email", JE.string form.email )
         , ( "username", JE.string form.username )
@@ -110,12 +115,16 @@ update shared msg model =
             updateForm (\form -> { form | password = password }) model
 
         OnSubmit ->
-            case validateForm model.form of
+            let
+                validatedForm =
+                    validateForm model.form
+            in
+            case Debug.log "validatedForm" validatedForm of
                 Ok validForm ->
-                    ( { model | problems = [], isLoading = True }, Supabase.signUp (encodeForm validForm), Shared.NoUpdate )
+                    ( { model | validated = validatedForm, isLoading = True }, Supabase.signUp (encodeForm validForm), Shared.NoUpdate )
 
-                Err problems ->
-                    ( { model | problems = problems }, Cmd.none, Shared.NoUpdate )
+                Err _ ->
+                    ( { model | validated = validatedForm }, Cmd.none, Shared.NoUpdate )
 
         GotSignupResponse json ->
             let
@@ -126,12 +135,15 @@ update shared msg model =
                 UserOk user ->
                     ( { model | form = emptyForm, isLoading = False }, Route.pushUrl shared.key Route.Home, Shared.UpdateUser user )
 
-                SignupError error ->
-                    let
-                        serverErrors =
-                            List.map ServerError [ error ]
-                    in
-                    ( { model | isLoading = False, problems = List.append model.problems serverErrors }, Cmd.none, Shared.NoUpdate )
+                SignupError _ ->
+                    -- let
+                    --     serverErrors =
+                    --         List.map ServerError [ error ]
+                    --     validatedErrors =
+                    --         Validator.mapErrors serverErrors model.validated
+                    -- in
+                    -- ( { model | isLoading = False, validated = validatedErrors }, Cmd.none, Shared.NoUpdate )
+                    ( { model | isLoading = False }, Cmd.none, Shared.NoUpdate )
 
                 PayloadError ->
                     ( model, Cmd.none, Shared.NoUpdate )
@@ -154,116 +166,46 @@ emptyForm =
 -- FORM HELPERS
 
 
-fieldsToValidate : List ValidatedField
-fieldsToValidate =
-    [ Username
-    , Email
-    , Password
-    ]
+fieldToString : Field -> String
+fieldToString field =
+    case field of
+        Email ->
+            "email"
+
+        Username ->
+            "username"
+
+        Password ->
+            "password"
 
 
-validateForm : Form -> Result (List Problem) TrimmedForm
+validateForm : Form -> Validated Problem ValidForm
 validateForm form =
     let
         trimmedForm =
             trimFields form
     in
-    case List.concatMap (validateField trimmedForm) fieldsToValidate of
-        [] ->
-            Ok trimmedForm
-
-        problems ->
-            Err problems
-
-
-validateField : TrimmedForm -> ValidatedField -> List Problem
-validateField (Trimmed form) field =
-    List.map (InvalidEntry field) <|
-        case field of
-            Email ->
-                if String.isEmpty form.email then
-                    [ "Email can't be blank." ]
-
-                else
-                    []
-
-            Username ->
-                if String.isEmpty form.username then
-                    [ "Username can't be blank." ]
-
-                else
-                    []
-
-            Password ->
-                if String.isEmpty form.password then
-                    [ "Password can't be blank." ]
-
-                else if String.length form.password < 8 then
-                    [ "Password must be at least 8 characters long." ]
-
-                else
-                    []
+    Ok ValidForm
+        |> Validator.Named.validateMany (fieldToString Email)
+            [ Validator.String.notEmpty (InvalidEntry Email "Email can't be blank")
+            , Validator.String.isEmail (InvalidEntry Email "Must be valid email")
+            ]
+            trimmedForm.email
+        |> Validator.Named.validate (fieldToString Username) (Validator.String.notEmpty (InvalidEntry Username "Username can't be blank")) trimmedForm.username
+        |> Validator.Named.validateMany (fieldToString Password)
+            [ Validator.String.hasLetter (InvalidEntry Password "Password must contain letters")
+            , Validator.String.hasNumber (InvalidEntry Password "Password must contain numbers")
+            , Validator.String.minLength (InvalidEntry Password "Password must be atleast 8 characters long") 8
+            ]
+            trimmedForm.password
 
 
-trimFields : Form -> TrimmedForm
+trimFields : Form -> Form
 trimFields form =
-    Trimmed
-        { username = String.trim form.username
-        , email = String.trim form.email
-        , password = String.trim form.password
-        }
-
-
-invalidEntryToString : List Problem -> ValidatedField -> String
-invalidEntryToString problems field =
-    getInvalidEntry problems field
-        |> List.map problemToString
-        |> String.join ""
-
-
-serverErrorToString : List Problem -> String
-serverErrorToString problems =
-    getServerError problems
-        |> List.map problemToString
-        |> String.join ""
-
-
-getInvalidEntry : List Problem -> ValidatedField -> List Problem
-getInvalidEntry problems validatedField =
-    List.filter
-        (\problem ->
-            case problem of
-                InvalidEntry field _ ->
-                    field == validatedField
-
-                _ ->
-                    False
-        )
-        problems
-
-
-getServerError : List Problem -> List Problem
-getServerError problems =
-    List.filter
-        (\problem ->
-            case problem of
-                ServerError _ ->
-                    True
-
-                InvalidEntry _ _ ->
-                    False
-        )
-        problems
-
-
-problemToString : Problem -> String
-problemToString problem =
-    case problem of
-        InvalidEntry _ str ->
-            str
-
-        ServerError { message } ->
-            message
+    { username = String.trim form.username
+    , email = String.trim form.email
+    , password = String.trim form.password
+    }
 
 
 
@@ -271,22 +213,44 @@ problemToString problem =
 
 
 view : Model -> Html Msg
-view { form, problems, isLoading } =
-    div [] [ viewSignupForm form problems isLoading ]
+view { form, validated, isLoading } =
+    div [] [ viewSignupForm form validated isLoading ]
 
 
-viewFormInvalidEntry : List Problem -> ValidatedField -> Html msg
-viewFormInvalidEntry problems field =
-    div [ class "h-1" ] [ p [ class "text-sm text-red-500 mt-2" ] [ text <| invalidEntryToString problems field ] ]
+
+-- viewFormServerError : List Problem -> Html msg
+-- viewFormServerError problems =
+--     div [ class "h-1" ] [ p [ class "text-sm mt-1 text-red-500" ] [ text <| serverErrorToString problems ] ]
 
 
-viewFormServerError : List Problem -> Html msg
-viewFormServerError problems =
-    div [ class "h-1" ] [ p [ class "text-sm mt-1 text-red-500" ] [ text <| serverErrorToString problems ] ]
+viewFormErrors : Field -> Validated Problem ValidForm -> Html msg
+viewFormErrors field validated =
+    case Validator.Named.getErrors (fieldToString field) validated of
+        Nothing ->
+            text ""
+
+        Just errors ->
+            div []
+                (List.map
+                    (\error ->
+                        case error of
+                            InvalidEntry _ message ->
+                                div [ class "h-1" ] [ p [ class "text-sm mt-1 text-red-500" ] [ text message ] ]
+
+                            ServerError { message } ->
+                                div [ class "h-1" ] [ p [ class "text-sm mt-1 text-red-500" ] [ text message ] ]
+                    )
+                    errors
+                )
 
 
-viewSignupForm : Form -> List Problem -> Bool -> Html Msg
-viewSignupForm form problems isLoading =
+hasFormErrors : Field -> Validated Problem ValidForm -> Bool
+hasFormErrors field validated =
+    Validator.Named.hasErrorsOn (fieldToString field) validated
+
+
+viewSignupForm : Form -> Validated Problem ValidForm -> Bool -> Html Msg
+viewSignupForm form validated isLoading =
     div [ class "flex flex-col font-light text-black text-start lg:w-96 md:w-96 sm:w-40" ]
         [ header [ class "text-2xl mb-6 font-medium font-serif" ] [ text "Join mitsumori" ]
         , Html.form [ id "signup-form" ]
@@ -295,7 +259,7 @@ viewSignupForm form problems isLoading =
                     [ text "Email address" ]
                 , input
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
-                    , classList [ ( "border-red-500", not (String.isEmpty <| invalidEntryToString problems Email) ) ]
+                    , classList [ ( "border-red-500", hasFormErrors Email validated ) ]
                     , id "email"
                     , placeholder "your.email@address.com"
                     , type_ "text"
@@ -303,14 +267,14 @@ viewSignupForm form problems isLoading =
                     , onInput OnEmailChange
                     ]
                     [ text form.email ]
-                , viewFormInvalidEntry problems Email
+                , viewFormErrors Email validated
                 ]
             , div [ class "flex flex-col mt-6" ]
                 [ label [ class "text-gray-900 mt-2", for "username" ]
                     [ text "Username" ]
                 , input
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
-                    , classList [ ( "border-red-500", not (String.isEmpty <| invalidEntryToString problems Username) ) ]
+                    , classList [ ( "border-red-500", hasFormErrors Username validated ) ]
                     , id "username"
                     , placeholder "johndoe"
                     , type_ "text"
@@ -318,14 +282,14 @@ viewSignupForm form problems isLoading =
                     , onInput OnUsernameChange
                     ]
                     [ text form.email ]
-                , viewFormInvalidEntry problems Username
+                , viewFormErrors Username validated
                 ]
             , div [ class "flex flex-col mt-6" ]
                 [ label [ class "text-gray-700 mt-2", for "password" ]
                     [ text "Password (8+ chars)" ]
                 , input
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
-                    , classList [ ( "border-red-500", not (String.isEmpty <| invalidEntryToString problems Password) ) ]
+                    , classList [ ( "border-red-500", hasFormErrors Password validated ) ]
                     , id "password"
                     , placeholder "Choose your password"
                     , type_ "password"
@@ -333,9 +297,10 @@ viewSignupForm form problems isLoading =
                     , onInput OnPasswordChange
                     ]
                     [ text form.password ]
-                , viewFormInvalidEntry problems Password
+                , viewFormErrors Password validated
                 ]
-            , viewFormServerError problems
+
+            -- , viewFormServerError problems
             ]
         , div [ class "flex mt-9 justify-between items-center" ]
             [ Button.create { label = "Create account", onClick = OnSubmit }

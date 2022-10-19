@@ -25,6 +25,7 @@ type alias Model =
     { form : Form
     , validated : Validated Problem ValidForm
     , isLoading : Bool
+    , serverError : Maybe Supabase.AuthError
     }
 
 
@@ -65,6 +66,7 @@ init _ =
             }
       , validated = Err Dict.empty
       , isLoading = False
+      , serverError = Nothing
       }
     , Cmd.none
     )
@@ -119,7 +121,7 @@ update shared msg model =
                 validatedForm =
                     validateForm model.form
             in
-            case Debug.log "validatedForm" validatedForm of
+            case validatedForm of
                 Ok validForm ->
                     ( { model | validated = validatedForm, isLoading = True }, Supabase.signUp (encodeForm validForm), Shared.NoUpdate )
 
@@ -135,15 +137,8 @@ update shared msg model =
                 UserOk user ->
                     ( { model | form = emptyForm, isLoading = False }, Route.pushUrl shared.key Route.Home, Shared.UpdateUser user )
 
-                SignupError _ ->
-                    -- let
-                    --     serverErrors =
-                    --         List.map ServerError [ error ]
-                    --     validatedErrors =
-                    --         Validator.mapErrors serverErrors model.validated
-                    -- in
-                    -- ( { model | isLoading = False, validated = validatedErrors }, Cmd.none, Shared.NoUpdate )
-                    ( { model | isLoading = False }, Cmd.none, Shared.NoUpdate )
+                SignupError error ->
+                    ( { model | isLoading = False, serverError = Just error }, Cmd.none, Shared.NoUpdate )
 
                 PayloadError ->
                     ( model, Cmd.none, Shared.NoUpdate )
@@ -188,16 +183,22 @@ validateForm form =
     Ok ValidForm
         |> Validator.Named.validateMany (fieldToString Email)
             [ Validator.String.notEmpty (InvalidEntry Email "Email can't be blank")
-            , Validator.String.isEmail (InvalidEntry Email "Must be valid email")
+            , Validator.String.isEmail (InvalidEntry Email "Must be a valid email")
             ]
             trimmedForm.email
         |> Validator.Named.validate (fieldToString Username) (Validator.String.notEmpty (InvalidEntry Username "Username can't be blank")) trimmedForm.username
         |> Validator.Named.validateMany (fieldToString Password)
-            [ Validator.String.hasLetter (InvalidEntry Password "Password must contain letters")
-            , Validator.String.hasNumber (InvalidEntry Password "Password must contain numbers")
+            [ Validator.String.notEmpty (InvalidEntry Password "Password can't be blank")
             , Validator.String.minLength (InvalidEntry Password "Password must be atleast 8 characters long") 8
+            , Validator.String.hasLetter (InvalidEntry Password "Password must contain letters")
+            , Validator.String.hasNumber (InvalidEntry Password "Password must contain numbers")
             ]
             trimmedForm.password
+
+
+fieldHasError : Field -> Validated Problem ValidForm -> Bool
+fieldHasError field validated =
+    Validator.Named.hasErrorsOn (fieldToString field) validated
 
 
 trimFields : Form -> Form
@@ -213,14 +214,19 @@ trimFields form =
 
 
 view : Model -> Html Msg
-view { form, validated, isLoading } =
-    div [] [ viewSignupForm form validated isLoading ]
+view { form, validated, isLoading, serverError } =
+    div [] [ viewSignupForm form validated serverError isLoading ]
 
 
-
--- viewFormServerError : List Problem -> Html msg
--- viewFormServerError problems =
---     div [ class "h-1" ] [ p [ class "text-sm mt-1 text-red-500" ] [ text <| serverErrorToString problems ] ]
+viewFormServerError : Maybe Supabase.AuthError -> Html msg
+viewFormServerError serverError =
+    let
+        message_ =
+            serverError
+                |> Maybe.map (\{ message } -> message)
+                |> Maybe.withDefault ""
+    in
+    div [ class "h-1" ] [ p [ class "text-sm mt-3 text-red-500" ] [ text message_ ] ]
 
 
 viewFormErrors : Field -> Validated Problem ValidForm -> Html msg
@@ -244,13 +250,8 @@ viewFormErrors field validated =
                 )
 
 
-hasFormErrors : Field -> Validated Problem ValidForm -> Bool
-hasFormErrors field validated =
-    Validator.Named.hasErrorsOn (fieldToString field) validated
-
-
-viewSignupForm : Form -> Validated Problem ValidForm -> Bool -> Html Msg
-viewSignupForm form validated isLoading =
+viewSignupForm : Form -> Validated Problem ValidForm -> Maybe Supabase.AuthError -> Bool -> Html Msg
+viewSignupForm form validated serverError isLoading =
     div [ class "flex flex-col font-light text-black text-start lg:w-96 md:w-96 sm:w-40" ]
         [ header [ class "text-2xl mb-6 font-medium font-serif" ] [ text "Join mitsumori" ]
         , Html.form [ id "signup-form" ]
@@ -259,7 +260,7 @@ viewSignupForm form validated isLoading =
                     [ text "Email address" ]
                 , input
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
-                    , classList [ ( "border-red-500", hasFormErrors Email validated ) ]
+                    , classList [ ( "border-red-500", fieldHasError Email validated ) ]
                     , id "email"
                     , placeholder "your.email@address.com"
                     , type_ "text"
@@ -274,7 +275,7 @@ viewSignupForm form validated isLoading =
                     [ text "Username" ]
                 , input
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
-                    , classList [ ( "border-red-500", hasFormErrors Username validated ) ]
+                    , classList [ ( "border-red-500", fieldHasError Username validated ) ]
                     , id "username"
                     , placeholder "johndoe"
                     , type_ "text"
@@ -289,7 +290,7 @@ viewSignupForm form validated isLoading =
                     [ text "Password (8+ chars)" ]
                 , input
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
-                    , classList [ ( "border-red-500", hasFormErrors Password validated ) ]
+                    , classList [ ( "border-red-500", fieldHasError Password validated ) ]
                     , id "password"
                     , placeholder "Choose your password"
                     , type_ "password"
@@ -299,8 +300,7 @@ viewSignupForm form validated isLoading =
                     [ text form.password ]
                 , viewFormErrors Password validated
                 ]
-
-            -- , viewFormServerError problems
+            , viewFormServerError serverError
             ]
         , div [ class "flex mt-9 justify-between items-center" ]
             [ Button.create { label = "Create account", onClick = OnSubmit }

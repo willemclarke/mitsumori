@@ -5,14 +5,13 @@ import Dict
 import Html exposing (Html, a, button, div, form, header, input, label, p, text)
 import Html.Attributes exposing (class, classList, for, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
+import Html.Extra as HE
 import Json.Decode as JD
 import Json.Encode as JE
 import Router.Route as Route
 import Shared exposing (Shared, SharedUpdate(..))
 import Supabase
 import User
-import Validator
-import Validator.Bool
 import Validator.Named exposing (Validated)
 import Validator.String
 
@@ -218,38 +217,6 @@ view { form, validated, isLoading, serverError } =
     div [] [ viewSignupForm form validated serverError isLoading ]
 
 
-viewFormServerError : Maybe Supabase.AuthError -> Html msg
-viewFormServerError serverError =
-    let
-        message_ =
-            serverError
-                |> Maybe.map (\{ message } -> message)
-                |> Maybe.withDefault ""
-    in
-    div [ class "h-1" ] [ p [ class "text-sm mt-3 text-red-500" ] [ text message_ ] ]
-
-
-viewFormErrors : Field -> Validated Problem ValidForm -> Html msg
-viewFormErrors field validated =
-    case Validator.Named.getErrors (fieldToString field) validated of
-        Nothing ->
-            text ""
-
-        Just errors ->
-            div []
-                (List.map
-                    (\error ->
-                        case error of
-                            InvalidEntry _ message ->
-                                div [ class "h-1" ] [ p [ class "text-sm mt-1 text-red-500" ] [ text message ] ]
-
-                            ServerError { message } ->
-                                div [ class "h-1" ] [ p [ class "text-sm mt-1 text-red-500" ] [ text message ] ]
-                    )
-                    errors
-                )
-
-
 viewSignupForm : Form -> Validated Problem ValidForm -> Maybe Supabase.AuthError -> Bool -> Html Msg
 viewSignupForm form validated serverError isLoading =
     div [ class "flex flex-col font-light text-black text-start lg:w-96 md:w-96 sm:w-40" ]
@@ -309,6 +276,38 @@ viewSignupForm form validated serverError isLoading =
             , button [ onClick <| NavigateTo Route.Signin, class "ml-2 text-gray-700 underline underline-offset-2 hover:text-black transition ease-in-out hover:-translate-y-0.5 duration-300s" ] [ text "Or sign in" ]
             ]
         ]
+
+
+viewFormServerError : Maybe Supabase.AuthError -> Html msg
+viewFormServerError serverError =
+    let
+        message_ =
+            serverError
+                |> Maybe.map (\{ message } -> message)
+                |> Maybe.withDefault ""
+    in
+    div [ class "h-1" ] [ p [ class "text-sm mt-3 text-red-500" ] [ text message_ ] ]
+
+
+viewFormErrors : Field -> Validated Problem ValidForm -> Html msg
+viewFormErrors field validated =
+    case Validator.Named.getErrors (fieldToString field) validated of
+        Nothing ->
+            text ""
+
+        Just errors ->
+            div []
+                (List.map
+                    (\error ->
+                        case error of
+                            InvalidEntry _ message ->
+                                div [ class "h-1" ] [ p [ class "text-sm mt-1 text-red-500" ] [ text message ] ]
+
+                            _ ->
+                                HE.nothing
+                    )
+                    errors
+                )
 
 
 subscriptions : Model -> Sub Msg

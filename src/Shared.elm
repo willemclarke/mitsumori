@@ -1,4 +1,4 @@
-module Shared exposing (Shared, SharedUpdate(..), SupabaseFlags, update)
+module Shared exposing (Shared, SharedUpdate(..), SupabaseFlags, generateUuid, stepSeed, update)
 
 import Browser.Navigation as Nav
 import Components.Toast exposing (ToastType)
@@ -36,6 +36,7 @@ type SharedUpdate
     | UpdateSupabase SupabaseFlags
     | ShowToast ToastType
     | CloseToast Uuid.Uuid
+    | StepSeed
 
 
 update : Shared -> SharedUpdate -> Shared
@@ -52,6 +53,9 @@ update shared sharedUpdate =
 
         CloseToast toastId ->
             { shared | toasts = List.filter (\( _, uuid_ ) -> uuid_ /= toastId) shared.toasts }
+
+        StepSeed ->
+            { shared | seed = stepSeed shared.seed }
 
         NoUpdate ->
             shared

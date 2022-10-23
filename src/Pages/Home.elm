@@ -4,6 +4,7 @@ import Components.Icons as Icons
 import Components.Modal as Modal
 import Components.Spinner as Spinner
 import Components.Toast as Toast
+import Dict
 import Graphql.Http
 import Html exposing (Html, a, button, div, form, header, input, label, p, text, textarea)
 import Html.Attributes exposing (class, classList, for, href, id, maxlength, placeholder, rows, type_, value)
@@ -14,6 +15,10 @@ import Shared exposing (Shared)
 import String.Extra as SE
 import Supabase
 import User
+import Uuid
+import Validator.Maybe
+import Validator.Named exposing (Validated)
+import Validator.String
 
 
 
@@ -27,6 +32,7 @@ type alias Model =
     , modalIsLoading : Bool
     , modalVisibility : ModalVisibility
     , modalType : ModalType
+    , validated : Validated Problem ValidForm
     }
 
 
@@ -42,9 +48,20 @@ type alias ModalForm =
     }
 
 
+type alias ValidForm =
+    { quote : String
+    , author : String
+    , reference : Maybe String
+    , tags : Maybe (List String)
+    }
+
+
 type Problem
-    = InvalidEntry ValidatedField String
-    | ServerError Supabase.AuthError
+    = InvalidEntry Field String
+
+
+
+-- | ServerError Supabase.AuthError
 
 
 type ModalType
@@ -58,14 +75,11 @@ type ModalVisibility
     | Hidden
 
 
-type ValidatedField
+type Field
     = Quote_
     | Author
     | Reference
-
-
-type TrimmedForm
-    = Trimmed ModalForm
+    | Tags
 
 
 init : Shared -> ( Model, Cmd Msg )
@@ -76,6 +90,7 @@ init shared =
       , modalIsLoading = False
       , modalType = NewQuote
       , modalVisibility = Hidden
+      , validated = Err Dict.empty
       }
     , Supabase.getQuotes GotQuotesResponse shared
     )
@@ -91,6 +106,7 @@ type Msg
     | OnQuoteChange String
     | OnAuthorChange String
     | OnReferenceChange String
+    | OnTagsChange String
     | OpenEditQuoteModal Supabase.Quote
     | OpenDeleteQuoteModal Supabase.Quote
     | SubmitAddQuoteModal
@@ -121,6 +137,9 @@ update shared msg model =
         OnReferenceChange reference ->
             updateModalForm (\form -> { form | reference = Just reference }) model
 
+        OnTagsChange tag ->
+            updateModalForm (\form -> { form | tags = Just [ tag ] }) model
+
         {- If we edit a quote, update the modalForm with the quotes values, also pass the Quote to the `Editing`
            constructor so when we submit the modal, we have the ID of the quote for supabase to use.
         -}
@@ -141,27 +160,36 @@ update shared msg model =
             )
 
         SubmitAddQuoteModal ->
-            case validateForm model.modalForm of
-                Ok (Trimmed validForm) ->
+            let
+                validatedForm =
+                    validateForm model.modalForm
+            in
+            case validatedForm of
+                Ok validForm ->
                     let
                         quote =
                             { quote = validForm.quote
                             , author = validForm.author
                             , reference = validForm.reference
                             , userId = Maybe.withDefault "" (User.userId shared.user)
+                            , quoteId = Uuid.toString <| Shared.generateUuid shared.seed
                             }
                     in
-                    ( { model | modalFormProblems = [], modalIsLoading = True }
+                    ( { model | validated = validatedForm, modalIsLoading = True }
                     , Supabase.insertQuote GotInsertQuoteResponse quote shared
-                    , Shared.NoUpdate
+                    , Shared.StepSeed
                     )
 
-                Err problems ->
-                    ( { model | modalFormProblems = problems }, Cmd.none, Shared.NoUpdate )
+                Err _ ->
+                    ( { model | validated = validatedForm }, Cmd.none, Shared.NoUpdate )
 
         SubmitEditQuoteModal quote ->
-            case validateForm model.modalForm of
-                Ok (Trimmed validForm) ->
+            let
+                validatedForm =
+                    validateForm model.modalForm
+            in
+            case validatedForm of
+                Ok validForm ->
                     let
                         quote_ =
                             { id = quote.id
@@ -170,16 +198,16 @@ update shared msg model =
                             , reference = validForm.reference
                             , userId = quote.userId
                             , createdAt = quote.createdAt
-                            , tags = Nothing
+                            , tags = quote.tags
                             }
                     in
-                    ( { model | modalFormProblems = [], modalIsLoading = True, modalForm = emptyModalForm }
+                    ( { model | validated = validatedForm, modalIsLoading = True, modalForm = emptyModalForm }
                     , Supabase.editQuote GotEditQuotesResponse quote_ shared
                     , Shared.NoUpdate
                     )
 
-                Err problems ->
-                    ( { model | modalFormProblems = problems }, Cmd.none, Shared.NoUpdate )
+                Err _ ->
+                    ( { model | validated = validatedForm }, Cmd.none, Shared.NoUpdate )
 
         SubmitDeleteQuoteModal quoteId ->
             ( { model | modalIsLoading = True, modalForm = emptyModalForm }
@@ -242,110 +270,51 @@ updateModalForm transform model =
 -- FORM HELPERS
 
 
-fieldsToValidate : List ValidatedField
-fieldsToValidate =
-    [ Quote_, Author ]
+fieldToString : Field -> String
+fieldToString field =
+    case field of
+        Quote_ ->
+            "quote"
+
+        Author ->
+            "author"
+
+        Reference ->
+            "reference"
+
+        Tags ->
+            "tags"
 
 
-validateForm : ModalForm -> Result (List Problem) TrimmedForm
+validateForm : ModalForm -> Validated Problem ValidForm
 validateForm form =
     let
         trimmedForm =
             trimFields form
     in
-    case List.concatMap (validateField trimmedForm) fieldsToValidate of
-        [] ->
-            Ok trimmedForm
-
-        problems ->
-            Err problems
-
-
-validateField : TrimmedForm -> ValidatedField -> List Problem
-validateField (Trimmed form) field =
-    List.map (InvalidEntry field) <|
-        case field of
-            Quote_ ->
-                if String.isEmpty form.quote then
-                    [ "Quote can't be blank" ]
-
-                else if String.length form.quote >= 250 then
-                    [ "Quote cannot exceed 250 characters" ]
-
-                else
-                    []
-
-            Author ->
-                if String.isEmpty form.author then
-                    [ "Author can't be blank" ]
-
-                else
-                    []
-
-            Reference ->
-                []
+    Ok ValidForm
+        |> Validator.Named.validateMany (fieldToString Quote_)
+            [ Validator.String.notEmpty (InvalidEntry Quote_ "Quote can't be blank")
+            , Validator.String.maxLength (InvalidEntry Quote_ "Quote can't exceed 250 chars") 250
+            ]
+            trimmedForm.quote
+        |> Validator.Named.validate (fieldToString Author) (Validator.String.notEmpty (InvalidEntry Author "Author can't be blank")) trimmedForm.author
+        |> Validator.Named.validate (fieldToString Reference) (Validator.Maybe.notRequired (Validator.String.isUrl (InvalidEntry Reference "Must be a valid URL, e.g. (www.google.com)"))) trimmedForm.reference
+        |> Validator.Named.noCheck trimmedForm.tags
 
 
-trimFields : ModalForm -> TrimmedForm
+fieldHasError : Field -> Validated Problem ValidForm -> Bool
+fieldHasError field validated =
+    Validator.Named.hasErrorsOn (fieldToString field) validated
+
+
+trimFields : ModalForm -> ModalForm
 trimFields form =
-    Trimmed
-        { quote = String.trim form.quote
-        , author = String.trim form.author
-        , reference = Maybe.map (\ref -> String.trim ref) form.reference
-        , tags = Maybe.map (\tags -> List.map String.trim tags) form.tags
-        }
-
-
-invalidEntryToString : List Problem -> ValidatedField -> String
-invalidEntryToString problems field =
-    getInvalidEntry problems field
-        |> List.map problemToString
-        |> String.join ""
-
-
-serverErrorToString : List Problem -> String
-serverErrorToString problems =
-    getServerError problems
-        |> List.map problemToString
-        |> String.join ""
-
-
-getInvalidEntry : List Problem -> ValidatedField -> List Problem
-getInvalidEntry problems validatedField =
-    List.filter
-        (\problem ->
-            case problem of
-                InvalidEntry field _ ->
-                    field == validatedField
-
-                _ ->
-                    False
-        )
-        problems
-
-
-getServerError : List Problem -> List Problem
-getServerError problems =
-    List.filter
-        (\problem ->
-            case problem of
-                ServerError _ ->
-                    True
-
-                InvalidEntry _ _ ->
-                    False
-        )
-        problems
-
-
-problemToString : Problem -> String
-problemToString problem =
-    case problem of
-        InvalidEntry _ str ->
-            str
-
-        ServerError { message } ->
-            message
+    { quote = String.trim form.quote
+    , author = String.trim form.author
+    , reference = Maybe.map (\ref -> String.trim ref) form.reference
+    , tags = Maybe.map (\tags -> List.map String.trim tags) form.tags
+    }
 
 
 
@@ -356,13 +325,13 @@ view : Shared -> Model -> Html Msg
 view shared model =
     div
         [ class "flex flex-col h-full w-full items-center" ]
-        [ viewHeader shared.user model.modalForm model.modalFormProblems model.modalType model.modalVisibility model.modalIsLoading
+        [ viewHeader shared.user model.modalForm model.validated model.modalType model.modalVisibility model.modalIsLoading
         , viewQuotes model.quotes shared
         ]
 
 
-viewHeader : User.User -> ModalForm -> List Problem -> ModalType -> ModalVisibility -> Bool -> Html Msg
-viewHeader user form problems modalType visibility isLoading =
+viewHeader : User.User -> ModalForm -> Validated Problem ValidForm -> ModalType -> ModalVisibility -> Bool -> Html Msg
+viewHeader user form validated modalType visibility isLoading =
     let
         username =
             (SE.toSentenceCase <| User.username user) ++ "'s"
@@ -370,16 +339,16 @@ viewHeader user form problems modalType visibility isLoading =
     div [ class "flex flex-col mt-16" ]
         [ div [ class "flex items-center" ]
             [ header [ class "text-3xl font-serif font-light mr-2" ] [ text <| String.join " " [ username, "quotes" ] ]
-            , addQuoteButton form problems modalType visibility isLoading
+            , addQuoteButton form validated modalType visibility isLoading
             ]
         ]
 
 
-addQuoteButton : ModalForm -> List Problem -> ModalType -> ModalVisibility -> Bool -> Html Msg
-addQuoteButton form problems modalType visibility isLoading =
+addQuoteButton : ModalForm -> Validated Problem ValidForm -> ModalType -> ModalVisibility -> Bool -> Html Msg
+addQuoteButton form validated modalType visibility isLoading =
     div [ class "flex justify-end" ]
         [ button [ class "transition ease-in-out hover:-translate-y-0.5 duration-300", onClick OpenAddQuoteModal ] [ Icons.plus ]
-        , viewQuoteModal form problems modalType visibility isLoading
+        , viewQuoteModal form validated modalType visibility isLoading
         ]
 
 
@@ -457,15 +426,15 @@ viewQuoteTag tag =
 {- This fn is responsible for displaying each type of Modal (adding a quote, editing, deleting) -}
 
 
-viewQuoteModal : ModalForm -> List Problem -> ModalType -> ModalVisibility -> Bool -> Html Msg
-viewQuoteModal form problems modalType visibility isLoading =
+viewQuoteModal : ModalForm -> Validated Problem ValidForm -> ModalType -> ModalVisibility -> Bool -> Html Msg
+viewQuoteModal form validated modalType visibility isLoading =
     case visibility of
         Visible ->
             case modalType of
                 NewQuote ->
                     Modal.create
                         { title = "Add quote"
-                        , body = viewModalFormBody form problems
+                        , body = viewModalFormBody form validated
                         , actions =
                             Modal.acceptAndDiscardActions
                                 (Modal.asyncAction { label = "Add quote", onClick = SubmitAddQuoteModal, isLoading = isLoading })
@@ -476,7 +445,7 @@ viewQuoteModal form problems modalType visibility isLoading =
                 Editing quote ->
                     Modal.create
                         { title = "Edit quote"
-                        , body = viewModalFormBody form problems
+                        , body = viewModalFormBody form validated
                         , actions =
                             Modal.acceptAndDiscardActions
                                 (Modal.asyncAction { label = "Edit quote", onClick = SubmitEditQuoteModal quote, isLoading = isLoading })
@@ -499,8 +468,8 @@ viewQuoteModal form problems modalType visibility isLoading =
             HE.nothing
 
 
-viewModalFormBody : ModalForm -> List Problem -> Html Msg
-viewModalFormBody form problems =
+viewModalFormBody : ModalForm -> Validated Problem ValidForm -> Html Msg
+viewModalFormBody form validated =
     div [ class "flex flex-col text-black" ]
         [ Html.form [ id "add-quote-form" ]
             [ div [ class "flex flex-col mt-2" ]
@@ -508,7 +477,7 @@ viewModalFormBody form problems =
                     [ text "Quote body" ]
                 , textarea
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
-                    , classList [ ( "border-red-500", not (String.isEmpty <| invalidEntryToString problems Quote_) ) ]
+                    , classList [ ( "border-red-500", fieldHasError Quote_ validated ) ]
                     , id "quote"
                     , rows 5
                     , maxlength 250
@@ -517,14 +486,14 @@ viewModalFormBody form problems =
                     , onInput OnQuoteChange
                     ]
                     [ text form.quote ]
-                , viewFormInvalidEntry problems Quote_
+                , viewFieldError Quote_ validated
                 ]
             , div [ class "flex flex-col mt-6" ]
                 [ label [ class "text-gray-900 mt-2", for "author" ]
                     [ text "Author" ]
                 , input
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
-                    , classList [ ( "border-red-500", not (String.isEmpty <| invalidEntryToString problems Author) ) ]
+                    , classList [ ( "border-red-500", fieldHasError Author validated ) ]
                     , id "author"
                     , value form.author
                     , placeholder "Author"
@@ -532,20 +501,22 @@ viewModalFormBody form problems =
                     , onInput OnAuthorChange
                     ]
                     [ text form.author ]
-                , viewFormInvalidEntry problems Author
+                , viewFieldError Author validated
                 ]
             , div [ class "flex flex-col mt-6" ]
                 [ label [ class "text-gray-900 mt-2", for "reference" ]
                     [ text "Reference" ]
                 , input
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
+                    , classList [ ( "border-red-500", fieldHasError Reference validated ) ]
                     , id "reference"
                     , value <| Maybe.withDefault "" form.reference
                     , placeholder "https://link-to-the-quote.com"
                     , type_ "text"
                     , onInput OnReferenceChange
                     ]
-                    [ text form.author ]
+                    [ text <| Maybe.withDefault "" form.reference ]
+                , viewFieldError Reference validated
                 ]
             , div [ class "flex flex-col mt-6" ]
                 [ label [ class "text-gray-900 mt-2", for "reference" ]
@@ -556,23 +527,43 @@ viewModalFormBody form problems =
                     , value ""
                     , placeholder "e.g. Stoic"
                     , type_ "text"
-                    , onInput OnReferenceChange
+                    , onInput OnTagsChange
                     ]
                     [ text form.author ]
                 ]
-            , viewFormServerError problems
+
+            -- , viewFormServerError validated
             ]
         ]
 
 
-viewFormInvalidEntry : List Problem -> ValidatedField -> Html msg
-viewFormInvalidEntry problems field =
-    div [ class "h-1" ] [ p [ class "text-sm text-red-500 mt-2" ] [ text <| invalidEntryToString problems field ] ]
+viewFormServerError : Maybe Supabase.AuthError -> Html msg
+viewFormServerError serverError =
+    let
+        message_ =
+            serverError
+                |> Maybe.map (\{ message } -> message)
+                |> Maybe.withDefault ""
+    in
+    div [ class "h-1" ] [ p [ class "text-sm mt-3 text-red-500" ] [ text message_ ] ]
 
 
-viewFormServerError : List Problem -> Html msg
-viewFormServerError problems =
-    div [ class "h-1" ] [ p [ class "text-sm mt-1 text-red-500" ] [ text <| serverErrorToString problems ] ]
+viewFieldError : Field -> Validated Problem ValidForm -> Html msg
+viewFieldError field validated =
+    case Validator.Named.getErrors (fieldToString field) validated of
+        Nothing ->
+            text ""
+
+        Just errors ->
+            div []
+                (List.map
+                    (\error ->
+                        case error of
+                            InvalidEntry _ message ->
+                                div [ class "h-1" ] [ p [ class "text-sm mt-1 text-red-500" ] [ text message ] ]
+                    )
+                    errors
+                )
 
 
 

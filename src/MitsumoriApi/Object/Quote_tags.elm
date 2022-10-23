@@ -24,9 +24,9 @@ text =
     Object.selectionForField "String" "text" [] Decode.string
 
 
-quote_id : SelectionSet (Maybe ScalarCodecs.Uuid) MitsumoriApi.Object.Quote_tags
+quote_id : SelectionSet ScalarCodecs.Uuid MitsumoriApi.Object.Quote_tags
 quote_id =
-    Object.selectionForField "(Maybe ScalarCodecs.Uuid)" "quote_id" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecUuid |> .decoder |> Decode.nullable)
+    Object.selectionForField "ScalarCodecs.Uuid" "quote_id" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
 
 
 id : SelectionSet ScalarCodecs.Uuid MitsumoriApi.Object.Quote_tags

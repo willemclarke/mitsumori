@@ -12,6 +12,7 @@ import MitsumoriApi.Object
 import MitsumoriApi.Object.Quote_tags as QuoteTags
 import MitsumoriApi.Object.Quote_tagsConnection as QuoteTagsConnection
 import MitsumoriApi.Object.Quote_tagsEdge as QuoteTagsEdge
+import MitsumoriApi.Object.Quote_tagsInsertResponse
 import MitsumoriApi.Object.Quotes as Quotes
 import MitsumoriApi.Object.QuotesConnection as QuotesConnection
 import MitsumoriApi.Object.QuotesDeleteResponse
@@ -50,17 +51,27 @@ type alias Tags =
     Maybe (List String)
 
 
+type alias Tag =
+    { id : String
+    , text : String
+    , quoteId : String
+    }
 
-{- This type (PartialQuote) is used for quote mutations, as we seed a quote_id, and created_at field on entry to the database,
-   so we don't have to generate an ID and pass the timestamp in
--}
 
-
-type alias PartialQuote =
+type alias InsertQuoteDto =
     { quote : String
     , author : String
     , userId : String
     , reference : Maybe String
+    , quoteId : String
+
+    -- , quoteTag : Maybe String
+    }
+
+
+type alias QuoteTagsDto =
+    { quoteId : String
+    , tag : Maybe String
     }
 
 
@@ -75,7 +86,7 @@ getQuotes gotResponseMsg { user, supabase } =
 
 insertQuote :
     (RemoteData (Graphql.Http.Error (List Quote)) (List Quote) -> msg)
-    -> PartialQuote
+    -> InsertQuoteDto
     -> Shared
     -> Cmd msg
 insertQuote gotResponseMsg quote { user, supabase } =
@@ -112,7 +123,7 @@ editQuote gotResponseMsg quote { user, supabase } =
         |> Graphql.Http.send (RemoteData.fromResult >> gotResponseMsg)
 
 
-insertQuoteMutation : PartialQuote -> SelectionSet (List Quote) RootMutation
+insertQuoteMutation : InsertQuoteDto -> SelectionSet (List Quote) RootMutation
 insertQuoteMutation quote =
     Mutation.insertIntoquotesCollection
         { objects =
@@ -125,7 +136,21 @@ insertQuoteMutation quote =
               }
             ]
         }
-        (MitsumoriApi.Object.QuotesInsertResponse.records quotesNode)
+        (MitsumoriApi.Object.QuotesInsertResponse.records <| quoteNode)
+        |> SelectionSet.nonNullOrFail
+
+
+insertQuoteTagsMutation : Tag -> SelectionSet (List Tag) RootMutation
+insertQuoteTagsMutation tag =
+    Mutation.insertIntoquote_tagsCollection
+        { objects =
+            [ { text = Present tag.text
+              , quote_id = Present tag.quoteId
+              , id = Absent
+              }
+            ]
+        }
+        (MitsumoriApi.Object.Quote_tagsInsertResponse.records <| quoteTagsNode)
         |> SelectionSet.nonNullOrFail
 
 
@@ -146,7 +171,7 @@ deleteQuoteMutation quoteId =
             }
         )
         { atMost = 1 }
-        (MitsumoriApi.Object.QuotesDeleteResponse.records quotesNode)
+        (MitsumoriApi.Object.QuotesDeleteResponse.records <| quoteNodeForMutation quoteId)
 
 
 editQuoteMutation : Quote -> SelectionSet (List Quote) RootMutation
@@ -175,7 +200,7 @@ editQuoteMutation quote =
             }
         , atMost = 1
         }
-        (MitsumoriApi.Object.QuotesUpdateResponse.records quotesNode)
+        (MitsumoriApi.Object.QuotesUpdateResponse.records <| quoteNodeForMutation quote.id)
 
 
 
@@ -212,11 +237,15 @@ quotesCollection =
 
 quotesEdges : SelectionSet (List Quote) MitsumoriApi.Object.QuotesConnection
 quotesEdges =
-    QuotesConnection.edges (QuotesEdge.node quotesNode)
+    QuotesConnection.edges (QuotesEdge.node quoteNode)
 
 
-quotesNode : SelectionSet Quote MitsumoriApi.Object.Quotes
-quotesNode =
+
+{- This quotes note gets a quote, with tags, used for fetching entire list of quotes -}
+
+
+quoteNode : SelectionSet Quote MitsumoriApi.Object.Quotes
+quoteNode =
     SelectionSet.map7 Quote
         Quotes.id
         Quotes.quote_text
@@ -227,8 +256,12 @@ quotesNode =
         quoteTagsCollection
 
 
-quotesNodeForMutation : String -> SelectionSet Quote MitsumoriApi.Object.Quotes
-quotesNodeForMutation quoteId =
+
+{- This quotes node gets a quote for a specific ID, which in turn gets the tags for that quotes id -}
+
+
+quoteNodeForMutation : String -> SelectionSet Quote MitsumoriApi.Object.Quotes
+quoteNodeForMutation quoteId =
     SelectionSet.map7 Quote
         Quotes.id
         Quotes.quote_text
@@ -239,7 +272,12 @@ quotesNodeForMutation quoteId =
         (quoteTagsCollectionFromId quoteId)
 
 
-quoteTagsCollectionFromId : String -> SelectionSet Tags MitsumoriApi.Object.Quotes
+quoteTagsCollection : SelectionSet Tags MitsumoriApi.Object.Quotes
+quoteTagsCollection =
+    Quotes.quote_tagsCollection (\optionals -> optionals) quoteTagEdges
+
+
+quoteTagsCollectionFromId : String -> SelectionSet (Maybe (List String)) MitsumoriApi.Object.Quotes
 quoteTagsCollectionFromId quoteId =
     Quotes.quote_tagsCollection
         (\optionals ->
@@ -257,18 +295,21 @@ quoteTagsCollectionFromId quoteId =
         quoteTagEdges
 
 
-quoteTagsCollection : SelectionSet Tags MitsumoriApi.Object.Quotes
-quoteTagsCollection =
-    Quotes.quote_tagsCollection (\optionals -> optionals) quoteTagEdges
-
-
 quoteTagEdges : SelectionSet (List String) MitsumoriApi.Object.Quote_tagsConnection
 quoteTagEdges =
-    QuoteTagsConnection.edges (QuoteTagsEdge.node quoteTagsNode)
+    QuoteTagsConnection.edges (QuoteTagsEdge.node quoteTagTextNode)
 
 
-quoteTagsNode : SelectionSet String MitsumoriApi.Object.Quote_tags
+quoteTagsNode : SelectionSet Tag MitsumoriApi.Object.Quote_tags
 quoteTagsNode =
+    SelectionSet.map3 Tag
+        QuoteTags.id
+        QuoteTags.text
+        QuoteTags.quote_id
+
+
+quoteTagTextNode : SelectionSet String MitsumoriApi.Object.Quote_tags
+quoteTagTextNode =
     QuoteTags.text
 
 

@@ -7,7 +7,7 @@ import Components.Toast as Toast
 import Dict
 import Graphql.Http
 import Html exposing (Html, a, button, div, form, header, input, label, p, text, textarea)
-import Html.Attributes exposing (class, classList, for, href, id, maxlength, placeholder, rows, type_, value)
+import Html.Attributes exposing (class, classList, for, href, id, maxlength, placeholder, rows, target, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Html.Extra as HE
 import RemoteData exposing (RemoteData(..))
@@ -15,7 +15,6 @@ import Shared exposing (Shared)
 import String.Extra as SE
 import Supabase
 import User
-import Uuid
 import Validator.Maybe
 import Validator.Named exposing (Validated)
 import Validator.String
@@ -60,10 +59,6 @@ type Problem
     = InvalidEntry Field String
 
 
-
--- | ServerError Supabase.AuthError
-
-
 type ModalType
     = NewQuote
     | Editing Supabase.Quote
@@ -96,6 +91,11 @@ init shared =
     )
 
 
+supabaseTagsToString : Supabase.Tags -> Maybe (List String)
+supabaseTagsToString tags =
+    Just <| List.map (\tag -> tag.text) tags
+
+
 
 -- UPDATE
 
@@ -113,6 +113,7 @@ type Msg
     | SubmitEditQuoteModal Supabase.Quote
     | SubmitDeleteQuoteModal String
     | GotQuotesResponse QuotesResponse
+    | GotQuoteTagsResponse (RemoteData (Graphql.Http.Error (List Supabase.Tag)) (List Supabase.Tag))
     | GotInsertQuoteResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
     | GotDeleteQuoteResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
     | GotEditQuotesResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
@@ -126,7 +127,7 @@ update shared msg model =
             ( { model | modalVisibility = Visible }, Cmd.none, Shared.NoUpdate )
 
         CloseModal ->
-            ( { model | modalType = NewQuote, modalVisibility = Hidden, modalForm = emptyModalForm, modalFormProblems = [] }, Cmd.none, Shared.NoUpdate )
+            ( { model | modalType = NewQuote, modalVisibility = Hidden, modalForm = emptyModalForm, modalFormProblems = [], modalIsLoading = False }, Cmd.none, Shared.NoUpdate )
 
         OnQuoteChange quote ->
             updateModalForm (\form -> { form | quote = quote }) model
@@ -145,7 +146,12 @@ update shared msg model =
         -}
         OpenEditQuoteModal quote ->
             ( { model
-                | modalForm = { quote = quote.quote, author = quote.author, reference = quote.reference, tags = quote.tags }
+                | modalForm =
+                    { quote = quote.quote
+                    , author = quote.author
+                    , reference = quote.reference
+                    , tags = supabaseTagsToString quote.tags
+                    }
                 , modalType = Editing quote
                 , modalVisibility = Visible
               }
@@ -172,12 +178,11 @@ update shared msg model =
                             , author = validForm.author
                             , reference = validForm.reference
                             , userId = Maybe.withDefault "" (User.userId shared.user)
-                            , quoteId = Uuid.toString <| Shared.generateUuid shared.seed
                             }
                     in
-                    ( { model | validated = validatedForm, modalIsLoading = True }
+                    ( { model | validated = validatedForm, modalIsLoading = True, quotes = RemoteData.Loading }
                     , Supabase.insertQuote GotInsertQuoteResponse quote shared
-                    , Shared.StepSeed
+                    , Shared.NoUpdate
                     )
 
                 Err _ ->
@@ -221,6 +226,32 @@ update shared msg model =
         -- TODO: handle case of error here better via toasts
         GotInsertQuoteResponse quotesResponse ->
             case quotesResponse of
+                RemoteData.Success quotes ->
+                    let
+                        tags =
+                            model.modalForm.tags |> Maybe.withDefault []
+
+                        {- Have to get the head of the list as insertQuotes returns the quote in a list -}
+                        quoteId =
+                            List.head quotes
+                                |> Maybe.map (\quote -> quote.id)
+                                |> Maybe.withDefault ""
+
+                        ( model_, cmd_ ) =
+                            case tags of
+                                [] ->
+                                    ( { model | modalIsLoading = False, modalVisibility = Hidden, modalType = NewQuote }, Supabase.getQuotes GotQuotesResponse shared )
+
+                                _ ->
+                                    ( model, Supabase.insertQuoteTags GotQuoteTagsResponse { quoteId = quoteId, tags = tags } shared )
+                    in
+                    ( model_, cmd_, Shared.NoUpdate )
+
+                _ ->
+                    ( model, Cmd.none, Shared.NoUpdate )
+
+        GotQuoteTagsResponse response ->
+            case response of
                 RemoteData.Success _ ->
                     ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False, modalForm = emptyModalForm }
                     , Supabase.getQuotes GotQuotesResponse shared
@@ -385,7 +416,7 @@ viewQuote shared quote =
                 HE.nothing
 
             else
-                div [ class "mt-1" ] [ a [ href <| reference, class "text-gray-600 text-sm cursor-pointer hover:text-black" ] [ text "Quote reference" ] ]
+                div [ class "mt-1" ] [ a [ href <| reference, class "text-gray-600 text-sm cursor-pointer hover:text-black", target "_blank" ] [ text "Quote reference" ] ]
     in
     div [ class "flex flex-col border rounded-lg p-6 shadow-sm hover:bg-gray-100/30 transition ease-in-out hover:-translate-y-px duration-300" ]
         [ p [ class "text-lg text-gray-800" ] [ text quote.quote ]

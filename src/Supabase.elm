@@ -1,4 +1,4 @@
-port module Supabase exposing (AuthError, Quote, Quotes, authErrorDecoder, deleteQuote, editQuote, getQuotes, getSession, insertQuote, quotesQuery, sessionResponse, signIn, signInResponse, signOut, signOutResponse, signUp, signUpResponse)
+port module Supabase exposing (AuthError, Quote, Quotes, Tag, Tags, authErrorDecoder, deleteQuote, editQuote, getQuotes, getSession, insertQuote, insertQuoteTags, quotesQuery, sessionResponse, signIn, signInResponse, signOut, signOutResponse, signUp, signUpResponse)
 
 import Graphql.Http
 import Graphql.Operation exposing (RootMutation, RootQuery)
@@ -48,7 +48,7 @@ type alias Quote =
 
 
 type alias Tags =
-    Maybe (List String)
+    List Tag
 
 
 type alias Tag =
@@ -63,15 +63,12 @@ type alias InsertQuoteDto =
     , author : String
     , userId : String
     , reference : Maybe String
-    , quoteId : String
-
-    -- , quoteTag : Maybe String
     }
 
 
 type alias QuoteTagsDto =
     { quoteId : String
-    , tag : Maybe String
+    , tags : List String
     }
 
 
@@ -91,6 +88,19 @@ insertQuote :
     -> Cmd msg
 insertQuote gotResponseMsg quote { user, supabase } =
     insertQuoteMutation quote
+        |> Graphql.Http.mutationRequest supabase.supabaseUrl
+        |> Graphql.Http.withHeader "apikey" supabase.supabaseKey
+        |> Graphql.Http.withHeader "Authorization" ("Bearer " ++ User.userJwt user)
+        |> Graphql.Http.send (RemoteData.fromResult >> gotResponseMsg)
+
+
+insertQuoteTags :
+    (RemoteData (Graphql.Http.Error (List Tag)) (List Tag) -> msg)
+    -> QuoteTagsDto
+    -> Shared
+    -> Cmd msg
+insertQuoteTags gotResponseMsg tag { user, supabase } =
+    insertQuoteTagsMutation tag
         |> Graphql.Http.mutationRequest supabase.supabaseUrl
         |> Graphql.Http.withHeader "apikey" supabase.supabaseKey
         |> Graphql.Http.withHeader "Authorization" ("Bearer " ++ User.userJwt user)
@@ -140,16 +150,14 @@ insertQuoteMutation quote =
         |> SelectionSet.nonNullOrFail
 
 
-insertQuoteTagsMutation : Tag -> SelectionSet (List Tag) RootMutation
-insertQuoteTagsMutation tag =
-    Mutation.insertIntoquote_tagsCollection
-        { objects =
-            [ { text = Present tag.text
-              , quote_id = Present tag.quoteId
-              , id = Absent
-              }
-            ]
-        }
+insertQuoteTagsMutation : QuoteTagsDto -> SelectionSet Tags RootMutation
+insertQuoteTagsMutation tagsDto =
+    let
+        queryObjects =
+            tagsDto.tags
+                |> List.map (\tag -> { text = Present tag, quote_id = Present tagsDto.quoteId, id = Absent })
+    in
+    Mutation.insertIntoquote_tagsCollection { objects = queryObjects }
         (MitsumoriApi.Object.Quote_tagsInsertResponse.records <| quoteTagsNode)
         |> SelectionSet.nonNullOrFail
 
@@ -170,7 +178,7 @@ deleteQuoteMutation quoteId =
                         }
             }
         )
-        { atMost = 1 }
+        { atMost = 2 }
         (MitsumoriApi.Object.QuotesDeleteResponse.records <| quoteNodeForMutation quoteId)
 
 
@@ -272,12 +280,17 @@ quoteNodeForMutation quoteId =
         (quoteTagsCollectionFromId quoteId)
 
 
+
+-- ^^ not sure if this is correct 29/10/2022
+
+
 quoteTagsCollection : SelectionSet Tags MitsumoriApi.Object.Quotes
 quoteTagsCollection =
     Quotes.quote_tagsCollection (\optionals -> optionals) quoteTagEdges
+        |> SelectionSet.nonNullOrFail
 
 
-quoteTagsCollectionFromId : String -> SelectionSet (Maybe (List String)) MitsumoriApi.Object.Quotes
+quoteTagsCollectionFromId : String -> SelectionSet Tags MitsumoriApi.Object.Quotes
 quoteTagsCollectionFromId quoteId =
     Quotes.quote_tagsCollection
         (\optionals ->
@@ -293,11 +306,12 @@ quoteTagsCollectionFromId quoteId =
             }
         )
         quoteTagEdges
+        |> SelectionSet.nonNullOrFail
 
 
-quoteTagEdges : SelectionSet (List String) MitsumoriApi.Object.Quote_tagsConnection
+quoteTagEdges : SelectionSet Tags MitsumoriApi.Object.Quote_tagsConnection
 quoteTagEdges =
-    QuoteTagsConnection.edges (QuoteTagsEdge.node quoteTagTextNode)
+    QuoteTagsConnection.edges (QuoteTagsEdge.node quoteTagsNode)
 
 
 quoteTagsNode : SelectionSet Tag MitsumoriApi.Object.Quote_tags

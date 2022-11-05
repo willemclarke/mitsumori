@@ -1,4 +1,4 @@
-port module Supabase exposing (AuthError, Quote, Quotes, Tag, Tags, authErrorDecoder, deleteQuote, editQuote, getQuotes, getSession, insertQuote, insertQuoteTags, quotesQuery, sessionResponse, signIn, signInResponse, signOut, signOutResponse, signUp, signUpResponse)
+port module Supabase exposing (AuthError, InsertQuoteDto, Quote, Quotes, Tag, authErrorDecoder, deleteQuote, editQuote, getQuotes, getSession, insertQuote, insertQuoteTags, quotesQuery, sessionResponse, signIn, signInResponse, signOut, signOutResponse, signUp, signUpResponse)
 
 import Graphql.Http
 import Graphql.Operation exposing (RootMutation, RootQuery)
@@ -43,12 +43,8 @@ type alias Quote =
     , createdAt : Time.Posix
     , userId : String
     , reference : Maybe String
-    , tags : Tags
+    , tags : List Tag
     }
-
-
-type alias Tags =
-    List Tag
 
 
 type alias Tag =
@@ -150,14 +146,15 @@ insertQuoteMutation quote =
         |> SelectionSet.nonNullOrFail
 
 
-insertQuoteTagsMutation : QuoteTagsDto -> SelectionSet Tags RootMutation
+insertQuoteTagsMutation : QuoteTagsDto -> SelectionSet (List Tag) RootMutation
 insertQuoteTagsMutation tagsDto =
     let
         queryObjects =
             tagsDto.tags
                 |> List.map (\tag -> { text = Present tag, quote_id = Present tagsDto.quoteId, id = Absent })
     in
-    Mutation.insertIntoquote_tagsCollection { objects = queryObjects }
+    Mutation.insertIntoquote_tagsCollection
+        { objects = queryObjects }
         (MitsumoriApi.Object.Quote_tagsInsertResponse.records <| quoteTagsNode)
         |> SelectionSet.nonNullOrFail
 
@@ -284,13 +281,13 @@ quoteNodeForMutation quoteId =
 -- ^^ not sure if this is correct 29/10/2022
 
 
-quoteTagsCollection : SelectionSet Tags MitsumoriApi.Object.Quotes
+quoteTagsCollection : SelectionSet (List Tag) MitsumoriApi.Object.Quotes
 quoteTagsCollection =
     Quotes.quote_tagsCollection (\optionals -> optionals) quoteTagEdges
         |> SelectionSet.nonNullOrFail
 
 
-quoteTagsCollectionFromId : String -> SelectionSet Tags MitsumoriApi.Object.Quotes
+quoteTagsCollectionFromId : String -> SelectionSet (List Tag) MitsumoriApi.Object.Quotes
 quoteTagsCollectionFromId quoteId =
     Quotes.quote_tagsCollection
         (\optionals ->
@@ -309,7 +306,7 @@ quoteTagsCollectionFromId quoteId =
         |> SelectionSet.nonNullOrFail
 
 
-quoteTagEdges : SelectionSet Tags MitsumoriApi.Object.Quote_tagsConnection
+quoteTagEdges : SelectionSet (List Tag) MitsumoriApi.Object.Quote_tagsConnection
 quoteTagEdges =
     QuoteTagsConnection.edges (QuoteTagsEdge.node quoteTagsNode)
 

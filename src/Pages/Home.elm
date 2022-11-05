@@ -15,6 +15,7 @@ import Shared exposing (Shared)
 import String.Extra as SE
 import Supabase
 import User
+import Validator
 import Validator.Maybe
 import Validator.Named exposing (Validated)
 import Validator.String
@@ -43,7 +44,7 @@ type alias ModalForm =
     { quote : String
     , author : String
     , reference : Maybe String
-    , tags : Maybe (List String)
+    , tags : String
     }
 
 
@@ -51,7 +52,7 @@ type alias ValidForm =
     { quote : String
     , author : String
     , reference : Maybe String
-    , tags : Maybe (List String)
+    , tags : String
     }
 
 
@@ -80,7 +81,7 @@ type Field
 init : Shared -> ( Model, Cmd Msg )
 init shared =
     ( { quotes = RemoteData.Loading
-      , modalForm = { quote = "", author = "", reference = Nothing, tags = Nothing }
+      , modalForm = { quote = "", author = "", reference = Nothing, tags = "" }
       , modalFormProblems = []
       , modalIsLoading = False
       , modalType = NewQuote
@@ -89,11 +90,6 @@ init shared =
       }
     , Supabase.getQuotes GotQuotesResponse shared
     )
-
-
-supabaseTagsToString : Supabase.Tags -> Maybe (List String)
-supabaseTagsToString tags =
-    Just <| List.map (\tag -> tag.text) tags
 
 
 
@@ -139,7 +135,7 @@ update shared msg model =
             updateModalForm (\form -> { form | reference = Just reference }) model
 
         OnTagsChange tag ->
-            updateModalForm (\form -> { form | tags = Just [ tag ] }) model
+            updateModalForm (\form -> { form | tags = tag }) model
 
         {- If we edit a quote, update the modalForm with the quotes values, also pass the Quote to the `Editing`
            constructor so when we submit the modal, we have the ID of the quote for supabase to use.
@@ -150,7 +146,7 @@ update shared msg model =
                     { quote = quote.quote
                     , author = quote.author
                     , reference = quote.reference
-                    , tags = supabaseTagsToString quote.tags
+                    , tags = String.join " " (supabaseTagsToString quote.tags)
                     }
                 , modalType = Editing quote
                 , modalVisibility = Visible
@@ -229,21 +225,20 @@ update shared msg model =
                 RemoteData.Success quotes ->
                     let
                         tags =
-                            model.modalForm.tags |> Maybe.withDefault []
+                            model.modalForm.tags
 
-                        {- Have to get the head of the list as insertQuotes returns the quote in a list -}
+                        {- Have to get the head of the list as insertQuotes returns the quote in a list ^__^ -}
                         quoteId =
                             List.head quotes
                                 |> Maybe.map (\quote -> quote.id)
                                 |> Maybe.withDefault ""
 
                         ( model_, cmd_ ) =
-                            case tags of
-                                [] ->
-                                    ( { model | modalIsLoading = False, modalVisibility = Hidden, modalType = NewQuote }, Supabase.getQuotes GotQuotesResponse shared )
+                            if String.isEmpty tags then
+                                ( { model | modalIsLoading = False, modalVisibility = Hidden, modalType = NewQuote }, Supabase.getQuotes GotQuotesResponse shared )
 
-                                _ ->
-                                    ( model, Supabase.insertQuoteTags GotQuoteTagsResponse { quoteId = quoteId, tags = tags } shared )
+                            else
+                                ( model, Supabase.insertQuoteTags GotQuoteTagsResponse { quoteId = quoteId, tags = stringTagsToList tags } shared )
                     in
                     ( model_, cmd_, Shared.NoUpdate )
 
@@ -289,7 +284,7 @@ update shared msg model =
 
 emptyModalForm : ModalForm
 emptyModalForm =
-    { quote = "", author = "", reference = Nothing, tags = Nothing }
+    { quote = "", author = "", reference = Nothing, tags = "" }
 
 
 updateModalForm : (ModalForm -> ModalForm) -> Model -> ( Model, Cmd msg, Shared.SharedUpdate )
@@ -331,7 +326,50 @@ validateForm form =
             trimmedForm.quote
         |> Validator.Named.validate (fieldToString Author) (Validator.String.notEmpty (InvalidEntry Author "Author can't be blank")) trimmedForm.author
         |> Validator.Named.validate (fieldToString Reference) (Validator.Maybe.notRequired (Validator.String.isUrl (InvalidEntry Reference "Must be a valid URL, e.g. (www.google.com)"))) trimmedForm.reference
-        |> Validator.Named.noCheck trimmedForm.tags
+        |> Validator.Named.validate (fieldToString Tags) (validateTags (InvalidEntry Tags "Tags must be separated by commas")) trimmedForm.tags
+
+
+
+{-
+   Some bootleg validaiton for tags as I can't be bothered making a combobox:
+       - Tags are just a string of words which have to separated by a comma
+           - Split string into words, if there is more than one tag,
+             map over tags, making sure they're split by comma, if they don't all pass show error
+           - If only one tag, return true so user doesn't have to append comma to single tag
+-}
+
+
+validateTags : error -> Validator.Validator error String String
+validateTags errorMsg =
+    Validator.customValidator errorMsg
+        (\tags ->
+            if List.length (String.words tags) > 1 then
+                String.words tags
+                    |> List.map (\word -> String.contains "," word)
+                    |> List.all (\bool -> bool)
+
+            else
+                True
+        )
+
+
+supabaseTagsToString : List Supabase.Tag -> List String
+supabaseTagsToString tags =
+    List.map (\tag -> tag.text) tags
+
+
+
+{-
+   "stoic, roman, plato," == ["stoic", "roman", "plato"]
+-}
+
+
+stringTagsToList : String -> List String
+stringTagsToList tags =
+    tags
+        |> String.split ","
+        |> List.map String.trim
+        |> List.filter (\tag -> not (String.isEmpty tag))
 
 
 fieldHasError : Field -> Validated Problem ValidForm -> Bool
@@ -344,7 +382,7 @@ trimFields form =
     { quote = String.trim form.quote
     , author = String.trim form.author
     , reference = Maybe.map (\ref -> String.trim ref) form.reference
-    , tags = Maybe.map (\tags -> List.map String.trim tags) form.tags
+    , tags = String.trim form.tags
     }
 
 
@@ -551,16 +589,17 @@ viewModalFormBody form validated =
                 ]
             , div [ class "flex flex-col mt-6" ]
                 [ label [ class "text-gray-900 mt-2", for "reference" ]
-                    [ text "Tags" ]
+                    [ text "Tags (separate by comma)" ]
                 , input
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
                     , id "tags"
-                    , value ""
-                    , placeholder "e.g. Stoic"
+                    , value form.tags
+                    , placeholder "stoic, roman, plato"
                     , type_ "text"
                     , onInput OnTagsChange
                     ]
                     [ text form.author ]
+                , viewFieldError Tags validated
                 ]
 
             -- , viewFormServerError validated

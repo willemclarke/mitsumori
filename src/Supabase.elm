@@ -118,7 +118,7 @@ deleteQuote gotResponseMsg quoteId { user, supabase } =
 
 editQuote :
     (RemoteData (Graphql.Http.Error (List Quote)) (List Quote) -> msg)
-    -> Quote
+    -> { id : String, quote : String, author : String, reference : Maybe String }
     -> Shared
     -> Cmd msg
 editQuote gotResponseMsg quote { user, supabase } =
@@ -179,7 +179,7 @@ deleteQuoteMutation quoteId =
         (MitsumoriApi.Object.QuotesDeleteResponse.records <| quoteNodeForMutation quoteId)
 
 
-editQuoteMutation : Quote -> SelectionSet (List Quote) RootMutation
+editQuoteMutation : { id : String, quote : String, author : String, reference : Maybe String } -> SelectionSet (List Quote) RootMutation
 editQuoteMutation quote =
     Mutation.updatequotesCollection
         (\optionals ->

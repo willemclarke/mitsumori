@@ -6,13 +6,12 @@ import Components.Spinner as Spinner
 import Components.Toast as Toast
 import Dict
 import Graphql.Http
-import Html exposing (Html, a, button, div, form, header, input, label, p, text, textarea)
+import Html exposing (Html, a, button, div, form, hr, input, label, p, text, textarea)
 import Html.Attributes exposing (class, classList, for, href, id, maxlength, placeholder, rows, target, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Html.Extra as HE
 import RemoteData exposing (RemoteData(..))
 import Shared exposing (Shared)
-import String.Extra as SE
 import Supabase
 import User
 import Validator
@@ -56,6 +55,12 @@ type alias ValidForm =
     }
 
 
+
+-- type alias Filter =
+--     { searchTerm : String
+--     }
+
+
 type Problem
     = InvalidEntry Field String
 
@@ -88,7 +93,7 @@ init shared =
       , modalVisibility = Hidden
       , validated = Err Dict.empty
       }
-    , Supabase.getQuotes GotQuotesResponse shared
+    , Supabase.getQuotes (GotQuotesResponse None) shared
     )
 
 
@@ -108,12 +113,27 @@ type Msg
     | SubmitAddQuoteModal
     | SubmitEditQuoteModal Supabase.Quote
     | SubmitDeleteQuoteModal String
-    | GotQuotesResponse QuotesResponse
-    | GotQuoteTagsResponse (RemoteData (Graphql.Http.Error (List Supabase.Tag)) (List Supabase.Tag))
+    | GotQuotesResponse Action QuotesResponse
+    | GotQuoteTagsResponse Action (RemoteData (Graphql.Http.Error (List Supabase.Tag)) (List Supabase.Tag))
     | GotInsertQuoteResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
     | GotDeleteQuoteResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
-    | GotEditQuotesResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
+    | GotEditQuotesResponse String (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
     | NoOp
+
+
+
+{-
+   This type is for the GotQuoteTagsResponse & GotQuotesResponse Msgs:
+        We want to know whether a quote was deleted, edited, added so
+        a respective toast can be displayed if request is successful.
+-}
+
+
+type Action
+    = AddQuote
+    | EditQuote
+    | DeleteQuote
+    | None
 
 
 update : Shared -> Msg -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
@@ -197,13 +217,10 @@ update shared msg model =
                             , quote = validForm.quote
                             , author = validForm.author
                             , reference = validForm.reference
-                            , userId = quote.userId
-                            , createdAt = quote.createdAt
-                            , tags = quote.tags
                             }
                     in
-                    ( { model | validated = validatedForm, modalIsLoading = True, modalForm = emptyModalForm }
-                    , Supabase.editQuote GotEditQuotesResponse quote_ shared
+                    ( { model | validated = validatedForm, modalIsLoading = True }
+                    , Supabase.editQuote (GotEditQuotesResponse quote.id) quote_ shared
                     , Shared.NoUpdate
                     )
 
@@ -216,8 +233,8 @@ update shared msg model =
             , Shared.NoUpdate
             )
 
-        GotQuotesResponse quotesResponse ->
-            ( { model | quotes = quotesResponse }, Cmd.none, Shared.NoUpdate )
+        GotQuotesResponse action quotesResponse ->
+            ( { model | quotes = quotesResponse }, Cmd.none, toastFromAction action )
 
         -- TODO: handle case of error here better via toasts
         GotInsertQuoteResponse quotesResponse ->
@@ -233,24 +250,55 @@ update shared msg model =
                                 |> Maybe.map (\quote -> quote.id)
                                 |> Maybe.withDefault ""
 
-                        ( model_, cmd_ ) =
+                        ( model_, cmd_, shared_ ) =
                             if String.isEmpty tags then
-                                ( { model | modalIsLoading = False, modalVisibility = Hidden, modalType = NewQuote }, Supabase.getQuotes GotQuotesResponse shared )
+                                ( { model | modalIsLoading = False, modalVisibility = Hidden, modalType = NewQuote }
+                                , Supabase.getQuotes (GotQuotesResponse AddQuote) shared
+                                , Shared.NoUpdate
+                                )
 
                             else
-                                ( model, Supabase.insertQuoteTags GotQuoteTagsResponse { quoteId = quoteId, tags = stringTagsToList tags } shared )
+                                ( model
+                                , Supabase.insertQuoteTags (GotQuoteTagsResponse AddQuote) { quoteId = quoteId, tags = stringTagsToList tags } shared
+                                , Shared.NoUpdate
+                                )
                     in
-                    ( model_, cmd_, Shared.NoUpdate )
+                    ( model_, cmd_, shared_ )
 
                 _ ->
                     ( model, Cmd.none, Shared.NoUpdate )
 
-        GotQuoteTagsResponse response ->
+        GotEditQuotesResponse quoteId quotesResponse ->
+            case quotesResponse of
+                RemoteData.Success _ ->
+                    let
+                        tags =
+                            model.modalForm.tags
+
+                        ( model_, cmd_, shared_ ) =
+                            if String.isEmpty tags then
+                                ( { model | modalIsLoading = False, modalVisibility = Hidden, modalType = NewQuote, modalForm = emptyModalForm }
+                                , Supabase.getQuotes (GotQuotesResponse EditQuote) shared
+                                , Shared.NoUpdate
+                                )
+
+                            else
+                                ( model
+                                , Supabase.insertQuoteTags (GotQuoteTagsResponse EditQuote) { quoteId = quoteId, tags = stringTagsToList tags } shared
+                                , Shared.NoUpdate
+                                )
+                    in
+                    ( model_, cmd_, shared_ )
+
+                _ ->
+                    ( model, Cmd.none, Shared.NoUpdate )
+
+        GotQuoteTagsResponse action response ->
             case response of
                 RemoteData.Success _ ->
                     ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False, modalForm = emptyModalForm }
-                    , Supabase.getQuotes GotQuotesResponse shared
-                    , Shared.ShowToast <| Toast.Success "Quote added successfully."
+                    , Supabase.getQuotes (GotQuotesResponse action) shared
+                    , Shared.NoUpdate
                     )
 
                 _ ->
@@ -260,19 +308,8 @@ update shared msg model =
             case quotesResponse of
                 RemoteData.Success _ ->
                     ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
-                    , Supabase.getQuotes GotQuotesResponse shared
-                    , Shared.ShowToast <| Toast.Success "Quote deleted successfully."
-                    )
-
-                _ ->
-                    ( model, Cmd.none, Shared.NoUpdate )
-
-        GotEditQuotesResponse quotesResponse ->
-            case quotesResponse of
-                RemoteData.Success _ ->
-                    ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
-                    , Supabase.getQuotes GotQuotesResponse shared
-                    , Shared.ShowToast <| Toast.Success "Quote edited successfully."
+                    , Supabase.getQuotes (GotQuotesResponse DeleteQuote) shared
+                    , Shared.NoUpdate
                     )
 
                 _ ->
@@ -290,6 +327,22 @@ emptyModalForm =
 updateModalForm : (ModalForm -> ModalForm) -> Model -> ( Model, Cmd msg, Shared.SharedUpdate )
 updateModalForm transform model =
     ( { model | modalForm = transform model.modalForm }, Cmd.none, Shared.NoUpdate )
+
+
+toastFromAction : Action -> Shared.SharedUpdate
+toastFromAction action =
+    case action of
+        AddQuote ->
+            Shared.ShowToast <| Toast.Success "Quote added successfully."
+
+        EditQuote ->
+            Shared.ShowToast (Toast.Success "Quote edited successfully.")
+
+        DeleteQuote ->
+            Shared.ShowToast <| Toast.Success "Quote deleted successfully."
+
+        None ->
+            Shared.NoUpdate
 
 
 
@@ -394,23 +447,33 @@ view : Shared -> Model -> Html Msg
 view shared model =
     div
         [ class "flex flex-col h-full w-full items-center" ]
-        [ viewHeader shared.user model.modalForm model.validated model.modalType model.modalVisibility model.modalIsLoading
+        [ viewHeader model.modalForm model.validated model.modalType model.modalVisibility model.modalIsLoading
+
+        -- , viewFilters { searchTerm = "dog" }
         , viewQuotes model.quotes shared
         ]
 
 
-viewHeader : User.User -> ModalForm -> Validated Problem ValidForm -> ModalType -> ModalVisibility -> Bool -> Html Msg
-viewHeader user form validated modalType visibility isLoading =
-    let
-        username =
-            (SE.toSentenceCase <| User.username user) ++ "'s"
-    in
-    div [ class "flex flex-col mt-16" ]
-        [ div [ class "flex items-center" ]
-            [ header [ class "text-3xl font-serif font-light mr-2" ] [ text <| String.join " " [ username, "quotes" ] ]
-            , addQuoteButton form validated modalType visibility isLoading
-            ]
+viewHeader : ModalForm -> Validated Problem ValidForm -> ModalType -> ModalVisibility -> Bool -> Html Msg
+viewHeader form validated modalType visibility isLoading =
+    div [ class "flex flex-col" ]
+        [ addQuoteButton form validated modalType visibility isLoading
         ]
+
+
+
+-- viewHeader : User.User -> ModalForm -> Validated Problem ValidForm -> ModalType -> ModalVisibility -> Bool -> Html Msg
+-- viewHeader user form validated modalType visibility isLoading =
+--     let
+--         username =
+--             (SE.toSentenceCase <| User.username user) ++ "'s"
+--     in
+--     div [ class "flex flex-col mt-16" ]
+--         [ div [ class "flex items-center" ]
+--             [ header [ class "text-3xl font-serif font-light mr-2" ] [ text <| String.join " " [ username, "quotes" ] ]
+--             , addQuoteButton form validated modalType visibility isLoading
+--             ]
+--         ]
 
 
 addQuoteButton : ModalForm -> Validated Problem ValidForm -> ModalType -> ModalVisibility -> Bool -> Html Msg
@@ -419,6 +482,24 @@ addQuoteButton form validated modalType visibility isLoading =
         [ button [ class "transition ease-in-out hover:-translate-y-0.5 duration-300", onClick OpenAddQuoteModal ] [ Icons.plus ]
         , viewQuoteModal form validated modalType visibility isLoading
         ]
+
+
+
+-- viewFilters : Filter -> Html Msg
+-- viewFilters { searchTerm } =
+--     div [ class "flex flex-col my-6" ]
+--         [ label [ class "text-gray-900 mb-1", for "search" ]
+--             [ text "Search" ]
+--         , input
+--             [ class "p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
+--             , id "search"
+--             , value searchTerm
+--             , placeholder "He who knocks"
+--             , type_ "text"
+--             , onInput OnAuthorChange
+--             ]
+--             [ text searchTerm ]
+--         ]
 
 
 viewQuotes : QuotesResponse -> Shared -> Html Msg
@@ -430,7 +511,7 @@ viewQuotes quotesData shared =
                     div [ class "flex w-full h-full justify-center items-center" ] [ Spinner.spinner ]
 
                 RemoteData.Success quotes ->
-                    div [ class "grid grid-rows-4 sm:grid-cols-1 lg:grid-cols-3 gap-x-6 gap-y-6" ]
+                    div [ class "grid grid-rows-4 sm:grid-cols-1 lg:grid-cols-3 gap-x-6 gap-y-2" ]
                         (List.map (\quote -> viewQuote shared quote) quotes.quotes)
 
                 _ ->
@@ -443,8 +524,7 @@ viewQuote : Shared -> Supabase.Quote -> Html Msg
 viewQuote shared quote =
     let
         quoteTags =
-            [ "Stoicism", "Roman" ]
-                |> List.map viewQuoteTag
+            List.map (\tag -> viewQuoteTag tag.text) quote.tags
 
         reference =
             Maybe.withDefault "" quote.reference
@@ -454,16 +534,20 @@ viewQuote shared quote =
                 HE.nothing
 
             else
-                div [ class "mt-1" ] [ a [ href <| reference, class "text-gray-600 text-sm cursor-pointer hover:text-black", target "_blank" ] [ text "Quote reference" ] ]
+                a [ href <| reference, class "text-gray-600 text-sm cursor-pointer hover:text-black", target "_blank" ] [ text "Quote reference" ]
     in
-    div [ class "flex flex-col border rounded-lg p-6 shadow-sm hover:bg-gray-100/30 transition ease-in-out hover:-translate-y-px duration-300" ]
+    div [ class "flex flex-col h-fit border rounded-lg p-6 shadow-sm hover:bg-gray-100/30 transition ease-in-out hover:-translate-y-px duration-300" ]
         [ p [ class "text-lg text-gray-800" ] [ text quote.quote ]
         , p [ class "mt-1 text-gray-600 text-md font-light" ] [ text <| "by " ++ quote.author ]
-        , div [ class "flex flex-col mt-2" ]
-            [ div [ class "flex space-x-2" ] quoteTags
+        , hr [ class "bg-gray-600 my-2" ] []
+        , div [ class "flex flex-col" ]
+            [ div [ class "flex space-x-2 my-2" ] quoteTags
             , viewQuoteReference
             ]
         , viewEditAndDeleteIconButtons shared quote
+        , p [ class "text-gray-600 text-sm cursor-pointer hover:text-black mt-2" ] [ text <| "Posted by " ++ User.username shared.user ]
+
+        -- This will become a tag once profile table/page setup
         ]
 
 
@@ -477,7 +561,7 @@ viewEditAndDeleteIconButtons shared quote =
             Just quote.userId
     in
     if userId == quoteUserId then
-        div [ class "flex justify-between mt-3" ]
+        div [ class "flex justify-between mt-2" ]
             [ button [ onClick <| OpenEditQuoteModal quote ] [ Icons.edit ]
             , button [ onClick <| OpenDeleteQuoteModal quote ] [ Icons.delete ]
             ]
@@ -580,7 +664,7 @@ viewModalFormBody form validated =
                     , classList [ ( "border-red-500", fieldHasError Reference validated ) ]
                     , id "reference"
                     , value <| Maybe.withDefault "" form.reference
-                    , placeholder "https://link-to-the-quote.com"
+                    , placeholder "https://www.link-to-the-quote.com"
                     , type_ "text"
                     , onInput OnReferenceChange
                     ]
@@ -589,12 +673,13 @@ viewModalFormBody form validated =
                 ]
             , div [ class "flex flex-col mt-6" ]
                 [ label [ class "text-gray-900 mt-2", for "reference" ]
-                    [ text "Tags (separate by comma)" ]
+                    [ text "Tags (separated by comma)" ]
                 , input
                     [ class "mt-3 p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
+                    , classList [ ( "border-red-500", fieldHasError Tags validated ) ]
                     , id "tags"
                     , value form.tags
-                    , placeholder "stoic, roman, plato"
+                    , placeholder "stoic, roman, plato,"
                     , type_ "text"
                     , onInput OnTagsChange
                     ]
@@ -622,7 +707,7 @@ viewFieldError : Field -> Validated Problem ValidForm -> Html msg
 viewFieldError field validated =
     case Validator.Named.getErrors (fieldToString field) validated of
         Nothing ->
-            text ""
+            HE.nothing
 
         Just errors ->
             div []
@@ -643,7 +728,3 @@ viewFieldError field validated =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.none
-
-
-
--- Supabase.quoteResponse GotQuotesResponse

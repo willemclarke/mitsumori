@@ -1,16 +1,24 @@
-module Router.Route exposing (..)
+module Routing.Route exposing (..)
 
 import Browser.Navigation as Nav
+import Maybe.Extra as ME
 import Url
-import Url.Parser as Parser
+import Url.Builder as Builder
+import Url.Parser as Parser exposing ((</>), (<?>))
+import Url.Parser.Query as Query
 import User exposing (User, UserType(..))
 
 
 type Route
-    = Home
+    = Home Filter
     | Signup
     | Signin
     | NotFound
+
+
+type alias Filter =
+    { searchTerm : Maybe String
+    }
 
 
 checkNav : User -> Maybe Route -> Maybe Route
@@ -20,10 +28,10 @@ checkNav user route =
             User.userType user
     in
     case ( userType, route ) of
-        ( Authenticated _, Just Home ) ->
-            Just Home
+        ( Authenticated _, Just (Home filter) ) ->
+            Just (Home filter)
 
-        ( Unauthenticated, Just Home ) ->
+        ( Unauthenticated, Just (Home _) ) ->
             Just Signin
 
         ( Unauthenticated, Just Signin ) ->
@@ -50,9 +58,31 @@ fromUrl url =
 parser : Parser.Parser (Route -> a) a
 parser =
     Parser.oneOf
-        [ Parser.map Home Parser.top
+        [ Parser.map Home (Parser.top <?> filterQueryParams)
         , Parser.map Signup (Parser.s "signup")
         , Parser.map Signin (Parser.s "signin")
+        ]
+
+
+filterQueryParams : Query.Parser Filter
+filterQueryParams =
+    Query.map Filter (Query.string "search")
+
+
+emptyFilter : Filter
+emptyFilter =
+    { searchTerm = Nothing }
+
+
+appendFilterParams : Nav.Key -> Filter -> Cmd msg
+appendFilterParams key filter =
+    Nav.replaceUrl key (Builder.absolute [] (parseParams filter))
+
+
+parseParams : Filter -> List Builder.QueryParameter
+parseParams filter =
+    ME.values
+        [ Maybe.map (Builder.string "search") filter.searchTerm
         ]
 
 
@@ -69,7 +99,7 @@ replaceUrl key route =
 toString : Route -> String
 toString route =
     case route of
-        Home ->
+        Home _ ->
             "/"
 
         Signup ->
@@ -85,7 +115,7 @@ toString route =
 toTitleString : Route -> String
 toTitleString route =
     case route of
-        Home ->
+        Home _ ->
             "Home"
 
         Signup ->

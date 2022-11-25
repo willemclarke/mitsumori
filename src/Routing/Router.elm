@@ -1,4 +1,4 @@
-module Router.Router exposing (Model, Msg(..), init, subscriptions, update, view)
+module Routing.Router exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Browser
 import Browser.Navigation
@@ -12,7 +12,7 @@ import Pages.Home as Home
 import Pages.Signin as SignIn
 import Pages.Signup as SignUp
 import Process
-import Router.Route as Route exposing (Route)
+import Routing.Route as Route exposing (Route)
 import Shared exposing (Shared)
 import Supabase
 import Task
@@ -51,8 +51,22 @@ type Msg
 init : Shared -> Url.Url -> ( Model, Cmd Msg )
 init shared url =
     let
+        -- /
+        filterParams =
+            Maybe.map
+                (\route ->
+                    case route of
+                        Route.Home filter ->
+                            filter
+
+                        _ ->
+                            Route.emptyFilter
+                )
+                (Route.fromUrl url)
+                |> Maybe.withDefault Route.emptyFilter
+
         ( homeModel, homeCmd ) =
-            Home.init shared
+            Home.init shared filterParams
 
         ( signUpModel, _ ) =
             SignUp.init ()
@@ -89,13 +103,13 @@ update shared msg model =
 
                 cmd =
                     case route of
-                        Just Route.Home ->
+                        Just (Route.Home _) ->
                             Browser.Navigation.reload
 
                         _ ->
                             Cmd.none
             in
-            ( { model | route = Route.fromUrl url }, cmd, Shared.NoUpdate )
+            ( { model | route = route }, cmd, Shared.NoUpdate )
 
         NavigateTo route ->
             ( model, Route.pushUrl shared.key route, Shared.NoUpdate )
@@ -199,7 +213,7 @@ view msgMapper shared model =
 pageView : Shared -> Model -> Html Msg
 pageView ({ user } as shared) model =
     case Route.checkNav user model.route of
-        Just Route.Home ->
+        Just (Route.Home _) ->
             Home.view shared model.homeModel
                 |> Html.map HomeMsg
 
@@ -223,7 +237,7 @@ viewNav { user } =
     let
         href_ =
             if User.isAuthenticated user then
-                Route.toString Route.Home
+                Route.toString (Route.Home Route.emptyFilter)
 
             else
                 Route.toString Route.Signup
@@ -263,7 +277,7 @@ subscriptions msgMapper model =
     let
         pageSubs =
             case model.route of
-                Just Route.Home ->
+                Just (Route.Home _) ->
                     Sub.map HomeMsg (Home.subscriptions model.homeModel)
 
                 Just Route.Signup ->

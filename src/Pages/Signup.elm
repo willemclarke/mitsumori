@@ -8,7 +8,7 @@ import Html.Events exposing (onClick, onInput)
 import Html.Extra as HE
 import Json.Decode as JD
 import Json.Encode as JE
-import Router.Route as Route
+import Routing.Route as Route
 import Shared exposing (Shared, SharedUpdate(..))
 import Supabase
 import User
@@ -134,7 +134,7 @@ update shared msg model =
             in
             case signupResponse of
                 UserOk user ->
-                    ( { model | form = emptyForm, isLoading = False }, Route.pushUrl shared.key Route.Home, Shared.UpdateUser user )
+                    ( { model | form = emptyForm, isLoading = False }, Route.pushUrl shared.key (Route.Home Route.emptyFilter), Shared.UpdateUser user )
 
                 SignupError error ->
                     ( { model | isLoading = False, serverError = Just error }, Cmd.none, Shared.NoUpdate )

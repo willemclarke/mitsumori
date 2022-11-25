@@ -8,5 +8,6 @@ Stack:
 - Elm
 - Supabase
 - elm-graphql
+- elm-review
 - typescript
 - tailwindcss

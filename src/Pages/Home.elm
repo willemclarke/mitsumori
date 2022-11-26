@@ -94,7 +94,7 @@ init shared filter =
       , debounce = Debounce.init
       , filter = Route.emptyFilter
       }
-    , Supabase.getQuotes (GotQuotesResponse None) shared
+    , Supabase.getQuotes (GotQuotesResponse None) filter shared
     )
 
 
@@ -306,7 +306,7 @@ update shared msg model =
                         ( model_, cmd_, shared_ ) =
                             if String.isEmpty tags then
                                 ( { model | modalIsLoading = False, modalVisibility = Hidden, modalType = NewQuote }
-                                , Supabase.getQuotes (GotQuotesResponse AddQuote) shared
+                                , Supabase.getQuotes (GotQuotesResponse AddQuote) Route.emptyFilter shared
                                 , Shared.NoUpdate
                                 )
 
@@ -331,7 +331,7 @@ update shared msg model =
                         ( model_, cmd_, shared_ ) =
                             if String.isEmpty tags then
                                 ( { model | modalIsLoading = False, modalVisibility = Hidden, modalType = NewQuote, modalForm = emptyModalForm }
-                                , Supabase.getQuotes (GotQuotesResponse EditQuote) shared
+                                , Supabase.getQuotes (GotQuotesResponse EditQuote) Route.emptyFilter shared
                                 , Shared.NoUpdate
                                 )
 
@@ -350,7 +350,7 @@ update shared msg model =
             case response of
                 RemoteData.Success _ ->
                     ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False, modalForm = emptyModalForm }
-                    , Supabase.getQuotes (GotQuotesResponse action) shared
+                    , Supabase.getQuotes (GotQuotesResponse action) Route.emptyFilter shared
                     , Shared.NoUpdate
                     )
 
@@ -361,7 +361,7 @@ update shared msg model =
             case quotesResponse of
                 RemoteData.Success _ ->
                     ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
-                    , Supabase.getQuotes (GotQuotesResponse DeleteQuote) shared
+                    , Supabase.getQuotes (GotQuotesResponse DeleteQuote) Route.emptyFilter shared
                     , Shared.NoUpdate
                     )
 

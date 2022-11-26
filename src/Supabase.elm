@@ -21,6 +21,7 @@ import MitsumoriApi.Object.QuotesInsertResponse
 import MitsumoriApi.Object.QuotesUpdateResponse
 import MitsumoriApi.Query as Query
 import RemoteData exposing (RemoteData)
+import Routing.Route as Route
 import Shared exposing (Shared)
 import Time
 import User
@@ -68,9 +69,9 @@ type alias QuoteTagsDto =
     }
 
 
-getQuotes : (RemoteData (Graphql.Http.Error Quotes) Quotes -> msg) -> Shared -> Cmd msg
-getQuotes gotResponseMsg { user, supabase } =
-    quotesQuery
+getQuotes : (RemoteData (Graphql.Http.Error Quotes) Quotes -> msg) -> Route.Filter -> Shared -> Cmd msg
+getQuotes gotResponseMsg filter { user, supabase } =
+    quotesQuery filter
         |> Graphql.Http.queryRequest supabase.supabaseUrl
         |> Graphql.Http.withHeader "apikey" supabase.supabaseKey
         |> Graphql.Http.withHeader "Authorization" ("Bearer " ++ User.userJwt user)
@@ -212,8 +213,13 @@ editQuoteMutation quote =
 -- TODO: understand how to pass in the id to the filter, which has a custom scarlar type
 
 
-quotesQuery : SelectionSet Quotes RootQuery
-quotesQuery =
+quotesQuery : Route.Filter -> SelectionSet Quotes RootQuery
+quotesQuery filter =
+    let
+        searchTermFilter =
+            OptionalArgument.fromMaybe filter.searchTerm
+                |> OptionalArgument.map (\present -> String.words present)
+    in
     Query.quotesCollection
         (\optionals ->
             { optionals
@@ -228,6 +234,29 @@ quotesQuery =
                           , user_id = Absent
                           }
                         ]
+                , filter =
+                    Present
+                        { created_at = Absent
+                        , id = Absent
+                        , quote_text =
+                            case searchTermFilter of
+                                Present filter_ ->
+                                    Present
+                                        { eq = Absent
+                                        , gt = Absent
+                                        , gte = Absent
+                                        , in_ = Present filter_
+                                        , lt = Absent
+                                        , lte = Absent
+                                        , neq = Absent
+                                        }
+
+                                _ ->
+                                    Absent
+                        , quote_author = Absent
+                        , quote_reference = Absent
+                        , user_id = Absent
+                        }
             }
         )
         quotesCollection

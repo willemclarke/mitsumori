@@ -19,6 +19,37 @@ import MitsumoriApi.Union
 import ScalarCodecs
 
 
+type alias DeleteFromprofileCollectionOptionalArguments =
+    { filter : OptionalArgument MitsumoriApi.InputObject.ProfileFilter }
+
+
+type alias DeleteFromprofileCollectionRequiredArguments =
+    { atMost : Int }
+
+
+{-| Deletes zero or more records from the collection
+
+  - filter - Restricts the mutation's impact to records matching the critera
+  - atMost - The maximum number of records in the collection permitted to be affected
+
+-}
+deleteFromprofileCollection :
+    (DeleteFromprofileCollectionOptionalArguments -> DeleteFromprofileCollectionOptionalArguments)
+    -> DeleteFromprofileCollectionRequiredArguments
+    -> SelectionSet decodesTo MitsumoriApi.Object.ProfileDeleteResponse
+    -> SelectionSet decodesTo RootMutation
+deleteFromprofileCollection fillInOptionals____ requiredArgs____ object____ =
+    let
+        filledInOptionals____ =
+            fillInOptionals____ { filter = Absent }
+
+        optionalArgs____ =
+            [ Argument.optional "filter" filledInOptionals____.filter MitsumoriApi.InputObject.encodeProfileFilter ]
+                |> List.filterMap Basics.identity
+    in
+    Object.selectionForCompositeField "deleteFromprofileCollection" (optionalArgs____ ++ [ Argument.required "atMost" requiredArgs____.atMost Encode.int ]) object____ Basics.identity
+
+
 type alias DeleteFromquoteTagsCollectionOptionalArguments =
     { filter : OptionalArgument MitsumoriApi.InputObject.Quote_tagsFilter }
 
@@ -81,6 +112,20 @@ deleteFromquotesCollection fillInOptionals____ requiredArgs____ object____ =
     Object.selectionForCompositeField "deleteFromquotesCollection" (optionalArgs____ ++ [ Argument.required "atMost" requiredArgs____.atMost Encode.int ]) object____ Basics.identity
 
 
+type alias InsertIntoprofileCollectionRequiredArguments =
+    { objects : List MitsumoriApi.InputObject.ProfileInsertInput }
+
+
+{-| Adds one or more `profileInsertResponse` records to the collection
+-}
+insertIntoprofileCollection :
+    InsertIntoprofileCollectionRequiredArguments
+    -> SelectionSet decodesTo MitsumoriApi.Object.ProfileInsertResponse
+    -> SelectionSet (Maybe decodesTo) RootMutation
+insertIntoprofileCollection requiredArgs____ object____ =
+    Object.selectionForCompositeField "insertIntoprofileCollection" [ Argument.required "objects" requiredArgs____.objects (MitsumoriApi.InputObject.encodeProfileInsertInput |> Encode.list) ] object____ (Basics.identity >> Decode.nullable)
+
+
 type alias InsertIntoquoteTagsCollectionRequiredArguments =
     { objects : List MitsumoriApi.InputObject.Quote_tagsInsertInput }
 
@@ -107,6 +152,40 @@ insertIntoquotesCollection :
     -> SelectionSet (Maybe decodesTo) RootMutation
 insertIntoquotesCollection requiredArgs____ object____ =
     Object.selectionForCompositeField "insertIntoquotesCollection" [ Argument.required "objects" requiredArgs____.objects (MitsumoriApi.InputObject.encodeQuotesInsertInput |> Encode.list) ] object____ (Basics.identity >> Decode.nullable)
+
+
+type alias UpdateprofileCollectionOptionalArguments =
+    { filter : OptionalArgument MitsumoriApi.InputObject.ProfileFilter }
+
+
+type alias UpdateprofileCollectionRequiredArguments =
+    { set : MitsumoriApi.InputObject.ProfileUpdateInput
+    , atMost : Int
+    }
+
+
+{-| Updates zero or more records in the collection
+
+  - set - Fields that are set will be updated for all records matching the `filter`
+  - filter - Restricts the mutation's impact to records matching the critera
+  - atMost - The maximum number of records in the collection permitted to be affected
+
+-}
+updateprofileCollection :
+    (UpdateprofileCollectionOptionalArguments -> UpdateprofileCollectionOptionalArguments)
+    -> UpdateprofileCollectionRequiredArguments
+    -> SelectionSet decodesTo MitsumoriApi.Object.ProfileUpdateResponse
+    -> SelectionSet decodesTo RootMutation
+updateprofileCollection fillInOptionals____ requiredArgs____ object____ =
+    let
+        filledInOptionals____ =
+            fillInOptionals____ { filter = Absent }
+
+        optionalArgs____ =
+            [ Argument.optional "filter" filledInOptionals____.filter MitsumoriApi.InputObject.encodeProfileFilter ]
+                |> List.filterMap Basics.identity
+    in
+    Object.selectionForCompositeField "updateprofileCollection" (optionalArgs____ ++ [ Argument.required "set" requiredArgs____.set MitsumoriApi.InputObject.encodeProfileUpdateInput, Argument.required "atMost" requiredArgs____.atMost Encode.int ]) object____ Basics.identity
 
 
 type alias UpdatequoteTagsCollectionOptionalArguments =

@@ -316,6 +316,158 @@ encodeJSONFilter input____ =
         [ ( "eq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecJson) |> Encode.optional input____.eq ), ( "neq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecJson) |> Encode.optional input____.neq ) ]
 
 
+buildProfileFilter :
+    (ProfileFilterOptionalFields -> ProfileFilterOptionalFields)
+    -> ProfileFilter
+buildProfileFilter fillOptionals____ =
+    let
+        optionals____ =
+            fillOptionals____
+                { id = Absent, user_id = Absent, created_at = Absent, username = Absent }
+    in
+    { id = optionals____.id, user_id = optionals____.user_id, created_at = optionals____.created_at, username = optionals____.username }
+
+
+type alias ProfileFilterOptionalFields =
+    { id : OptionalArgument UUIDFilter
+    , user_id : OptionalArgument UUIDFilter
+    , created_at : OptionalArgument DatetimeFilter
+    , username : OptionalArgument StringFilter
+    }
+
+
+{-| Type for the ProfileFilter input object.
+-}
+type alias ProfileFilter =
+    { id : OptionalArgument UUIDFilter
+    , user_id : OptionalArgument UUIDFilter
+    , created_at : OptionalArgument DatetimeFilter
+    , username : OptionalArgument StringFilter
+    }
+
+
+{-| Encode a ProfileFilter into a value that can be used as an argument.
+-}
+encodeProfileFilter : ProfileFilter -> Value
+encodeProfileFilter input____ =
+    Encode.maybeObject
+        [ ( "id", encodeUUIDFilter |> Encode.optional input____.id ), ( "user_id", encodeUUIDFilter |> Encode.optional input____.user_id ), ( "created_at", encodeDatetimeFilter |> Encode.optional input____.created_at ), ( "username", encodeStringFilter |> Encode.optional input____.username ) ]
+
+
+buildProfileInsertInput :
+    (ProfileInsertInputOptionalFields -> ProfileInsertInputOptionalFields)
+    -> ProfileInsertInput
+buildProfileInsertInput fillOptionals____ =
+    let
+        optionals____ =
+            fillOptionals____
+                { id = Absent, user_id = Absent, created_at = Absent, username = Absent }
+    in
+    { id = optionals____.id, user_id = optionals____.user_id, created_at = optionals____.created_at, username = optionals____.username }
+
+
+type alias ProfileInsertInputOptionalFields =
+    { id : OptionalArgument ScalarCodecs.Uuid
+    , user_id : OptionalArgument ScalarCodecs.Uuid
+    , created_at : OptionalArgument ScalarCodecs.Datetime
+    , username : OptionalArgument String
+    }
+
+
+{-| Type for the ProfileInsertInput input object.
+-}
+type alias ProfileInsertInput =
+    { id : OptionalArgument ScalarCodecs.Uuid
+    , user_id : OptionalArgument ScalarCodecs.Uuid
+    , created_at : OptionalArgument ScalarCodecs.Datetime
+    , username : OptionalArgument String
+    }
+
+
+{-| Encode a ProfileInsertInput into a value that can be used as an argument.
+-}
+encodeProfileInsertInput : ProfileInsertInput -> Value
+encodeProfileInsertInput input____ =
+    Encode.maybeObject
+        [ ( "id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ), ( "user_id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.user_id ), ( "created_at", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.created_at ), ( "username", Encode.string |> Encode.optional input____.username ) ]
+
+
+buildProfileOrderBy :
+    (ProfileOrderByOptionalFields -> ProfileOrderByOptionalFields)
+    -> ProfileOrderBy
+buildProfileOrderBy fillOptionals____ =
+    let
+        optionals____ =
+            fillOptionals____
+                { id = Absent, user_id = Absent, created_at = Absent, username = Absent }
+    in
+    { id = optionals____.id, user_id = optionals____.user_id, created_at = optionals____.created_at, username = optionals____.username }
+
+
+type alias ProfileOrderByOptionalFields =
+    { id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , user_id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , created_at : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , username : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    }
+
+
+{-| Type for the ProfileOrderBy input object.
+-}
+type alias ProfileOrderBy =
+    { id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , user_id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , created_at : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , username : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    }
+
+
+{-| Encode a ProfileOrderBy into a value that can be used as an argument.
+-}
+encodeProfileOrderBy : ProfileOrderBy -> Value
+encodeProfileOrderBy input____ =
+    Encode.maybeObject
+        [ ( "id", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.id ), ( "user_id", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.user_id ), ( "created_at", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.created_at ), ( "username", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.username ) ]
+
+
+buildProfileUpdateInput :
+    (ProfileUpdateInputOptionalFields -> ProfileUpdateInputOptionalFields)
+    -> ProfileUpdateInput
+buildProfileUpdateInput fillOptionals____ =
+    let
+        optionals____ =
+            fillOptionals____
+                { id = Absent, user_id = Absent, created_at = Absent, username = Absent }
+    in
+    { id = optionals____.id, user_id = optionals____.user_id, created_at = optionals____.created_at, username = optionals____.username }
+
+
+type alias ProfileUpdateInputOptionalFields =
+    { id : OptionalArgument ScalarCodecs.Uuid
+    , user_id : OptionalArgument ScalarCodecs.Uuid
+    , created_at : OptionalArgument ScalarCodecs.Datetime
+    , username : OptionalArgument String
+    }
+
+
+{-| Type for the ProfileUpdateInput input object.
+-}
+type alias ProfileUpdateInput =
+    { id : OptionalArgument ScalarCodecs.Uuid
+    , user_id : OptionalArgument ScalarCodecs.Uuid
+    , created_at : OptionalArgument ScalarCodecs.Datetime
+    , username : OptionalArgument String
+    }
+
+
+{-| Encode a ProfileUpdateInput into a value that can be used as an argument.
+-}
+encodeProfileUpdateInput : ProfileUpdateInput -> Value
+encodeProfileUpdateInput input____ =
+    Encode.maybeObject
+        [ ( "id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ), ( "user_id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.user_id ), ( "created_at", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.created_at ), ( "username", Encode.string |> Encode.optional input____.username ) ]
+
+
 buildQuote_tagsFilter :
     (Quote_tagsFilterOptionalFields -> Quote_tagsFilterOptionalFields)
     -> Quote_tagsFilter

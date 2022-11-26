@@ -19,6 +19,42 @@ import MitsumoriApi.Union
 import ScalarCodecs
 
 
+type alias ProfileCollectionOptionalArguments =
+    { first : OptionalArgument Int
+    , last : OptionalArgument Int
+    , before : OptionalArgument ScalarCodecs.Cursor
+    , after : OptionalArgument ScalarCodecs.Cursor
+    , filter : OptionalArgument MitsumoriApi.InputObject.ProfileFilter
+    , orderBy : OptionalArgument (List MitsumoriApi.InputObject.ProfileOrderBy)
+    }
+
+
+{-| A pagable collection of type `profile`
+
+  - first - Query the first `n` records in the collection
+  - last - Query the last `n` records in the collection
+  - before - Query values in the collection before the provided cursor
+  - after - Query values in the collection after the provided cursor
+  - filter - Filters to apply to the results set when querying from the collection
+  - orderBy - Sort order to apply to the collection
+
+-}
+profileCollection :
+    (ProfileCollectionOptionalArguments -> ProfileCollectionOptionalArguments)
+    -> SelectionSet decodesTo MitsumoriApi.Object.ProfileConnection
+    -> SelectionSet (Maybe decodesTo) RootQuery
+profileCollection fillInOptionals____ object____ =
+    let
+        filledInOptionals____ =
+            fillInOptionals____ { first = Absent, last = Absent, before = Absent, after = Absent, filter = Absent, orderBy = Absent }
+
+        optionalArgs____ =
+            [ Argument.optional "first" filledInOptionals____.first Encode.int, Argument.optional "last" filledInOptionals____.last Encode.int, Argument.optional "before" filledInOptionals____.before (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "after" filledInOptionals____.after (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "filter" filledInOptionals____.filter MitsumoriApi.InputObject.encodeProfileFilter, Argument.optional "orderBy" filledInOptionals____.orderBy (MitsumoriApi.InputObject.encodeProfileOrderBy |> Encode.list) ]
+                |> List.filterMap Basics.identity
+    in
+    Object.selectionForCompositeField "profileCollection" optionalArgs____ object____ (Basics.identity >> Decode.nullable)
+
+
 type alias QuoteTagsCollectionOptionalArguments =
     { first : OptionalArgument Int
     , last : OptionalArgument Int

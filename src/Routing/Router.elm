@@ -109,7 +109,7 @@ update shared msg model =
                         _ ->
                             Cmd.none
             in
-            ( { model | route = route }, cmd, Shared.NoUpdate )
+            ( { model | route = route }, Cmd.none, Shared.NoUpdate )
 
         NavigateTo route ->
             ( model, Route.pushUrl shared.key route, Shared.NoUpdate )

@@ -48,10 +48,6 @@ type Field
     | Password
 
 
-type TrimmedForm
-    = Trimmed Form
-
-
 type SigninResponse
     = UserOk User.User
     | SignupError Supabase.AuthError

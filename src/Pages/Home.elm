@@ -92,7 +92,9 @@ init shared filter =
       , modalVisibility = Hidden
       , validated = Err Dict.empty
       , debounce = Debounce.init
-      , filter = Route.emptyFilter
+      , filter = filter
+
+      --   , filter = Route.emptyFilter
       }
     , Supabase.getQuotes (GotQuotesResponse None) filter shared
     )
@@ -188,7 +190,6 @@ update shared msg model =
             in
             ( { model | filter = newFilter }
             , Route.appendFilterParams shared.key newFilter
-              -- , Cmd.none
             , Shared.NoUpdate
             )
 
@@ -207,8 +208,8 @@ update shared msg model =
         OnReferenceChange reference ->
             updateModalForm (\form -> { form | reference = Just reference }) model
 
-        OnTagsChange tag ->
-            updateModalForm (\form -> { form | tags = tag }) model
+        OnTagsChange tags ->
+            updateModalForm (\form -> { form | tags = tags }) model
 
         {- If we edit a quote, update the modalForm with the quotes values, also pass the Quote to the `Editing`
            constructor so when we submit the modal, we have the ID of the quote for supabase to use.

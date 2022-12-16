@@ -21,35 +21,6 @@ type alias Filter =
     }
 
 
-checkNav : User -> Maybe Route -> Maybe Route
-checkNav user route =
-    let
-        userType =
-            User.userType user
-    in
-    case ( userType, route ) of
-        ( Authenticated _, Just (Home filter) ) ->
-            Just (Home filter)
-
-        ( Unauthenticated, Just (Home _) ) ->
-            Just Signin
-
-        ( Unauthenticated, Just Signin ) ->
-            Just Signin
-
-        ( Unauthenticated, Just Signup ) ->
-            Just Signup
-
-        ( Unauthenticated, Just NotFound ) ->
-            Just NotFound
-
-        ( Authenticated _, Just NotFound ) ->
-            Just NotFound
-
-        ( _, _ ) ->
-            Just NotFound
-
-
 fromUrl : Url.Url -> Maybe Route
 fromUrl url =
     Parser.parse parser url
@@ -94,6 +65,35 @@ pushUrl key route =
 replaceUrl : Nav.Key -> Route -> Cmd msg
 replaceUrl key route =
     Nav.replaceUrl key (toString route)
+
+
+checkNav : User -> Maybe Route -> Maybe Route
+checkNav user route =
+    let
+        userType =
+            User.userType user
+    in
+    case ( userType, route ) of
+        ( Authenticated _, Just (Home filter) ) ->
+            Just (Home filter)
+
+        ( Unauthenticated, Just (Home _) ) ->
+            Just Signin
+
+        ( Unauthenticated, Just Signin ) ->
+            Just Signin
+
+        ( Unauthenticated, Just Signup ) ->
+            Just Signup
+
+        ( Unauthenticated, Just NotFound ) ->
+            Just NotFound
+
+        ( Authenticated _, Just NotFound ) ->
+            Just NotFound
+
+        ( _, _ ) ->
+            Just NotFound
 
 
 toString : Route -> String

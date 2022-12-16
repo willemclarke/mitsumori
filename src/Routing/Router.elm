@@ -86,6 +86,9 @@ update : Shared -> Msg -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
 update shared msg model =
     case msg of
         UrlChanged url ->
+            {--To get the Home init to run when the filter params are added to url
+            you need to call the init like below, instead of just updating the route
+        --}
             let
                 route =
                     Route.fromUrl url

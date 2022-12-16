@@ -1,15 +1,15 @@
-import { Elm } from "./Main.elm";
-import * as supabase from "./supabase";
+import { Elm } from './Main.elm';
+import * as supabase from './supabase';
 
-if (process.env.NODE_ENV === "development") {
-  const ElmDebugTransform = await import("elm-debug-transformer");
+if (process.env.NODE_ENV === 'development') {
+  const ElmDebugTransform = await import('elm-debug-transformer');
 
   ElmDebugTransform.register({
     simple_mode: true,
   });
 }
 
-const root = document.getElementById("elm");
+const root = document.getElementById('elm');
 
 const app = Elm.Main.init({
   node: root,
@@ -50,7 +50,7 @@ app.ports.signOut.subscribe(async () => {
   const { error } = await supabase.signOut();
 
   if (!error) {
-    return app.ports.signOutResponse.send("Success");
+    return app.ports.signOutResponse.send('Success');
   }
 
   return app.ports.signOutResponse.send(error);
@@ -64,9 +64,9 @@ app.ports.getSession.subscribe(async () => {
 const onAuthChange = () => {
   return supabase.supabaseClient.auth.onAuthStateChange((event, session) => {
     switch (event) {
-      case "TOKEN_REFRESHED": {
-        console.log("inside token refreshed");
-        console.log("Refreshing user session/token");
+      case 'TOKEN_REFRESHED': {
+        console.log('inside token refreshed');
+        console.log('Refreshing user session/token');
         return app.ports.sessionResponse.send(session);
       }
       default:

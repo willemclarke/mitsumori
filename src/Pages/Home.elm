@@ -1,18 +1,21 @@
-module Pages.Home exposing (Model, Msg(..), init, subscriptions, update, view, viewQuoteModal)
+module Pages.Home exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Components.Icons as Icons
 import Components.Modal as Modal
 import Components.Spinner as Spinner
 import Components.Toast as Toast
+import Debounce exposing (Debounce)
 import Dict
 import Graphql.Http
-import Html exposing (Html, a, button, div, form, hr, input, label, p, text, textarea)
-import Html.Attributes exposing (class, classList, for, href, id, maxlength, placeholder, rows, target, type_, value)
+import Html exposing (Html, a, button, div, hr, input, label, p, span, text, textarea)
+import Html.Attributes exposing (class, classList, for, href, id, maxlength, placeholder, rows, tabindex, target, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Html.Extra as HE
 import RemoteData exposing (RemoteData(..))
+import Routing.Route as Route
 import Shared exposing (Shared)
 import Supabase
+import Task
 import User
 import Validator
 import Validator.Maybe
@@ -53,12 +56,6 @@ type alias ValidForm =
     , reference : Maybe String
     , tags : String
     }
-
-
-
--- type alias Filter =
---     { searchTerm : String
---     }
 
 
 type Problem
@@ -154,8 +151,8 @@ update shared msg model =
         OnReferenceChange reference ->
             updateModalForm (\form -> { form | reference = Just reference }) model
 
-        OnTagsChange tag ->
-            updateModalForm (\form -> { form | tags = tag }) model
+        OnTagsChange tags ->
+            updateModalForm (\form -> { form | tags = tags }) model
 
         {- If we edit a quote, update the modalForm with the quotes values, also pass the Quote to the `Editing`
            constructor so when we submit the modal, we have the ID of the quote for supabase to use.
@@ -166,7 +163,7 @@ update shared msg model =
                     { quote = quote.quote
                     , author = quote.author
                     , reference = quote.reference
-                    , tags = String.join " " (supabaseTagsToString quote.tags)
+                    , tags = ""
                     }
                 , modalType = Editing quote
                 , modalVisibility = Visible
@@ -319,6 +316,11 @@ update shared msg model =
             ( model, Cmd.none, Shared.NoUpdate )
 
 
+updateFilter : Maybe String -> Route.Filter -> Route.Filter
+updateFilter searchTerm filter =
+    { filter | searchTerm = searchTerm }
+
+
 emptyModalForm : ModalForm
 emptyModalForm =
     { quote = "", author = "", reference = Nothing, tags = "" }
@@ -333,13 +335,13 @@ toastFromAction : Action -> Shared.SharedUpdate
 toastFromAction action =
     case action of
         AddQuote ->
-            Shared.ShowToast <| Toast.Success "Quote added successfully."
+            Shared.ShowToast (Toast.Success "Quote added successfully.")
 
         EditQuote ->
             Shared.ShowToast (Toast.Success "Quote edited successfully.")
 
         DeleteQuote ->
-            Shared.ShowToast <| Toast.Success "Quote deleted successfully."
+            Shared.ShowToast (Toast.Success "Quote deleted successfully.")
 
         None ->
             Shared.NoUpdate
@@ -448,8 +450,6 @@ view shared model =
     div
         [ class "flex flex-col h-full w-full items-center" ]
         [ viewHeader model.modalForm model.validated model.modalType model.modalVisibility model.modalIsLoading
-
-        -- , viewFilters { searchTerm = "dog" }
         , viewQuotes model.quotes shared
         ]
 
@@ -461,45 +461,12 @@ viewHeader form validated modalType visibility isLoading =
         ]
 
 
-
--- viewHeader : User.User -> ModalForm -> Validated Problem ValidForm -> ModalType -> ModalVisibility -> Bool -> Html Msg
--- viewHeader user form validated modalType visibility isLoading =
---     let
---         username =
---             (SE.toSentenceCase <| User.username user) ++ "'s"
---     in
---     div [ class "flex flex-col mt-16" ]
---         [ div [ class "flex items-center" ]
---             [ header [ class "text-3xl font-serif font-light mr-2" ] [ text <| String.join " " [ username, "quotes" ] ]
---             , addQuoteButton form validated modalType visibility isLoading
---             ]
---         ]
-
-
 addQuoteButton : ModalForm -> Validated Problem ValidForm -> ModalType -> ModalVisibility -> Bool -> Html Msg
 addQuoteButton form validated modalType visibility isLoading =
     div [ class "flex justify-end" ]
         [ button [ class "transition ease-in-out hover:-translate-y-0.5 duration-300", onClick OpenAddQuoteModal ] [ Icons.plus ]
         , viewQuoteModal form validated modalType visibility isLoading
         ]
-
-
-
--- viewFilters : Filter -> Html Msg
--- viewFilters { searchTerm } =
---     div [ class "flex flex-col my-6" ]
---         [ label [ class "text-gray-900 mb-1", for "search" ]
---             [ text "Search" ]
---         , input
---             [ class "p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
---             , id "search"
---             , value searchTerm
---             , placeholder "He who knocks"
---             , type_ "text"
---             , onInput OnAuthorChange
---             ]
---             [ text searchTerm ]
---         ]
 
 
 viewQuotes : QuotesResponse -> Shared -> Html Msg
@@ -536,7 +503,10 @@ viewQuote shared quote =
             else
                 a [ href <| reference, class "text-gray-600 text-sm cursor-pointer hover:text-black", target "_blank" ] [ text "Quote reference" ]
     in
-    div [ class "flex flex-col h-fit border rounded-lg p-6 shadow-sm hover:bg-gray-100/30 transition ease-in-out hover:-translate-y-px duration-300" ]
+    div
+        [ class "flex flex-col h-fit border rounded-lg p-6 shadow-sm hover:bg-gray-100/30 transition ease-in-out hover:-translate-y-px duration-300"
+        , tabindex 0
+        ]
         [ p [ class "text-lg text-gray-800" ] [ text quote.quote ]
         , p [ class "mt-1 text-gray-600 text-md font-light" ] [ text <| "by " ++ quote.author ]
         , hr [ class "bg-gray-600 my-2" ] []
@@ -545,7 +515,10 @@ viewQuote shared quote =
             , viewQuoteReference
             ]
         , viewEditAndDeleteIconButtons shared quote
-        , p [ class "text-gray-600 text-sm cursor-pointer hover:text-black mt-2" ] [ text <| "Posted by " ++ User.username shared.user ]
+        , p [ class "text-gray-600 text-sm cursor-pointer mt-2" ]
+            [ text <| "Posted by "
+            , span [ class "hover:text-black" ] [ text <| User.username shared.user ]
+            ]
 
         -- This will become a tag once profile table/page setup
         ]

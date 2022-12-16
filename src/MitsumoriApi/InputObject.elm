@@ -238,6 +238,36 @@ encodeFloatFilter input____ =
         [ ( "eq", Encode.float |> Encode.optional input____.eq ), ( "gt", Encode.float |> Encode.optional input____.gt ), ( "gte", Encode.float |> Encode.optional input____.gte ), ( "in", (Encode.float |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", Encode.float |> Encode.optional input____.lt ), ( "lte", Encode.float |> Encode.optional input____.lte ), ( "neq", Encode.float |> Encode.optional input____.neq ) ]
 
 
+buildIDFilter :
+    (IDFilterOptionalFields -> IDFilterOptionalFields)
+    -> IDFilter
+buildIDFilter fillOptionals____ =
+    let
+        optionals____ =
+            fillOptionals____
+                { eq = Absent }
+    in
+    { eq = optionals____.eq }
+
+
+type alias IDFilterOptionalFields =
+    { eq : OptionalArgument ScalarCodecs.Id }
+
+
+{-| Type for the IDFilter input object.
+-}
+type alias IDFilter =
+    { eq : OptionalArgument ScalarCodecs.Id }
+
+
+{-| Encode a IDFilter into a value that can be used as an argument.
+-}
+encodeIDFilter : IDFilter -> Value
+encodeIDFilter input____ =
+    Encode.maybeObject
+        [ ( "eq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecId) |> Encode.optional input____.eq ) ]
+
+
 buildIntFilter :
     (IntFilterOptionalFields -> IntFilterOptionalFields)
     -> IntFilter
@@ -282,38 +312,158 @@ encodeIntFilter input____ =
         [ ( "eq", Encode.int |> Encode.optional input____.eq ), ( "gt", Encode.int |> Encode.optional input____.gt ), ( "gte", Encode.int |> Encode.optional input____.gte ), ( "in", (Encode.int |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", Encode.int |> Encode.optional input____.lt ), ( "lte", Encode.int |> Encode.optional input____.lte ), ( "neq", Encode.int |> Encode.optional input____.neq ) ]
 
 
-buildJSONFilter :
-    (JSONFilterOptionalFields -> JSONFilterOptionalFields)
-    -> JSONFilter
-buildJSONFilter fillOptionals____ =
+buildProfileFilter :
+    (ProfileFilterOptionalFields -> ProfileFilterOptionalFields)
+    -> ProfileFilter
+buildProfileFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { eq = Absent, neq = Absent }
+                { id = Absent, user_id = Absent, created_at = Absent, username = Absent, nodeId = Absent }
     in
-    { eq = optionals____.eq, neq = optionals____.neq }
+    { id = optionals____.id, user_id = optionals____.user_id, created_at = optionals____.created_at, username = optionals____.username, nodeId = optionals____.nodeId }
 
 
-type alias JSONFilterOptionalFields =
-    { eq : OptionalArgument ScalarCodecs.Json
-    , neq : OptionalArgument ScalarCodecs.Json
+type alias ProfileFilterOptionalFields =
+    { id : OptionalArgument UUIDFilter
+    , user_id : OptionalArgument UUIDFilter
+    , created_at : OptionalArgument DatetimeFilter
+    , username : OptionalArgument StringFilter
+    , nodeId : OptionalArgument IDFilter
     }
 
 
-{-| Type for the JSONFilter input object.
+{-| Type for the ProfileFilter input object.
 -}
-type alias JSONFilter =
-    { eq : OptionalArgument ScalarCodecs.Json
-    , neq : OptionalArgument ScalarCodecs.Json
+type alias ProfileFilter =
+    { id : OptionalArgument UUIDFilter
+    , user_id : OptionalArgument UUIDFilter
+    , created_at : OptionalArgument DatetimeFilter
+    , username : OptionalArgument StringFilter
+    , nodeId : OptionalArgument IDFilter
     }
 
 
-{-| Encode a JSONFilter into a value that can be used as an argument.
+{-| Encode a ProfileFilter into a value that can be used as an argument.
 -}
-encodeJSONFilter : JSONFilter -> Value
-encodeJSONFilter input____ =
+encodeProfileFilter : ProfileFilter -> Value
+encodeProfileFilter input____ =
     Encode.maybeObject
-        [ ( "eq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecJson) |> Encode.optional input____.eq ), ( "neq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecJson) |> Encode.optional input____.neq ) ]
+        [ ( "id", encodeUUIDFilter |> Encode.optional input____.id ), ( "user_id", encodeUUIDFilter |> Encode.optional input____.user_id ), ( "created_at", encodeDatetimeFilter |> Encode.optional input____.created_at ), ( "username", encodeStringFilter |> Encode.optional input____.username ), ( "nodeId", encodeIDFilter |> Encode.optional input____.nodeId ) ]
+
+
+buildProfileInsertInput :
+    (ProfileInsertInputOptionalFields -> ProfileInsertInputOptionalFields)
+    -> ProfileInsertInput
+buildProfileInsertInput fillOptionals____ =
+    let
+        optionals____ =
+            fillOptionals____
+                { id = Absent, user_id = Absent, created_at = Absent, username = Absent }
+    in
+    { id = optionals____.id, user_id = optionals____.user_id, created_at = optionals____.created_at, username = optionals____.username }
+
+
+type alias ProfileInsertInputOptionalFields =
+    { id : OptionalArgument ScalarCodecs.Uuid
+    , user_id : OptionalArgument ScalarCodecs.Uuid
+    , created_at : OptionalArgument ScalarCodecs.Datetime
+    , username : OptionalArgument String
+    }
+
+
+{-| Type for the ProfileInsertInput input object.
+-}
+type alias ProfileInsertInput =
+    { id : OptionalArgument ScalarCodecs.Uuid
+    , user_id : OptionalArgument ScalarCodecs.Uuid
+    , created_at : OptionalArgument ScalarCodecs.Datetime
+    , username : OptionalArgument String
+    }
+
+
+{-| Encode a ProfileInsertInput into a value that can be used as an argument.
+-}
+encodeProfileInsertInput : ProfileInsertInput -> Value
+encodeProfileInsertInput input____ =
+    Encode.maybeObject
+        [ ( "id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ), ( "user_id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.user_id ), ( "created_at", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.created_at ), ( "username", Encode.string |> Encode.optional input____.username ) ]
+
+
+buildProfileOrderBy :
+    (ProfileOrderByOptionalFields -> ProfileOrderByOptionalFields)
+    -> ProfileOrderBy
+buildProfileOrderBy fillOptionals____ =
+    let
+        optionals____ =
+            fillOptionals____
+                { id = Absent, user_id = Absent, created_at = Absent, username = Absent }
+    in
+    { id = optionals____.id, user_id = optionals____.user_id, created_at = optionals____.created_at, username = optionals____.username }
+
+
+type alias ProfileOrderByOptionalFields =
+    { id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , user_id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , created_at : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , username : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    }
+
+
+{-| Type for the ProfileOrderBy input object.
+-}
+type alias ProfileOrderBy =
+    { id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , user_id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , created_at : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , username : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    }
+
+
+{-| Encode a ProfileOrderBy into a value that can be used as an argument.
+-}
+encodeProfileOrderBy : ProfileOrderBy -> Value
+encodeProfileOrderBy input____ =
+    Encode.maybeObject
+        [ ( "id", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.id ), ( "user_id", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.user_id ), ( "created_at", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.created_at ), ( "username", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.username ) ]
+
+
+buildProfileUpdateInput :
+    (ProfileUpdateInputOptionalFields -> ProfileUpdateInputOptionalFields)
+    -> ProfileUpdateInput
+buildProfileUpdateInput fillOptionals____ =
+    let
+        optionals____ =
+            fillOptionals____
+                { id = Absent, user_id = Absent, created_at = Absent, username = Absent }
+    in
+    { id = optionals____.id, user_id = optionals____.user_id, created_at = optionals____.created_at, username = optionals____.username }
+
+
+type alias ProfileUpdateInputOptionalFields =
+    { id : OptionalArgument ScalarCodecs.Uuid
+    , user_id : OptionalArgument ScalarCodecs.Uuid
+    , created_at : OptionalArgument ScalarCodecs.Datetime
+    , username : OptionalArgument String
+    }
+
+
+{-| Type for the ProfileUpdateInput input object.
+-}
+type alias ProfileUpdateInput =
+    { id : OptionalArgument ScalarCodecs.Uuid
+    , user_id : OptionalArgument ScalarCodecs.Uuid
+    , created_at : OptionalArgument ScalarCodecs.Datetime
+    , username : OptionalArgument String
+    }
+
+
+{-| Encode a ProfileUpdateInput into a value that can be used as an argument.
+-}
+encodeProfileUpdateInput : ProfileUpdateInput -> Value
+encodeProfileUpdateInput input____ =
+    Encode.maybeObject
+        [ ( "id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ), ( "user_id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.user_id ), ( "created_at", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.created_at ), ( "username", Encode.string |> Encode.optional input____.username ) ]
 
 
 buildQuote_tagsFilter :
@@ -323,15 +473,16 @@ buildQuote_tagsFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { text = Absent, quote_id = Absent, id = Absent }
+                { text = Absent, quote_id = Absent, id = Absent, nodeId = Absent }
     in
-    { text = optionals____.text, quote_id = optionals____.quote_id, id = optionals____.id }
+    { text = optionals____.text, quote_id = optionals____.quote_id, id = optionals____.id, nodeId = optionals____.nodeId }
 
 
 type alias Quote_tagsFilterOptionalFields =
     { text : OptionalArgument StringFilter
     , quote_id : OptionalArgument UUIDFilter
     , id : OptionalArgument UUIDFilter
+    , nodeId : OptionalArgument IDFilter
     }
 
 
@@ -341,6 +492,7 @@ type alias Quote_tagsFilter =
     { text : OptionalArgument StringFilter
     , quote_id : OptionalArgument UUIDFilter
     , id : OptionalArgument UUIDFilter
+    , nodeId : OptionalArgument IDFilter
     }
 
 
@@ -349,7 +501,7 @@ type alias Quote_tagsFilter =
 encodeQuote_tagsFilter : Quote_tagsFilter -> Value
 encodeQuote_tagsFilter input____ =
     Encode.maybeObject
-        [ ( "text", encodeStringFilter |> Encode.optional input____.text ), ( "quote_id", encodeUUIDFilter |> Encode.optional input____.quote_id ), ( "id", encodeUUIDFilter |> Encode.optional input____.id ) ]
+        [ ( "text", encodeStringFilter |> Encode.optional input____.text ), ( "quote_id", encodeUUIDFilter |> Encode.optional input____.quote_id ), ( "id", encodeUUIDFilter |> Encode.optional input____.id ), ( "nodeId", encodeIDFilter |> Encode.optional input____.nodeId ) ]
 
 
 buildQuote_tagsInsertInput :
@@ -467,9 +619,9 @@ buildQuotesFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { id = Absent, quote_text = Absent, quote_author = Absent, user_id = Absent, created_at = Absent, quote_reference = Absent }
+                { id = Absent, quote_text = Absent, quote_author = Absent, user_id = Absent, created_at = Absent, quote_reference = Absent, nodeId = Absent }
     in
-    { id = optionals____.id, quote_text = optionals____.quote_text, quote_author = optionals____.quote_author, user_id = optionals____.user_id, created_at = optionals____.created_at, quote_reference = optionals____.quote_reference }
+    { id = optionals____.id, quote_text = optionals____.quote_text, quote_author = optionals____.quote_author, user_id = optionals____.user_id, created_at = optionals____.created_at, quote_reference = optionals____.quote_reference, nodeId = optionals____.nodeId }
 
 
 type alias QuotesFilterOptionalFields =
@@ -479,6 +631,7 @@ type alias QuotesFilterOptionalFields =
     , user_id : OptionalArgument UUIDFilter
     , created_at : OptionalArgument DatetimeFilter
     , quote_reference : OptionalArgument StringFilter
+    , nodeId : OptionalArgument IDFilter
     }
 
 
@@ -491,6 +644,7 @@ type alias QuotesFilter =
     , user_id : OptionalArgument UUIDFilter
     , created_at : OptionalArgument DatetimeFilter
     , quote_reference : OptionalArgument StringFilter
+    , nodeId : OptionalArgument IDFilter
     }
 
 
@@ -499,7 +653,7 @@ type alias QuotesFilter =
 encodeQuotesFilter : QuotesFilter -> Value
 encodeQuotesFilter input____ =
     Encode.maybeObject
-        [ ( "id", encodeUUIDFilter |> Encode.optional input____.id ), ( "quote_text", encodeStringFilter |> Encode.optional input____.quote_text ), ( "quote_author", encodeStringFilter |> Encode.optional input____.quote_author ), ( "user_id", encodeUUIDFilter |> Encode.optional input____.user_id ), ( "created_at", encodeDatetimeFilter |> Encode.optional input____.created_at ), ( "quote_reference", encodeStringFilter |> Encode.optional input____.quote_reference ) ]
+        [ ( "id", encodeUUIDFilter |> Encode.optional input____.id ), ( "quote_text", encodeStringFilter |> Encode.optional input____.quote_text ), ( "quote_author", encodeStringFilter |> Encode.optional input____.quote_author ), ( "user_id", encodeUUIDFilter |> Encode.optional input____.user_id ), ( "created_at", encodeDatetimeFilter |> Encode.optional input____.created_at ), ( "quote_reference", encodeStringFilter |> Encode.optional input____.quote_reference ), ( "nodeId", encodeIDFilter |> Encode.optional input____.nodeId ) ]
 
 
 buildQuotesInsertInput :

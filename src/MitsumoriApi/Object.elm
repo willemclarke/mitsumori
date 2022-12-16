@@ -9,6 +9,30 @@ type PageInfo
     = PageInfo
 
 
+type Profile
+    = Profile
+
+
+type ProfileConnection
+    = ProfileConnection
+
+
+type ProfileDeleteResponse
+    = ProfileDeleteResponse
+
+
+type ProfileEdge
+    = ProfileEdge
+
+
+type ProfileInsertResponse
+    = ProfileInsertResponse
+
+
+type ProfileUpdateResponse
+    = ProfileUpdateResponse
+
+
 type Quote_tags
     = Quote_tags
 

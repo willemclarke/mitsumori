@@ -8,7 +8,7 @@ import Html.Attributes exposing (class, href)
 import Json.Decode as JD
 import Json.Encode as JE
 import Random
-import Router.Router as Router
+import Routing.Router as Router
 import Shared exposing (Shared, SharedUpdate(..))
 import Supabase
 import Url
@@ -170,7 +170,6 @@ updateUserSession model json =
                     let
                         initSharedState =
                             { key = model.key
-                            , url = model.url
                             , user = user
                             , toasts = []
                             , supabase = flags.supabase

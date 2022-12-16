@@ -1,4 +1,4 @@
-module Router.Router exposing (Model, Msg(..), init, subscriptions, update, view)
+module Routing.Router exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Browser
 import Browser.Navigation
@@ -12,7 +12,7 @@ import Pages.Home as Home
 import Pages.Signin as SignIn
 import Pages.Signup as SignUp
 import Process
-import Router.Route as Route exposing (Route)
+import Routing.Route as Route exposing (Route)
 import Shared exposing (Shared)
 import Supabase
 import Task
@@ -84,12 +84,9 @@ update shared msg model =
     case msg of
         UrlChanged url ->
             let
-                route =
-                    Route.fromUrl url
-
                 cmd =
-                    case route of
-                        Just Route.Home ->
+                    case Route.fromUrl url of
+                        Just (Route.Home _) ->
                             Browser.Navigation.reload
 
                         _ ->
@@ -199,7 +196,7 @@ view msgMapper shared model =
 pageView : Shared -> Model -> Html Msg
 pageView ({ user } as shared) model =
     case Route.checkNav user model.route of
-        Just Route.Home ->
+        Just (Route.Home _) ->
             Home.view shared model.homeModel
                 |> Html.map HomeMsg
 
@@ -223,7 +220,7 @@ viewNav { user } =
     let
         href_ =
             if User.isAuthenticated user then
-                Route.toString Route.Home
+                Route.toString (Route.Home Route.emptyFilter)
 
             else
                 Route.toString Route.Signup
@@ -263,7 +260,7 @@ subscriptions msgMapper model =
     let
         pageSubs =
             case model.route of
-                Just Route.Home ->
+                Just (Route.Home _) ->
                     Sub.map HomeMsg (Home.subscriptions model.homeModel)
 
                 Just Route.Signup ->

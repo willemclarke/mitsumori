@@ -20,9 +20,11 @@
             "elm-community/html-extra": "3.4.0",
             "elm-community/json-extra": "4.3.0",
             "elm-community/list-extra": "8.6.0",
+            "elm-community/maybe-extra": "5.3.0",
             "elm-community/string-extra": "4.0.1",
             "gege251/elm-validator-pipeline": "3.0.0",
             "hmsk/elm-vite-plugin-helper": "1.0.1",
+            "jinjor/elm-debounce": "3.0.0",
             "krisajenkins/remotedata": "6.0.1",
             "rtfeldman/elm-iso8601-date-strings": "1.1.4"
         },

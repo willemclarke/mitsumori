@@ -19,6 +19,13 @@ import MitsumoriApi.Union
 import ScalarCodecs
 
 
+{-| Globally Unique Record Identifier
+-}
+nodeId : SelectionSet ScalarCodecs.Id MitsumoriApi.Object.Quote_tags
+nodeId =
+    Object.selectionForField "ScalarCodecs.Id" "nodeId" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecId |> .decoder)
+
+
 text : SelectionSet String MitsumoriApi.Object.Quote_tags
 text =
     Object.selectionForField "String" "text" [] Decode.string

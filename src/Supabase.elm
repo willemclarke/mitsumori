@@ -172,10 +172,11 @@ deleteQuoteMutation quoteId =
                         , user_id = Absent
                         , created_at = Absent
                         , quote_reference = Absent
+                        , nodeId = Absent
                         }
             }
         )
-        { atMost = 2 }
+        { atMost = 1 }
         (MitsumoriApi.Object.QuotesDeleteResponse.records <| quoteNodeForMutation quoteId)
 
 
@@ -192,6 +193,7 @@ editQuoteMutation quote =
                         , user_id = Absent
                         , created_at = Absent
                         , quote_reference = Absent
+                        , nodeId = Absent
                         }
             }
         )
@@ -206,10 +208,6 @@ editQuoteMutation quote =
         , atMost = 1
         }
         (MitsumoriApi.Object.QuotesUpdateResponse.records <| quoteNodeForMutation quote.id)
-
-
-
--- TODO: understand how to pass in the id to the filter, which has a custom scarlar type
 
 
 quotesQuery : SelectionSet Quotes RootQuery
@@ -228,6 +226,7 @@ quotesQuery =
                           , user_id = Absent
                           }
                         ]
+                , filter = Absent
             }
         )
         quotesCollection
@@ -277,10 +276,6 @@ quoteNodeForMutation quoteId =
         (quoteTagsCollectionFromId quoteId)
 
 
-
--- ^^ not sure if this is correct 29/10/2022
-
-
 quoteTagsCollection : SelectionSet (List Tag) MitsumoriApi.Object.Quotes
 quoteTagsCollection =
     Quotes.quote_tagsCollection (\optionals -> optionals) quoteTagEdges
@@ -299,6 +294,7 @@ quoteTagsCollectionFromId quoteId =
                                 { eq = Present quoteId, in_ = Absent, neq = Absent }
                         , text = Absent
                         , id = Absent
+                        , nodeId = Absent
                         }
             }
         )

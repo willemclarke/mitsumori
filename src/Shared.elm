@@ -1,4 +1,4 @@
-module Shared exposing (Shared, SharedUpdate(..), SupabaseFlags, generateUuid, stepSeed, update)
+module Shared exposing (Shared, SharedUpdate(..), SupabaseFlags, stepSeed, update)
 
 import Browser.Navigation as Nav
 import Components.Toast exposing (ToastType)
@@ -16,7 +16,6 @@ import Uuid
 
 type alias Shared =
     { key : Nav.Key
-    , url : Url.Url
     , user : User
     , seed : Seed
     , supabase : SupabaseFlags

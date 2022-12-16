@@ -8,7 +8,7 @@ import Html.Events exposing (onClick, onInput)
 import Html.Extra as HE
 import Json.Decode as JD
 import Json.Encode as JE
-import Router.Route as Route
+import Routing.Route as Route
 import Shared exposing (Shared, SharedUpdate(..))
 import Supabase
 import User
@@ -134,7 +134,7 @@ update shared msg model =
             in
             case signupResponse of
                 UserOk user ->
-                    ( { model | form = emptyForm, isLoading = False }, Route.pushUrl shared.key Route.Home, Shared.UpdateUser user )
+                    ( { model | form = emptyForm, isLoading = False }, Route.pushUrl shared.key (Route.Home Route.emptyFilter), Shared.UpdateUser user )
 
                 SignupError error ->
                     ( { model | isLoading = False, serverError = Just error }, Cmd.none, Shared.NoUpdate )
@@ -235,7 +235,7 @@ viewSignupForm form validated serverError isLoading =
                     , onInput OnEmailChange
                     ]
                     [ text form.email ]
-                , viewFormErrors Email validated
+                , viewFieldError Email validated
                 ]
             , div [ class "flex flex-col mt-6" ]
                 [ label [ class "text-gray-900 mt-2", for "username" ]
@@ -250,7 +250,7 @@ viewSignupForm form validated serverError isLoading =
                     , onInput OnUsernameChange
                     ]
                     [ text form.email ]
-                , viewFormErrors Username validated
+                , viewFieldError Username validated
                 ]
             , div [ class "flex flex-col mt-6" ]
                 [ label [ class "text-gray-700 mt-2", for "password" ]
@@ -265,7 +265,7 @@ viewSignupForm form validated serverError isLoading =
                     , onInput OnPasswordChange
                     ]
                     [ text form.password ]
-                , viewFormErrors Password validated
+                , viewFieldError Password validated
                 ]
             , viewFormServerError serverError
             ]
@@ -289,8 +289,8 @@ viewFormServerError serverError =
     div [ class "h-1" ] [ p [ class "text-sm mt-3 text-red-500" ] [ text message_ ] ]
 
 
-viewFormErrors : Field -> Validated Problem ValidForm -> Html msg
-viewFormErrors field validated =
+viewFieldError : Field -> Validated Problem ValidForm -> Html msg
+viewFieldError field validated =
     case Validator.Named.getErrors (fieldToString field) validated of
         Nothing ->
             text ""
@@ -303,7 +303,7 @@ viewFormErrors field validated =
                             InvalidEntry _ message ->
                                 div [ class "h-1" ] [ p [ class "text-sm mt-1 text-red-500" ] [ text message ] ]
 
-                            _ ->
+                            ServerError _ ->
                                 HE.nothing
                     )
                     errors

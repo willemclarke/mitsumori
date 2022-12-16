@@ -93,8 +93,6 @@ init shared filter =
       , validated = Err Dict.empty
       , debounce = Debounce.init
       , filter = filter
-
-      --   , filter = Route.emptyFilter
       }
     , Supabase.getQuotes (GotQuotesResponse None) filter shared
     )
@@ -157,10 +155,7 @@ update shared msg model =
                 ( debounce, cmd ) =
                     Debounce.push debounceConfig searchTerm model.debounce
             in
-            ( { model
-                | debounce = debounce
-                , filter = updateSearchFilter (Just searchTerm) model.filter
-              }
+            ( { model | debounce = debounce, filter = updateFilter (Just searchTerm) model.filter }
             , cmd
             , Shared.NoUpdate
             )
@@ -186,12 +181,9 @@ update shared msg model =
                         Just string
 
                 newFilter =
-                    updateSearchFilter searchTerm model.filter
+                    updateFilter searchTerm model.filter
             in
-            ( { model | filter = newFilter }
-            , Route.appendFilterParams shared.key newFilter
-            , Shared.NoUpdate
-            )
+            ( { model | filter = newFilter }, Route.appendFilterParams shared.key newFilter, Shared.NoUpdate )
 
         OpenAddQuoteModal ->
             ( { model | modalVisibility = Visible }, Cmd.none, Shared.NoUpdate )
@@ -378,14 +370,9 @@ submitSearchInput searchTerm =
     Task.perform SubmitSearchInput (Task.succeed searchTerm)
 
 
-updateSearchFilter : Maybe String -> Route.Filter -> Route.Filter
-updateSearchFilter searchTerm filter =
+updateFilter : Maybe String -> Route.Filter -> Route.Filter
+updateFilter searchTerm filter =
     { filter | searchTerm = searchTerm }
-
-
-updateFilter : (Route.Filter -> Route.Filter) -> Model -> Model
-updateFilter transform model =
-    { model | filter = transform model.filter }
 
 
 emptyModalForm : ModalForm

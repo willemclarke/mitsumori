@@ -19,6 +19,23 @@ import MitsumoriApi.Union
 import ScalarCodecs
 
 
+type alias NodeRequiredArguments =
+    { nodeId : ScalarCodecs.Id }
+
+
+{-| Retrieve a record by its `ID`
+
+  - nodeId - The record's `ID`
+
+-}
+node :
+    NodeRequiredArguments
+    -> SelectionSet decodesTo MitsumoriApi.Interface.Node
+    -> SelectionSet (Maybe decodesTo) RootQuery
+node requiredArgs____ object____ =
+    Object.selectionForCompositeField "node" [ Argument.required "nodeId" requiredArgs____.nodeId (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecId) ] object____ (Basics.identity >> Decode.nullable)
+
+
 type alias ProfileCollectionOptionalArguments =
     { first : OptionalArgument Int
     , last : OptionalArgument Int

@@ -170,7 +170,6 @@ updateUserSession model json =
                     let
                         initSharedState =
                             { key = model.key
-                            , url = model.url
                             , user = user
                             , toasts = []
                             , supabase = flags.supabase

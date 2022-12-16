@@ -51,19 +51,8 @@ type Msg
 init : Shared -> Url.Url -> ( Model, Cmd Msg )
 init shared url =
     let
-        -- /
         filterParams =
-            Maybe.map
-                (\route ->
-                    case route of
-                        Route.Home filter ->
-                            filter
-
-                        _ ->
-                            Route.emptyFilter
-                )
-                (Route.fromUrl url)
-                |> Maybe.withDefault Route.emptyFilter
+            Route.extractFilterParams url
 
         ( homeModel, homeCmd ) =
             Home.init shared filterParams
@@ -101,16 +90,19 @@ update shared msg model =
                 route =
                     Route.fromUrl url
 
-                cmd =
-                    case route of
-                        Just (Route.Home _) ->
-                            Browser.Navigation.reload
-
-                        _ ->
-                            Cmd.none
+                ( model_, cmd_ ) =
+                    init shared url
             in
-            ( { model | route = route }, Cmd.none, Shared.NoUpdate )
+            ( { model_ | route = route }, cmd_, Shared.NoUpdate )
 
+        --     cmd =
+        --         case route of
+        --             Just (Route.Home _) ->
+        --                 Browser.Navigation.reload
+        --             _ ->
+        --                 Cmd.none
+        -- in
+        -- ( { model | route = route }, Cmd.none, Shared.NoUpdate )
         NavigateTo route ->
             ( model, Route.pushUrl shared.key route, Shared.NoUpdate )
 

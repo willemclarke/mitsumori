@@ -238,6 +238,36 @@ encodeFloatFilter input____ =
         [ ( "eq", Encode.float |> Encode.optional input____.eq ), ( "gt", Encode.float |> Encode.optional input____.gt ), ( "gte", Encode.float |> Encode.optional input____.gte ), ( "in", (Encode.float |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", Encode.float |> Encode.optional input____.lt ), ( "lte", Encode.float |> Encode.optional input____.lte ), ( "neq", Encode.float |> Encode.optional input____.neq ) ]
 
 
+buildIDFilter :
+    (IDFilterOptionalFields -> IDFilterOptionalFields)
+    -> IDFilter
+buildIDFilter fillOptionals____ =
+    let
+        optionals____ =
+            fillOptionals____
+                { eq = Absent }
+    in
+    { eq = optionals____.eq }
+
+
+type alias IDFilterOptionalFields =
+    { eq : OptionalArgument ScalarCodecs.Id }
+
+
+{-| Type for the IDFilter input object.
+-}
+type alias IDFilter =
+    { eq : OptionalArgument ScalarCodecs.Id }
+
+
+{-| Encode a IDFilter into a value that can be used as an argument.
+-}
+encodeIDFilter : IDFilter -> Value
+encodeIDFilter input____ =
+    Encode.maybeObject
+        [ ( "eq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecId) |> Encode.optional input____.eq ) ]
+
+
 buildIntFilter :
     (IntFilterOptionalFields -> IntFilterOptionalFields)
     -> IntFilter
@@ -282,40 +312,6 @@ encodeIntFilter input____ =
         [ ( "eq", Encode.int |> Encode.optional input____.eq ), ( "gt", Encode.int |> Encode.optional input____.gt ), ( "gte", Encode.int |> Encode.optional input____.gte ), ( "in", (Encode.int |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", Encode.int |> Encode.optional input____.lt ), ( "lte", Encode.int |> Encode.optional input____.lte ), ( "neq", Encode.int |> Encode.optional input____.neq ) ]
 
 
-buildJSONFilter :
-    (JSONFilterOptionalFields -> JSONFilterOptionalFields)
-    -> JSONFilter
-buildJSONFilter fillOptionals____ =
-    let
-        optionals____ =
-            fillOptionals____
-                { eq = Absent, neq = Absent }
-    in
-    { eq = optionals____.eq, neq = optionals____.neq }
-
-
-type alias JSONFilterOptionalFields =
-    { eq : OptionalArgument ScalarCodecs.Json
-    , neq : OptionalArgument ScalarCodecs.Json
-    }
-
-
-{-| Type for the JSONFilter input object.
--}
-type alias JSONFilter =
-    { eq : OptionalArgument ScalarCodecs.Json
-    , neq : OptionalArgument ScalarCodecs.Json
-    }
-
-
-{-| Encode a JSONFilter into a value that can be used as an argument.
--}
-encodeJSONFilter : JSONFilter -> Value
-encodeJSONFilter input____ =
-    Encode.maybeObject
-        [ ( "eq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecJson) |> Encode.optional input____.eq ), ( "neq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecJson) |> Encode.optional input____.neq ) ]
-
-
 buildProfileFilter :
     (ProfileFilterOptionalFields -> ProfileFilterOptionalFields)
     -> ProfileFilter
@@ -323,9 +319,9 @@ buildProfileFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { id = Absent, user_id = Absent, created_at = Absent, username = Absent }
+                { id = Absent, user_id = Absent, created_at = Absent, username = Absent, nodeId = Absent }
     in
-    { id = optionals____.id, user_id = optionals____.user_id, created_at = optionals____.created_at, username = optionals____.username }
+    { id = optionals____.id, user_id = optionals____.user_id, created_at = optionals____.created_at, username = optionals____.username, nodeId = optionals____.nodeId }
 
 
 type alias ProfileFilterOptionalFields =
@@ -333,6 +329,7 @@ type alias ProfileFilterOptionalFields =
     , user_id : OptionalArgument UUIDFilter
     , created_at : OptionalArgument DatetimeFilter
     , username : OptionalArgument StringFilter
+    , nodeId : OptionalArgument IDFilter
     }
 
 
@@ -343,6 +340,7 @@ type alias ProfileFilter =
     , user_id : OptionalArgument UUIDFilter
     , created_at : OptionalArgument DatetimeFilter
     , username : OptionalArgument StringFilter
+    , nodeId : OptionalArgument IDFilter
     }
 
 
@@ -351,7 +349,7 @@ type alias ProfileFilter =
 encodeProfileFilter : ProfileFilter -> Value
 encodeProfileFilter input____ =
     Encode.maybeObject
-        [ ( "id", encodeUUIDFilter |> Encode.optional input____.id ), ( "user_id", encodeUUIDFilter |> Encode.optional input____.user_id ), ( "created_at", encodeDatetimeFilter |> Encode.optional input____.created_at ), ( "username", encodeStringFilter |> Encode.optional input____.username ) ]
+        [ ( "id", encodeUUIDFilter |> Encode.optional input____.id ), ( "user_id", encodeUUIDFilter |> Encode.optional input____.user_id ), ( "created_at", encodeDatetimeFilter |> Encode.optional input____.created_at ), ( "username", encodeStringFilter |> Encode.optional input____.username ), ( "nodeId", encodeIDFilter |> Encode.optional input____.nodeId ) ]
 
 
 buildProfileInsertInput :
@@ -475,15 +473,16 @@ buildQuote_tagsFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { text = Absent, quote_id = Absent, id = Absent }
+                { text = Absent, quote_id = Absent, id = Absent, nodeId = Absent }
     in
-    { text = optionals____.text, quote_id = optionals____.quote_id, id = optionals____.id }
+    { text = optionals____.text, quote_id = optionals____.quote_id, id = optionals____.id, nodeId = optionals____.nodeId }
 
 
 type alias Quote_tagsFilterOptionalFields =
     { text : OptionalArgument StringFilter
     , quote_id : OptionalArgument UUIDFilter
     , id : OptionalArgument UUIDFilter
+    , nodeId : OptionalArgument IDFilter
     }
 
 
@@ -493,6 +492,7 @@ type alias Quote_tagsFilter =
     { text : OptionalArgument StringFilter
     , quote_id : OptionalArgument UUIDFilter
     , id : OptionalArgument UUIDFilter
+    , nodeId : OptionalArgument IDFilter
     }
 
 
@@ -501,7 +501,7 @@ type alias Quote_tagsFilter =
 encodeQuote_tagsFilter : Quote_tagsFilter -> Value
 encodeQuote_tagsFilter input____ =
     Encode.maybeObject
-        [ ( "text", encodeStringFilter |> Encode.optional input____.text ), ( "quote_id", encodeUUIDFilter |> Encode.optional input____.quote_id ), ( "id", encodeUUIDFilter |> Encode.optional input____.id ) ]
+        [ ( "text", encodeStringFilter |> Encode.optional input____.text ), ( "quote_id", encodeUUIDFilter |> Encode.optional input____.quote_id ), ( "id", encodeUUIDFilter |> Encode.optional input____.id ), ( "nodeId", encodeIDFilter |> Encode.optional input____.nodeId ) ]
 
 
 buildQuote_tagsInsertInput :
@@ -619,9 +619,9 @@ buildQuotesFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { id = Absent, quote_text = Absent, quote_author = Absent, user_id = Absent, created_at = Absent, quote_reference = Absent }
+                { id = Absent, quote_text = Absent, quote_author = Absent, user_id = Absent, created_at = Absent, quote_reference = Absent, nodeId = Absent }
     in
-    { id = optionals____.id, quote_text = optionals____.quote_text, quote_author = optionals____.quote_author, user_id = optionals____.user_id, created_at = optionals____.created_at, quote_reference = optionals____.quote_reference }
+    { id = optionals____.id, quote_text = optionals____.quote_text, quote_author = optionals____.quote_author, user_id = optionals____.user_id, created_at = optionals____.created_at, quote_reference = optionals____.quote_reference, nodeId = optionals____.nodeId }
 
 
 type alias QuotesFilterOptionalFields =
@@ -631,6 +631,7 @@ type alias QuotesFilterOptionalFields =
     , user_id : OptionalArgument UUIDFilter
     , created_at : OptionalArgument DatetimeFilter
     , quote_reference : OptionalArgument StringFilter
+    , nodeId : OptionalArgument IDFilter
     }
 
 
@@ -643,6 +644,7 @@ type alias QuotesFilter =
     , user_id : OptionalArgument UUIDFilter
     , created_at : OptionalArgument DatetimeFilter
     , quote_reference : OptionalArgument StringFilter
+    , nodeId : OptionalArgument IDFilter
     }
 
 
@@ -651,7 +653,7 @@ type alias QuotesFilter =
 encodeQuotesFilter : QuotesFilter -> Value
 encodeQuotesFilter input____ =
     Encode.maybeObject
-        [ ( "id", encodeUUIDFilter |> Encode.optional input____.id ), ( "quote_text", encodeStringFilter |> Encode.optional input____.quote_text ), ( "quote_author", encodeStringFilter |> Encode.optional input____.quote_author ), ( "user_id", encodeUUIDFilter |> Encode.optional input____.user_id ), ( "created_at", encodeDatetimeFilter |> Encode.optional input____.created_at ), ( "quote_reference", encodeStringFilter |> Encode.optional input____.quote_reference ) ]
+        [ ( "id", encodeUUIDFilter |> Encode.optional input____.id ), ( "quote_text", encodeStringFilter |> Encode.optional input____.quote_text ), ( "quote_author", encodeStringFilter |> Encode.optional input____.quote_author ), ( "user_id", encodeUUIDFilter |> Encode.optional input____.user_id ), ( "created_at", encodeDatetimeFilter |> Encode.optional input____.created_at ), ( "quote_reference", encodeStringFilter |> Encode.optional input____.quote_reference ), ( "nodeId", encodeIDFilter |> Encode.optional input____.nodeId ) ]
 
 
 buildQuotesInsertInput :

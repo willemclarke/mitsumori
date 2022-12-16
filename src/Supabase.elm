@@ -173,10 +173,11 @@ deleteQuoteMutation quoteId =
                         , user_id = Absent
                         , created_at = Absent
                         , quote_reference = Absent
+                        , nodeId = Absent
                         }
             }
         )
-        { atMost = 2 }
+        { atMost = 1 }
         (MitsumoriApi.Object.QuotesDeleteResponse.records <| quoteNodeForMutation quoteId)
 
 
@@ -193,6 +194,7 @@ editQuoteMutation quote =
                         , user_id = Absent
                         , created_at = Absent
                         , quote_reference = Absent
+                        , nodeId = Absent
                         }
             }
         )
@@ -256,6 +258,7 @@ quotesQuery filter =
                         , quote_author = Absent
                         , quote_reference = Absent
                         , user_id = Absent
+                        , nodeId = Absent
                         }
             }
         )
@@ -328,6 +331,7 @@ quoteTagsCollectionFromId quoteId =
                                 { eq = Present quoteId, in_ = Absent, neq = Absent }
                         , text = Absent
                         , id = Absent
+                        , nodeId = Absent
                         }
             }
         )

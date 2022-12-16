@@ -1,4 +1,4 @@
-module Routing.Route exposing (..)
+module Routing.Route exposing (Filter, Route(..), appendFilterParams, checkNav, emptyFilter, extractFilterParams, filterQueryParams, fromUrl, pushUrl, replaceUrl, toString, toTitleString)
 
 import Browser.Navigation as Nav
 import Maybe.Extra as ME
@@ -38,6 +38,21 @@ parser =
 filterQueryParams : Query.Parser Filter
 filterQueryParams =
     Query.map Filter (Query.string "search")
+
+
+extractFilterParams : Url.Url -> Filter
+extractFilterParams url =
+    fromUrl url
+        |> Maybe.map
+            (\route ->
+                case route of
+                    Home filter ->
+                        filter
+
+                    _ ->
+                        emptyFilter
+            )
+        |> Maybe.withDefault emptyFilter
 
 
 emptyFilter : Filter

@@ -16,7 +16,6 @@ import Uuid
 
 type alias Shared =
     { key : Nav.Key
-    , url : Url.Url
     , user : User
     , seed : Seed
     , supabase : SupabaseFlags

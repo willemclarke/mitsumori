@@ -19,6 +19,13 @@ import MitsumoriApi.Union
 import ScalarCodecs
 
 
+{-| Globally Unique Record Identifier
+-}
+nodeId : SelectionSet ScalarCodecs.Id MitsumoriApi.Object.Profile
+nodeId =
+    Object.selectionForField "ScalarCodecs.Id" "nodeId" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecId |> .decoder)
+
+
 id : SelectionSet ScalarCodecs.Uuid MitsumoriApi.Object.Profile
 id =
     Object.selectionForField "ScalarCodecs.Uuid" "id" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecUuid |> .decoder)

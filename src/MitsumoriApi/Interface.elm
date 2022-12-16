@@ -5,6 +5,5 @@
 module MitsumoriApi.Interface exposing (..)
 
 
-placeholder : String
-placeholder =
-    ""
+type Node
+    = Node

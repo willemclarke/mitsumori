@@ -27,9 +27,9 @@ type alias DeleteFromprofileCollectionRequiredArguments =
     { atMost : Int }
 
 
-{-| Deletes zero or more records from the collection
+{-| Deletes zero or more records from the `profile` collection
 
-  - filter - Restricts the mutation's impact to records matching the critera
+  - filter - Restricts the mutation's impact to records matching the criteria
   - atMost - The maximum number of records in the collection permitted to be affected
 
 -}
@@ -58,9 +58,9 @@ type alias DeleteFromquoteTagsCollectionRequiredArguments =
     { atMost : Int }
 
 
-{-| Deletes zero or more records from the collection
+{-| Deletes zero or more records from the `quote_tags` collection
 
-  - filter - Restricts the mutation's impact to records matching the critera
+  - filter - Restricts the mutation's impact to records matching the criteria
   - atMost - The maximum number of records in the collection permitted to be affected
 
 -}
@@ -89,9 +89,9 @@ type alias DeleteFromquotesCollectionRequiredArguments =
     { atMost : Int }
 
 
-{-| Deletes zero or more records from the collection
+{-| Deletes zero or more records from the `quotes` collection
 
-  - filter - Restricts the mutation's impact to records matching the critera
+  - filter - Restricts the mutation's impact to records matching the criteria
   - atMost - The maximum number of records in the collection permitted to be affected
 
 -}
@@ -116,7 +116,7 @@ type alias InsertIntoprofileCollectionRequiredArguments =
     { objects : List MitsumoriApi.InputObject.ProfileInsertInput }
 
 
-{-| Adds one or more `profileInsertResponse` records to the collection
+{-| Adds one or more `profile` records to the collection
 -}
 insertIntoprofileCollection :
     InsertIntoprofileCollectionRequiredArguments
@@ -130,7 +130,7 @@ type alias InsertIntoquoteTagsCollectionRequiredArguments =
     { objects : List MitsumoriApi.InputObject.Quote_tagsInsertInput }
 
 
-{-| Adds one or more `quote_tagsInsertResponse` records to the collection
+{-| Adds one or more `quote_tags` records to the collection
 -}
 insertIntoquote_tagsCollection :
     InsertIntoquoteTagsCollectionRequiredArguments
@@ -144,7 +144,7 @@ type alias InsertIntoquotesCollectionRequiredArguments =
     { objects : List MitsumoriApi.InputObject.QuotesInsertInput }
 
 
-{-| Adds one or more `quotesInsertResponse` records to the collection
+{-| Adds one or more `quotes` records to the collection
 -}
 insertIntoquotesCollection :
     InsertIntoquotesCollectionRequiredArguments
@@ -164,10 +164,10 @@ type alias UpdateprofileCollectionRequiredArguments =
     }
 
 
-{-| Updates zero or more records in the collection
+{-| Updates zero or more records in the `profile` collection
 
   - set - Fields that are set will be updated for all records matching the `filter`
-  - filter - Restricts the mutation's impact to records matching the critera
+  - filter - Restricts the mutation's impact to records matching the criteria
   - atMost - The maximum number of records in the collection permitted to be affected
 
 -}
@@ -198,10 +198,10 @@ type alias UpdatequoteTagsCollectionRequiredArguments =
     }
 
 
-{-| Updates zero or more records in the collection
+{-| Updates zero or more records in the `quote_tags` collection
 
   - set - Fields that are set will be updated for all records matching the `filter`
-  - filter - Restricts the mutation's impact to records matching the critera
+  - filter - Restricts the mutation's impact to records matching the criteria
   - atMost - The maximum number of records in the collection permitted to be affected
 
 -}
@@ -232,10 +232,10 @@ type alias UpdatequotesCollectionRequiredArguments =
     }
 
 
-{-| Updates zero or more records in the collection
+{-| Updates zero or more records in the `quotes` collection
 
   - set - Fields that are set will be updated for all records matching the `filter`
-  - filter - Restricts the mutation's impact to records matching the critera
+  - filter - Restricts the mutation's impact to records matching the criteria
   - atMost - The maximum number of records in the collection permitted to be affected
 
 -}

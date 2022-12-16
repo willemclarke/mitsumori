@@ -51,11 +51,8 @@ type Msg
 init : Shared -> Url.Url -> ( Model, Cmd Msg )
 init shared url =
     let
-        filterParams =
-            Route.extractFilterParams url
-
         ( homeModel, homeCmd ) =
-            Home.init shared filterParams
+            Home.init shared
 
         ( signUpModel, _ ) =
             SignUp.init ()
@@ -86,26 +83,17 @@ update : Shared -> Msg -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
 update shared msg model =
     case msg of
         UrlChanged url ->
-            {--To get the Home init to run when the filter params are added to url
-            you need to call the init like below, instead of just updating the route
-        --}
             let
-                route =
-                    Route.fromUrl url
+                cmd =
+                    case Route.fromUrl url of
+                        Just (Route.Home _) ->
+                            Browser.Navigation.reload
 
-                ( model_, cmd_ ) =
-                    init shared url
+                        _ ->
+                            Cmd.none
             in
-            ( { model_ | route = route }, cmd_, Shared.NoUpdate )
+            ( { model | route = Route.fromUrl url }, cmd, Shared.NoUpdate )
 
-        --     cmd =
-        --         case route of
-        --             Just (Route.Home _) ->
-        --                 Browser.Navigation.reload
-        --             _ ->
-        --                 Cmd.none
-        -- in
-        -- ( { model | route = route }, Cmd.none, Shared.NoUpdate )
         NavigateTo route ->
             ( model, Route.pushUrl shared.key route, Shared.NoUpdate )
 

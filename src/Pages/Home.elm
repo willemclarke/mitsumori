@@ -35,8 +35,6 @@ type alias Model =
     , modalVisibility : ModalVisibility
     , modalType : ModalType
     , validated : Validated Problem ValidForm
-    , debounce : Debounce String
-    , filter : Route.Filter
     }
 
 
@@ -82,8 +80,8 @@ type Field
     | Tags
 
 
-init : Shared -> Route.Filter -> ( Model, Cmd Msg )
-init shared filter =
+init : Shared -> ( Model, Cmd Msg )
+init shared =
     ( { quotes = RemoteData.Loading
       , modalForm = { quote = "", author = "", reference = Nothing, tags = "" }
       , modalFormProblems = []
@@ -91,18 +89,9 @@ init shared filter =
       , modalType = NewQuote
       , modalVisibility = Hidden
       , validated = Err Dict.empty
-      , debounce = Debounce.init
-      , filter = filter
       }
-    , Supabase.getQuotes (GotQuotesResponse None) filter shared
+    , Supabase.getQuotes (GotQuotesResponse None) shared
     )
-
-
-debounceConfig : Debounce.Config Msg
-debounceConfig =
-    { strategy = Debounce.later 400
-    , transform = DebounceMsg
-    }
 
 
 
@@ -116,8 +105,6 @@ type Msg
     | OnAuthorChange String
     | OnReferenceChange String
     | OnTagsChange String
-    | OnSearchChange String
-    | SubmitSearchInput String
     | OpenEditQuoteModal Supabase.Quote
     | OpenDeleteQuoteModal Supabase.Quote
     | SubmitAddQuoteModal
@@ -128,7 +115,6 @@ type Msg
     | GotInsertQuoteResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
     | GotDeleteQuoteResponse (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
     | GotEditQuotesResponse String (RemoteData (Graphql.Http.Error (List Supabase.Quote)) (List Supabase.Quote))
-    | DebounceMsg Debounce.Msg
     | NoOp
 
 
@@ -150,41 +136,6 @@ type Action
 update : Shared -> Msg -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
 update shared msg model =
     case msg of
-        OnSearchChange searchTerm ->
-            let
-                ( debounce, cmd ) =
-                    Debounce.push debounceConfig searchTerm model.debounce
-            in
-            ( { model | debounce = debounce, filter = updateFilter (Just searchTerm) model.filter }
-            , cmd
-            , Shared.NoUpdate
-            )
-
-        DebounceMsg msg_ ->
-            let
-                ( debounce, cmd ) =
-                    Debounce.update
-                        debounceConfig
-                        (Debounce.takeLast submitSearchInput)
-                        msg_
-                        model.debounce
-            in
-            ( { model | debounce = debounce }, cmd, Shared.NoUpdate )
-
-        SubmitSearchInput string ->
-            let
-                searchTerm =
-                    if String.isEmpty string then
-                        Nothing
-
-                    else
-                        Just string
-
-                newFilter =
-                    updateFilter searchTerm model.filter
-            in
-            ( { model | filter = newFilter }, Route.appendFilterParams shared.key newFilter, Shared.NoUpdate )
-
         OpenAddQuoteModal ->
             ( { model | modalVisibility = Visible }, Cmd.none, Shared.NoUpdate )
 
@@ -299,7 +250,7 @@ update shared msg model =
                         ( model_, cmd_, shared_ ) =
                             if String.isEmpty tags then
                                 ( { model | modalIsLoading = False, modalVisibility = Hidden, modalType = NewQuote }
-                                , Supabase.getQuotes (GotQuotesResponse AddQuote) Route.emptyFilter shared
+                                , Supabase.getQuotes (GotQuotesResponse AddQuote) shared
                                 , Shared.NoUpdate
                                 )
 
@@ -324,7 +275,7 @@ update shared msg model =
                         ( model_, cmd_, shared_ ) =
                             if String.isEmpty tags then
                                 ( { model | modalIsLoading = False, modalVisibility = Hidden, modalType = NewQuote, modalForm = emptyModalForm }
-                                , Supabase.getQuotes (GotQuotesResponse EditQuote) Route.emptyFilter shared
+                                , Supabase.getQuotes (GotQuotesResponse EditQuote) shared
                                 , Shared.NoUpdate
                                 )
 
@@ -343,7 +294,7 @@ update shared msg model =
             case response of
                 RemoteData.Success _ ->
                     ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False, modalForm = emptyModalForm }
-                    , Supabase.getQuotes (GotQuotesResponse action) Route.emptyFilter shared
+                    , Supabase.getQuotes (GotQuotesResponse action) shared
                     , Shared.NoUpdate
                     )
 
@@ -354,7 +305,7 @@ update shared msg model =
             case quotesResponse of
                 RemoteData.Success _ ->
                     ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
-                    , Supabase.getQuotes (GotQuotesResponse DeleteQuote) Route.emptyFilter shared
+                    , Supabase.getQuotes (GotQuotesResponse DeleteQuote) shared
                     , Shared.NoUpdate
                     )
 
@@ -363,11 +314,6 @@ update shared msg model =
 
         NoOp ->
             ( model, Cmd.none, Shared.NoUpdate )
-
-
-submitSearchInput : String -> Cmd Msg
-submitSearchInput searchTerm =
-    Task.perform SubmitSearchInput (Task.succeed searchTerm)
 
 
 updateFilter : Maybe String -> Route.Filter -> Route.Filter
@@ -504,7 +450,6 @@ view shared model =
     div
         [ class "flex flex-col h-full w-full items-center" ]
         [ viewHeader model.modalForm model.validated model.modalType model.modalVisibility model.modalIsLoading
-        , viewFilter model.filter
         , viewQuotes model.quotes shared
         ]
 
@@ -521,23 +466,6 @@ addQuoteButton form validated modalType visibility isLoading =
     div [ class "flex justify-end" ]
         [ button [ class "transition ease-in-out hover:-translate-y-0.5 duration-300", onClick OpenAddQuoteModal ] [ Icons.plus ]
         , viewQuoteModal form validated modalType visibility isLoading
-        ]
-
-
-viewFilter : Route.Filter -> Html Msg
-viewFilter { searchTerm } =
-    div [ class "flex flex-col my-6" ]
-        [ label [ class "text-gray-900 mb-1", for "search" ]
-            [ text "Search" ]
-        , input
-            [ class "p-2 border border-gray-300 rounded-lg hover:border-gray-500 focus:border-gray-700 focus:outline-0 focus:ring focus:ring-slate-300"
-            , id "search"
-            , value (Maybe.withDefault "" searchTerm)
-            , placeholder "Search quote text here"
-            , type_ "text"
-            , onInput OnSearchChange
-            ]
-            [ text (Maybe.withDefault "" searchTerm) ]
         ]
 
 

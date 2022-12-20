@@ -4,7 +4,6 @@ import Components.Icons as Icons
 import Components.Modal as Modal
 import Components.Spinner as Spinner
 import Components.Toast as Toast
-import Debounce exposing (Debounce)
 import Dict
 import Graphql.Http
 import Html exposing (Html, a, button, div, hr, input, label, p, span, text, textarea)
@@ -15,7 +14,6 @@ import RemoteData exposing (RemoteData(..))
 import Routing.Route as Route
 import Shared exposing (Shared)
 import Supabase
-import Task
 import User
 import Validator
 import Validator.Maybe
@@ -225,13 +223,22 @@ update shared msg model =
                     ( { model | validated = validatedForm }, Cmd.none, Shared.NoUpdate )
 
         SubmitDeleteQuoteModal quoteId ->
-            ( { model | modalIsLoading = True, modalForm = emptyModalForm }
+            ( { model | quotes = RemoteData.Loading, modalIsLoading = True }
             , Supabase.deleteQuote GotDeleteQuoteResponse quoteId shared
             , Shared.NoUpdate
             )
 
         GotQuotesResponse action quotesResponse ->
-            ( { model | quotes = quotesResponse }, Cmd.none, toastFromAction action )
+            ( { model
+                | quotes = quotesResponse
+                , modalForm = emptyModalForm
+                , modalVisibility = Hidden
+                , modalType = NewQuote
+                , modalIsLoading = False
+              }
+            , Cmd.none
+            , toastFromAction action
+            )
 
         -- TODO: handle case of error here better via toasts
         GotInsertQuoteResponse quotesResponse ->
@@ -249,13 +256,13 @@ update shared msg model =
 
                         ( model_, cmd_, shared_ ) =
                             if String.isEmpty tags then
-                                ( { model | modalIsLoading = False, modalVisibility = Hidden, modalType = NewQuote }
+                                ( { model | quotes = RemoteData.Loading }
                                 , Supabase.getQuotes (GotQuotesResponse AddQuote) shared
                                 , Shared.NoUpdate
                                 )
 
                             else
-                                ( model
+                                ( { model | quotes = RemoteData.Loading }
                                 , Supabase.insertQuoteTags (GotQuoteTagsResponse AddQuote) { quoteId = quoteId, tags = stringTagsToList tags } shared
                                 , Shared.NoUpdate
                                 )
@@ -274,7 +281,7 @@ update shared msg model =
 
                         ( model_, cmd_, shared_ ) =
                             if String.isEmpty tags then
-                                ( { model | modalIsLoading = False, modalVisibility = Hidden, modalType = NewQuote, modalForm = emptyModalForm }
+                                ( { model | quotes = RemoteData.Loading }
                                 , Supabase.getQuotes (GotQuotesResponse EditQuote) shared
                                 , Shared.NoUpdate
                                 )
@@ -304,7 +311,7 @@ update shared msg model =
         GotDeleteQuoteResponse quotesResponse ->
             case quotesResponse of
                 RemoteData.Success _ ->
-                    ( { model | modalVisibility = Hidden, modalType = NewQuote, modalIsLoading = False }
+                    ( { model | modalIsLoading = False, modalVisibility = Hidden, modalType = NewQuote }
                     , Supabase.getQuotes (GotQuotesResponse DeleteQuote) shared
                     , Shared.NoUpdate
                     )

@@ -28,6 +28,7 @@ type alias Model =
     , signUpModel : SignUp.Model
     , signInModel : SignIn.Model
     , route : Maybe Route
+    , isDropdownOpen : Bool
     }
 
 
@@ -46,6 +47,7 @@ type Msg
     | SignOut
     | GotSignOutResponse JE.Value
     | CloseToast Uuid.Uuid
+    | DropdownClicked
     | Tick Time.Posix
     | NoOp
 
@@ -66,6 +68,7 @@ init shared url =
       , signUpModel = signUpModel
       , signInModel = signInModel
       , route = Route.fromUrl url
+      , isDropdownOpen = False
       }
     , Cmd.map HomeMsg homeCmd
     )
@@ -130,6 +133,9 @@ update shared msg model =
         CloseToast id ->
             ( model, Cmd.none, Shared.CloseToast id )
 
+        DropdownClicked ->
+            ( { model | isDropdownOpen = not model.isDropdownOpen }, Cmd.none, Shared.NoUpdate )
+
         Tick _ ->
             let
                 closeToastCmds =
@@ -188,7 +194,7 @@ view msgMapper shared model =
 
         content =
             div [ class "flex flex-col h-full w-full" ]
-                [ viewNav shared
+                [ viewNav { isDropdownOpen = model.isDropdownOpen } shared
                 , div [ class "flex flex-col items-center justify-center h-full w-full" ]
                     [ pageView shared model, Toast.region toasts ]
                 ]
@@ -220,8 +226,8 @@ pageView ({ user } as shared) model =
             viewNotFoundPage
 
 
-viewNav : Shared -> Html Msg
-viewNav { user } =
+viewNav : { isDropdownOpen : Bool } -> Shared -> Html Msg
+viewNav { isDropdownOpen } { user } =
     let
         href_ =
             if User.isAuthenticated user then
@@ -236,14 +242,14 @@ viewNav { user } =
             [ if User.isAuthenticated user then
                 Dropdown.create
                     { username = User.username user
-                    , onClick = NoOp
-                    , options = [ { label = "Signout", onClick = SignOut } ]
+                    , onClick = DropdownClicked
+                    , isOpen = isDropdownOpen
+                    , options =
+                        [ { label = "Signout", onClick = SignOut }
+                        , { label = "Testing my lashen", onClick = NoOp }
+                        ]
                     }
                     |> Dropdown.view
-                -- div [ class "font-sans" ]
-                --     [ Button.create { label = "Sign out", onClick = SignOut }
-                --         |> Button.view
-                --     ]
 
               else
                 div [ class "font-sans space-x-2" ]

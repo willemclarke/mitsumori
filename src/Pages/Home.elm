@@ -472,7 +472,7 @@ addQuoteButton : ModalForm -> Validated Problem ValidForm -> ModalType -> ModalV
 addQuoteButton form validated modalType visibility isLoading =
     div [ class "flex justify-end" ]
         [ button [ class "transition ease-in-out hover:-translate-y-0.5 duration-300", onClick OpenAddQuoteModal ] [ Icons.plus ]
-        , viewQuoteModal form validated modalType visibility isLoading
+        , viewModal form validated modalType visibility isLoading
         ]
 
 
@@ -559,8 +559,8 @@ viewQuoteTag tag =
 {- This fn is responsible for displaying each type of Modal (adding a quote, editing, deleting) -}
 
 
-viewQuoteModal : ModalForm -> Validated Problem ValidForm -> ModalType -> ModalVisibility -> Bool -> Html Msg
-viewQuoteModal form validated modalType visibility isLoading =
+viewModal : ModalForm -> Validated Problem ValidForm -> ModalType -> ModalVisibility -> Bool -> Html Msg
+viewModal form validated modalType visibility isLoading =
     case visibility of
         Visible ->
             case modalType of

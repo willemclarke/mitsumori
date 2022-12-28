@@ -3,6 +3,7 @@ module Routing.Router exposing (Model, Msg(..), init, subscriptions, update, vie
 import Browser
 import Browser.Navigation
 import Components.Button as Button
+import Components.Dropdown as Dropdown
 import Components.Toast as Toast
 import Html exposing (Html, a, div, text)
 import Html.Attributes exposing (class, href)
@@ -27,6 +28,7 @@ type alias Model =
     , signUpModel : SignUp.Model
     , signInModel : SignIn.Model
     , route : Maybe Route
+    , isDropdownOpen : Bool
     }
 
 
@@ -45,7 +47,9 @@ type Msg
     | SignOut
     | GotSignOutResponse JE.Value
     | CloseToast Uuid.Uuid
+    | DropdownClicked
     | Tick Time.Posix
+    | NoOp
 
 
 init : Shared -> Url.Url -> ( Model, Cmd Msg )
@@ -64,6 +68,7 @@ init shared url =
       , signUpModel = signUpModel
       , signInModel = signInModel
       , route = Route.fromUrl url
+      , isDropdownOpen = False
       }
     , Cmd.map HomeMsg homeCmd
     )
@@ -128,6 +133,9 @@ update shared msg model =
         CloseToast id ->
             ( model, Cmd.none, Shared.CloseToast id )
 
+        DropdownClicked ->
+            ( { model | isDropdownOpen = not model.isDropdownOpen }, Cmd.none, Shared.NoUpdate )
+
         Tick _ ->
             let
                 closeToastCmds =
@@ -136,6 +144,9 @@ update shared msg model =
                         |> Cmd.batch
             in
             ( model, closeToastCmds, Shared.NoUpdate )
+
+        NoOp ->
+            ( model, Cmd.none, Shared.NoUpdate )
 
 
 after : Float -> msg -> Cmd msg
@@ -183,7 +194,7 @@ view msgMapper shared model =
 
         content =
             div [ class "flex flex-col h-full w-full" ]
-                [ viewNav shared
+                [ viewNav { isDropdownOpen = model.isDropdownOpen } shared
                 , div [ class "flex flex-col items-center justify-center h-full w-full" ]
                     [ pageView shared model, Toast.region toasts ]
                 ]
@@ -215,8 +226,8 @@ pageView ({ user } as shared) model =
             viewNotFoundPage
 
 
-viewNav : Shared -> Html Msg
-viewNav { user } =
+viewNav : { isDropdownOpen : Bool } -> Shared -> Html Msg
+viewNav { isDropdownOpen } { user } =
     let
         href_ =
             if User.isAuthenticated user then
@@ -229,10 +240,16 @@ viewNav { user } =
         [ a [ href href_, class "text-3xl transition ease-in-out hover:-translate-y-0.5 duration-300" ] [ text "mitsumori" ]
         , div [ class "flex" ]
             [ if User.isAuthenticated user then
-                div [ class "font-sans" ]
-                    [ Button.create { label = "Sign out", onClick = SignOut }
-                        |> Button.view
-                    ]
+                Dropdown.create
+                    { username = User.username user
+                    , onClick = DropdownClicked
+                    , isOpen = isDropdownOpen
+                    , options =
+                        [ { label = "Signout", onClick = SignOut }
+                        , { label = "Testing my lashen", onClick = NoOp }
+                        ]
+                    }
+                    |> Dropdown.view
 
               else
                 div [ class "font-sans space-x-2" ]

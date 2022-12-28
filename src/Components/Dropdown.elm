@@ -53,13 +53,12 @@ view (Dropdown ({ username, options, isOpen } as config)) =
                 , ariaExpanded ariaExpanded_
                 , ariaHasPopup "true"
                 , onClick config.onClick
-                , onBlur config.onBlur
                 ]
                 [ text username ]
             ]
         , HE.viewIf isOpen
             (div
-                [ class "absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none transition-opacity duration-300 ease-in-out"
+                [ class "absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none animate-in fade-in duration-400"
                 , role "menu"
                 , ariaLabelledby "menu-button"
                 , tabindex -1
@@ -67,9 +66,10 @@ view (Dropdown ({ username, options, isOpen } as config)) =
                 [ div [ class "flex flex-col p-1 font-sans", role "none" ]
                     (List.map
                         (\option ->
-                            a
+                            div
                                 [ class "text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100/60"
                                 , onClick option.onClick
+                                , onBlur config.onBlur
                                 , tabindex -1
                                 , role "menuitem"
                                 ]

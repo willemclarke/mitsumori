@@ -42,13 +42,13 @@ viewToast type_ icon body onClose =
         appearance =
             case type_ of
                 Success _ ->
-                    "bg-gray-800 text-white"
+                    "bg-gray-800"
 
                 Error _ ->
-                    "bg-red-400 text-white"
+                    "bg-red-400"
     in
     div
-        [ class <| appearance ++ " animate-in ease-in slide-in-from-bottom duration-400 shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden"
+        [ class <| appearance ++ "text-slate-50 shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden animate-in ease-in slide-in-from-bottom fade-in duration-400"
         ]
         [ div
             [ class "p-4"

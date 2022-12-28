@@ -47,7 +47,8 @@ type Msg
     | SignOut
     | GotSignOutResponse JE.Value
     | CloseToast Uuid.Uuid
-    | DropdownClicked
+    | OnDropdownClicked
+    | OnDropdownBlurred
     | Tick Time.Posix
     | NoOp
 
@@ -133,8 +134,11 @@ update shared msg model =
         CloseToast id ->
             ( model, Cmd.none, Shared.CloseToast id )
 
-        DropdownClicked ->
+        OnDropdownClicked ->
             ( { model | isDropdownOpen = not model.isDropdownOpen }, Cmd.none, Shared.NoUpdate )
+
+        OnDropdownBlurred ->
+            ( { model | isDropdownOpen = False }, Cmd.none, Shared.NoUpdate )
 
         Tick _ ->
             let
@@ -242,7 +246,8 @@ viewNav { isDropdownOpen } { user } =
             [ if User.isAuthenticated user then
                 Dropdown.create
                     { username = User.username user
-                    , onClick = DropdownClicked
+                    , onClick = OnDropdownClicked
+                    , onBlur = OnDropdownBlurred
                     , isOpen = isDropdownOpen
                     , options =
                         [ { label = "Signout", onClick = SignOut }

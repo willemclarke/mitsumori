@@ -4,13 +4,14 @@ import Components.Button as Button
 import Html exposing (Html, a, button, div, option, text)
 import Html.Attributes exposing (class, id, tabindex, type_)
 import Html.Attributes.Aria exposing (ariaExpanded, ariaHasPopup, ariaLabelledby, role)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onBlur, onClick)
 import Html.Extra as HE
 
 
 type alias Config msg =
     { username : String
     , onClick : msg
+    , onBlur : msg
     , isOpen : Bool
     , options : List (Option msg)
     }
@@ -52,12 +53,13 @@ view (Dropdown ({ username, options, isOpen } as config)) =
                 , ariaExpanded ariaExpanded_
                 , ariaHasPopup "true"
                 , onClick config.onClick
+                , onBlur config.onBlur
                 ]
                 [ text username ]
             ]
         , HE.viewIf isOpen
             (div
-                [ class "absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none transition-opacity"
+                [ class "absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none transition-opacity duration-300 ease-in-out"
                 , role "menu"
                 , ariaLabelledby "menu-button"
                 , tabindex -1

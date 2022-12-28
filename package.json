@@ -12,7 +12,6 @@
     "serve": "vite preview",
     "lint": "elm-review",
     "test": "elm-test-rs",
-    "graphql:gen": "VITE_SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mbW1tbG1ibWhvZ3lid2NmaHFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NjI0NjQ0MzQsImV4cCI6MTk3ODA0MDQzNH0.UMgK0VTp_QhOUQsj1FO7hB8S3_FRHerT6t5hyBES4tE npx @dillonkearns/elm-graphql https://mfmmmlmbmhogybwcfhqm.supabase.co/graphql/v1 --base MitsumoriGql  --header 'apikey:  $VITE_SUPABASE_KEY'",
     "tailwind:run": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch"
   },
   "devDependencies": {

@@ -31,9 +31,9 @@ id =
     Object.selectionForField "ScalarCodecs.Uuid" "id" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
 
 
-created_at : SelectionSet ScalarCodecs.Datetime MitsumoriApi.Object.Profile
-created_at =
-    Object.selectionForField "ScalarCodecs.Datetime" "created_at" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecDatetime |> .decoder)
+createdat : SelectionSet ScalarCodecs.Datetime MitsumoriApi.Object.Profile
+createdat =
+    Object.selectionForField "ScalarCodecs.Datetime" "createdat" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecDatetime |> .decoder)
 
 
 username : SelectionSet String MitsumoriApi.Object.Profile

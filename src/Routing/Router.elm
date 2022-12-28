@@ -3,6 +3,7 @@ module Routing.Router exposing (Model, Msg(..), init, subscriptions, update, vie
 import Browser
 import Browser.Navigation
 import Components.Button as Button
+import Components.Dropdown as Dropdown
 import Components.Toast as Toast
 import Html exposing (Html, a, div, text)
 import Html.Attributes exposing (class, href)
@@ -46,6 +47,7 @@ type Msg
     | GotSignOutResponse JE.Value
     | CloseToast Uuid.Uuid
     | Tick Time.Posix
+    | NoOp
 
 
 init : Shared -> Url.Url -> ( Model, Cmd Msg )
@@ -136,6 +138,9 @@ update shared msg model =
                         |> Cmd.batch
             in
             ( model, closeToastCmds, Shared.NoUpdate )
+
+        NoOp ->
+            ( model, Cmd.none, Shared.NoUpdate )
 
 
 after : Float -> msg -> Cmd msg
@@ -229,10 +234,16 @@ viewNav { user } =
         [ a [ href href_, class "text-3xl transition ease-in-out hover:-translate-y-0.5 duration-300" ] [ text "mitsumori" ]
         , div [ class "flex" ]
             [ if User.isAuthenticated user then
-                div [ class "font-sans" ]
-                    [ Button.create { label = "Sign out", onClick = SignOut }
-                        |> Button.view
-                    ]
+                Dropdown.create
+                    { username = User.username user
+                    , onClick = NoOp
+                    , options = [ { label = "Signout", onClick = SignOut } ]
+                    }
+                    |> Dropdown.view
+                -- div [ class "font-sans" ]
+                --     [ Button.create { label = "Sign out", onClick = SignOut }
+                --         |> Button.view
+                --     ]
 
               else
                 div [ class "font-sans space-x-2" ]

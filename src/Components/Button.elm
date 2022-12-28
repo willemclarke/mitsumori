@@ -1,4 +1,4 @@
-module Components.Button exposing (create, view, withAdditionalStyles, withIsDisabled, withIsLoading, withWhiteAppearance)
+module Components.Button exposing (ButtonType(..), create, view, withAdditionalStyles, withButtonType, withIsDisabled, withIsLoading, withWhiteAppearance)
 
 import Html exposing (Html, button, div, text)
 import Html.Attributes exposing (class, disabled, style, type_)
@@ -13,6 +13,7 @@ type alias Config msg =
     , isDisabled : Bool
     , appearence : Appearance
     , additionalStyles : Maybe String
+    , type_ : ButtonType
     }
 
 
@@ -25,9 +26,14 @@ type Appearance
     | White
 
 
+type ButtonType
+    = Submit
+    | Button_
+
+
 create : { label : String, onClick : msg } -> Button msg
 create { label, onClick } =
-    Button { label = label, onClick = onClick, isLoading = False, isDisabled = False, appearence = Black, additionalStyles = Nothing }
+    Button { label = label, onClick = onClick, isLoading = False, isDisabled = False, appearence = Black, additionalStyles = Nothing, type_ = Submit }
 
 
 withIsLoading : Bool -> Button msg -> Button msg
@@ -50,6 +56,11 @@ withWhiteAppearance (Button config) =
     Button { config | appearence = White }
 
 
+withButtonType : ButtonType -> Button msg -> Button msg
+withButtonType buttonType (Button config) =
+    Button { config | type_ = buttonType }
+
+
 colourSchemeToString : Appearance -> String
 colourSchemeToString colour =
     case colour of
@@ -58,6 +69,16 @@ colourSchemeToString colour =
 
         White ->
             "bg-white text-black border border-gray-300 hover:border-gray-500 hover:bg-gray-100/90"
+
+
+buttonTypeToString : ButtonType -> String
+buttonTypeToString buttonType =
+    case buttonType of
+        Submit ->
+            "submit"
+
+        Button_ ->
+            "button"
 
 
 spinner : Html msg
@@ -85,7 +106,7 @@ view (Button ({ label, additionalStyles, isLoading, isDisabled, appearence } as 
         [ class classes
         , onClick config.onClick
         , disabled isDisabled
-        , type_ "submit"
+        , type_ (buttonTypeToString config.type_)
         ]
         [ div [ class "flex items-center" ]
             [ HE.viewIf isLoading <|

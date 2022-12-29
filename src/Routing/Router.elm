@@ -251,7 +251,9 @@ viewNav { isDropdownOpen } { user } =
                     , isOpen = isDropdownOpen
                     , options =
                         [ { label = "Signout", onClick = SignOut }
-                        , { label = "Testing my lashen", onClick = NoOp }
+                        , { label = "Profile", onClick = NoOp }
+
+                        -- todo `NavigateTo Route.Profile once setup
                         ]
                     }
                     |> Dropdown.view

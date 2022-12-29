@@ -1,11 +1,11 @@
 module Components.Dropdown exposing (create, view)
 
-import Components.Button as Button
-import Html exposing (Html, a, button, div, option, text)
+import Html exposing (Html, button, div, option, text)
 import Html.Attributes exposing (class, id, tabindex, type_)
 import Html.Attributes.Aria exposing (ariaExpanded, ariaHasPopup, ariaLabelledby, role)
-import Html.Events exposing (onBlur, onClick)
+import Html.Events exposing (onBlur, onClick, onMouseDown, preventDefaultOn)
 import Html.Extra as HE
+import Json.Decode as JD
 
 
 type alias Config msg =
@@ -53,6 +53,7 @@ view (Dropdown ({ username, options, isOpen } as config)) =
                 , ariaExpanded ariaExpanded_
                 , ariaHasPopup "true"
                 , onClick config.onClick
+                , onBlur config.onBlur
                 ]
                 [ text username ]
             ]
@@ -63,13 +64,17 @@ view (Dropdown ({ username, options, isOpen } as config)) =
                 , ariaLabelledby "menu-button"
                 , tabindex -1
                 ]
-                [ div [ class "flex flex-col p-1 font-sans", role "none" ]
+                [ div
+                    [ class "flex flex-col p-1 font-sans"
+                    , role "none"
+                    ]
                     (List.map
                         (\option ->
                             div
-                                [ class "text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100/60"
-                                , onClick option.onClick
-                                , onBlur config.onBlur
+                                [ class "text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100/60 cursor-pointer"
+                                , onMouseDown option.onClick
+                                , preventDefaultOn "mousedown" (JD.succeed ( option.onClick, True ))
+                                , onClick config.onBlur
                                 , tabindex -1
                                 , role "menuitem"
                                 ]

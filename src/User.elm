@@ -1,4 +1,4 @@
-module User exposing (User, UserInfo, UserType(..), decoder, isAuthenticated, unauthenticated, userId, userJwt, userType, username)
+module User exposing (User, UserInfo, UserType(..), decoder, isAuthenticated, unauthenticated, user, userId, userJwt, userType, username)
 
 import Json.Decode as JD
 
@@ -41,6 +41,26 @@ userDecoder =
         (JD.field "user" (JD.field "email" JD.string))
         (JD.field "user" (JD.field "user_metadata" (JD.field "username" JD.string)))
         (JD.field "user" (JD.field "id" JD.string))
+
+
+
+{- This fn is only used in Router.elm where we know definitively that the user is authenticated, hence
+   the dummy userInfo record
+-}
+
+
+user : User -> UserInfo
+user (User type_) =
+    case type_ of
+        Authenticated info ->
+            info
+
+        Unauthenticated ->
+            { jwt = ""
+            , email = ""
+            , username = ""
+            , id = ""
+            }
 
 
 userJwt : User -> String
@@ -86,8 +106,8 @@ unauthenticated =
 username : User -> String
 username (User type_) =
     case type_ of
-        Authenticated user ->
-            user.username
+        Authenticated user_ ->
+            user_.username
 
         Unauthenticated ->
             ""

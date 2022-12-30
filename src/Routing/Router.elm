@@ -248,18 +248,18 @@ viewNav { isDropdownOpen } { user } =
         , div [ class "flex" ]
             [ if User.isAuthenticated user then
                 Dropdown.create
-                    { username = User.username user
+                    { user = User.user user
                     , onClick = OnDropdownClicked
                     , onBlur = OnDropdownBlurred
                     , isOpen = isDropdownOpen
                     , options =
-                        [ { label = "Signout"
-                          , onClick = SignOut
-                          , icon = Just (HeroIcons.logout [ SvgAttr.class "w-5 h-5" ])
-                          }
-                        , { label = "Profile"
+                        [ { label = "Profile"
                           , onClick = NoOp
                           , icon = Just (HeroIcons.userCircle [ SvgAttr.class "w-5 h-5" ])
+                          }
+                        , { label = "Signout"
+                          , onClick = SignOut
+                          , icon = Just (HeroIcons.logout [ SvgAttr.class "w-5 h-5" ])
                           }
                         ]
                     }

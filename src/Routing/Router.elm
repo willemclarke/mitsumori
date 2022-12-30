@@ -4,7 +4,9 @@ import Browser
 import Browser.Navigation
 import Components.Button as Button
 import Components.Dropdown as Dropdown
+import Components.Icons as Icons
 import Components.Toast as Toast
+import Heroicons.Outline as HeroIcons
 import Html exposing (Html, a, div, text)
 import Html.Attributes exposing (class, href)
 import Json.Decode as JD
@@ -16,6 +18,7 @@ import Process
 import Routing.Route as Route exposing (Route)
 import Shared exposing (Shared)
 import Supabase
+import Svg.Attributes as SvgAttr
 import Task
 import Time
 import Url
@@ -250,10 +253,14 @@ viewNav { isDropdownOpen } { user } =
                     , onBlur = OnDropdownBlurred
                     , isOpen = isDropdownOpen
                     , options =
-                        [ { label = "Signout", onClick = SignOut }
-                        , { label = "Profile", onClick = NoOp }
-
-                        -- todo `NavigateTo Route.Profile once setup
+                        [ { label = "Signout"
+                          , onClick = SignOut
+                          , icon = Just (HeroIcons.logout [ SvgAttr.class "w-5 h-5" ])
+                          }
+                        , { label = "Profile"
+                          , onClick = NoOp
+                          , icon = Just (HeroIcons.userCircle [ SvgAttr.class "w-5 h-5" ])
+                          }
                         ]
                     }
                     |> Dropdown.view

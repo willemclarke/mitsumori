@@ -1,6 +1,6 @@
 module Components.Dropdown exposing (create, view)
 
-import Html exposing (Html, button, div, option, text)
+import Html exposing (Html, button, div, option, span, text)
 import Html.Attributes exposing (class, id, tabindex, type_)
 import Html.Attributes.Aria exposing (ariaExpanded, ariaHasPopup, ariaLabelledby, role)
 import Html.Events exposing (onBlur, onClick, onMouseDown, preventDefaultOn)
@@ -20,6 +20,7 @@ type alias Config msg =
 type alias Option msg =
     { label : String
     , onClick : msg
+    , icon : Maybe (Html msg)
     }
 
 
@@ -71,14 +72,16 @@ view (Dropdown ({ username, options, isOpen } as config)) =
                     (List.map
                         (\option ->
                             div
-                                [ class "text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100/60 cursor-pointer"
+                                [ class "flex items-center text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100/60 cursor-pointer"
                                 , onMouseDown option.onClick
                                 , preventDefaultOn "mousedown" (JD.succeed ( option.onClick, True ))
                                 , onClick config.onBlur
                                 , tabindex -1
                                 , role "menuitem"
                                 ]
-                                [ text option.label ]
+                                [ HE.viewMaybe (\icon -> span [ class "mr-2" ] [ icon ]) option.icon
+                                , text option.label
+                                ]
                         )
                         options
                     )

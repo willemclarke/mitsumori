@@ -1,11 +1,13 @@
 module Components.Dropdown exposing (create, view)
 
+import Heroicons.Outline as HeroIcons
 import Html exposing (Html, button, div, option, span, text)
 import Html.Attributes exposing (class, id, tabindex, type_)
 import Html.Attributes.Aria exposing (ariaExpanded, ariaHasPopup, ariaLabelledby, role)
 import Html.Events exposing (onBlur, onClick, onMouseDown, preventDefaultOn)
 import Html.Extra as HE
 import Json.Decode as JD
+import Svg.Attributes as SvgAttr
 import User
 
 
@@ -49,7 +51,7 @@ view (Dropdown ({ user, options, isOpen } as config)) =
         ]
         [ div []
             [ button
-                [ class " py-2 px-4 bg-white text-black border border-gray-300 hover:border-gray-500 hover:bg-gray-100/90 shadow hover:shadow-md focus:ring focus:ring-slate-300 rounded-md"
+                [ class "flex items-center py-2 px-4 bg-white text-black border border-gray-300 hover:border-gray-500 hover:bg-gray-100/90 shadow hover:shadow-md focus:ring focus:ring-slate-300 rounded-md"
                 , type_ "button"
                 , id "menu-button"
                 , ariaExpanded ariaExpanded_
@@ -57,7 +59,9 @@ view (Dropdown ({ user, options, isOpen } as config)) =
                 , onClick config.onClick
                 , onBlur config.onBlur
                 ]
-                [ text user.username ]
+                [ text user.username
+                , span [ class "ml-1" ] [ HeroIcons.chevronDown [ SvgAttr.class "w-5 h-5" ] ]
+                ]
             ]
         , HE.viewIf isOpen
             (div

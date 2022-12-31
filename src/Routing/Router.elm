@@ -65,7 +65,7 @@ init shared url =
             Home.init shared
 
         ( profileModel, _ ) =
-            Profile.init ()
+            Profile.init shared url
 
         ( signUpModel, _ ) =
             SignUp.init ()
@@ -98,10 +98,19 @@ update : Shared -> Msg -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
 update shared msg model =
     case msg of
         UrlChanged url ->
-            ( { model | route = Route.fromUrl url }, Cmd.none, Shared.NoUpdate )
+            let
+                cmd =
+                    case Route.fromUrl url of
+                        Just (Route.Home _) ->
+                            Browser.Navigation.reload
+
+                        _ ->
+                            Cmd.none
+            in
+            ( { model | route = Route.fromUrl url }, cmd, Shared.NoUpdate )
 
         NavigateTo route ->
-            ( model, Route.pushUrl shared.key route, Shared.NoUpdate )
+            ( model, Route.replaceUrl shared.key route, Shared.NoUpdate )
 
         HomeMsg homeMsg ->
             updateHome shared model homeMsg

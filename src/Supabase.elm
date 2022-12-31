@@ -1,4 +1,4 @@
-port module Supabase exposing (AuthError, InsertQuoteDto, Quote, Quotes, Tag, authErrorDecoder, deleteQuote, editQuote, getQuotes, getSession, insertQuote, insertQuoteTags, quotesQuery, sessionResponse, signIn, signInResponse, signOut, signOutResponse, signUp, signUpResponse)
+port module Supabase exposing (AuthError, InsertQuoteDto, Profiles, Quote, Quotes, Tag, authErrorDecoder, deleteQuote, editQuote, getProfile, getQuotes, getSession, insertQuote, insertQuoteTags, quotesQuery, sessionResponse, signIn, signInResponse, signOut, signOutResponse, signUp, signUpResponse)
 
 import Graphql.Http
 import Graphql.Operation exposing (RootMutation, RootQuery)
@@ -9,6 +9,9 @@ import Json.Encode as JE
 import MitsumoriApi.Enum.OrderByDirection exposing (OrderByDirection(..))
 import MitsumoriApi.Mutation as Mutation
 import MitsumoriApi.Object
+import MitsumoriApi.Object.Profile as Profile
+import MitsumoriApi.Object.ProfileConnection as ProfileConnection
+import MitsumoriApi.Object.ProfileEdge as ProfileEdge
 import MitsumoriApi.Object.Quote_tags as QuoteTags
 import MitsumoriApi.Object.Quote_tagsConnection as QuoteTagsConnection
 import MitsumoriApi.Object.Quote_tagsEdge as QuoteTagsEdge
@@ -48,6 +51,17 @@ type alias Quote =
     }
 
 
+type alias Profiles =
+    { profiles : List Profile }
+
+
+type alias Profile =
+    { id : String
+    , username : String
+    , createdAt : Time.Posix
+    }
+
+
 type alias Tag =
     { id : String
     , text : String
@@ -68,6 +82,15 @@ type alias QuoteTagsDto =
     { quoteId : String
     , tags : List String
     }
+
+
+getProfile : (RemoteData (Graphql.Http.Error Profiles) Profiles -> msg) -> String -> Shared -> Cmd msg
+getProfile gotResponseMsg userId { user, supabase } =
+    profileQuery userId
+        |> Graphql.Http.queryRequest supabase.supabaseUrl
+        |> Graphql.Http.withHeader "apikey" supabase.supabaseKey
+        |> Graphql.Http.withHeader "Authorization" ("Bearer " ++ User.userJwt user)
+        |> Graphql.Http.send (RemoteData.fromResult >> gotResponseMsg)
 
 
 getQuotes : (RemoteData (Graphql.Http.Error Quotes) Quotes -> msg) -> Shared -> Cmd msg
@@ -238,6 +261,44 @@ quotesQuery =
         )
         quotesCollection
         |> SelectionSet.nonNullOrFail
+
+
+profileQuery : String -> SelectionSet Profiles RootQuery
+profileQuery userId =
+    Query.profileCollection
+        (\optionals ->
+            { optionals
+                | first = Present 1
+                , filter =
+                    Present
+                        { id = Present { eq = Present userId, in_ = Absent, neq = Absent }
+                        , created_at = Absent
+                        , username = Absent
+                        , nodeId = Absent
+                        }
+            }
+        )
+        profileCollection
+        |> SelectionSet.nonNullOrFail
+
+
+profileCollection : SelectionSet Profiles MitsumoriApi.Object.ProfileConnection
+profileCollection =
+    SelectionSet.succeed Profiles
+        |> SelectionSet.with profileEdge
+
+
+profileEdge : SelectionSet (List Profile) MitsumoriApi.Object.ProfileConnection
+profileEdge =
+    ProfileConnection.edges (ProfileEdge.node profileNode)
+
+
+profileNode : SelectionSet Profile MitsumoriApi.Object.Profile
+profileNode =
+    SelectionSet.map3 Profile
+        Profile.id
+        Profile.username
+        Profile.created_at
 
 
 quotesCollection : SelectionSet Quotes MitsumoriApi.Object.QuotesConnection

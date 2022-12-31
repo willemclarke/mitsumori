@@ -71,11 +71,11 @@ view (Dropdown ({ user, options, isOpen } as config)) =
                 , tabindex -1
                 ]
                 [ div
-                    [ class "flex flex-col text-gray-700 text-sm"
+                    [ class "flex flex-col text-gray-700 text-sm my-1"
                     , role "none"
                     ]
                     -- header
-                    [ div [ class "px-4 py-2 font-normal border-b my-1" ]
+                    [ div [ class "px-4 py-2 font-normal border-b" ]
                         [ text "Signed in as ", span [ class "font-semibold" ] [ text user.email ] ]
 
                     -- options

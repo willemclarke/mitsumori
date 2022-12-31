@@ -1,8 +1,8 @@
-module Pages.Profile exposing (Model, Msg(..), init, update, view)
+module Pages.Profile exposing (Model, Msg(..), init, subscriptions, update, view)
 
-import Html exposing (Html, a, button, div, hr, input, label, p, span, text, textarea)
-import Html.Attributes exposing (class, classList, for, href, id, maxlength, placeholder, rows, tabindex, target, type_, value)
-import Html.Events exposing (onClick, onInput)
+import Html exposing (Html, div, text)
+import Html.Attributes exposing (class)
+import Html.Events
 import Shared exposing (Shared)
 
 
@@ -29,5 +29,10 @@ update shared msg model =
 
 view : Shared -> Model -> Html Msg
 view shared model =
-    div [ class "flex flex-col h-full w-full items-center" ]
+    div [ class "flex flex-col h-full w-full items-center mt-12" ]
         [ text model.title ]
+
+
+subscriptions : Sub Msg
+subscriptions =
+    Sub.none

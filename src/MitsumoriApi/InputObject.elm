@@ -611,9 +611,9 @@ buildQuotesFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { id = Absent, quote_text = Absent, quote_author = Absent, user_id = Absent, created_at = Absent, quote_reference = Absent, nodeId = Absent }
+                { id = Absent, quote_text = Absent, quote_author = Absent, user_id = Absent, created_at = Absent, quote_reference = Absent, posted_by = Absent, nodeId = Absent }
     in
-    { id = optionals____.id, quote_text = optionals____.quote_text, quote_author = optionals____.quote_author, user_id = optionals____.user_id, created_at = optionals____.created_at, quote_reference = optionals____.quote_reference, nodeId = optionals____.nodeId }
+    { id = optionals____.id, quote_text = optionals____.quote_text, quote_author = optionals____.quote_author, user_id = optionals____.user_id, created_at = optionals____.created_at, quote_reference = optionals____.quote_reference, posted_by = optionals____.posted_by, nodeId = optionals____.nodeId }
 
 
 type alias QuotesFilterOptionalFields =
@@ -623,6 +623,7 @@ type alias QuotesFilterOptionalFields =
     , user_id : OptionalArgument UUIDFilter
     , created_at : OptionalArgument DatetimeFilter
     , quote_reference : OptionalArgument StringFilter
+    , posted_by : OptionalArgument StringFilter
     , nodeId : OptionalArgument IDFilter
     }
 
@@ -636,6 +637,7 @@ type alias QuotesFilter =
     , user_id : OptionalArgument UUIDFilter
     , created_at : OptionalArgument DatetimeFilter
     , quote_reference : OptionalArgument StringFilter
+    , posted_by : OptionalArgument StringFilter
     , nodeId : OptionalArgument IDFilter
     }
 
@@ -645,7 +647,7 @@ type alias QuotesFilter =
 encodeQuotesFilter : QuotesFilter -> Value
 encodeQuotesFilter input____ =
     Encode.maybeObject
-        [ ( "id", encodeUUIDFilter |> Encode.optional input____.id ), ( "quote_text", encodeStringFilter |> Encode.optional input____.quote_text ), ( "quote_author", encodeStringFilter |> Encode.optional input____.quote_author ), ( "user_id", encodeUUIDFilter |> Encode.optional input____.user_id ), ( "created_at", encodeDatetimeFilter |> Encode.optional input____.created_at ), ( "quote_reference", encodeStringFilter |> Encode.optional input____.quote_reference ), ( "nodeId", encodeIDFilter |> Encode.optional input____.nodeId ) ]
+        [ ( "id", encodeUUIDFilter |> Encode.optional input____.id ), ( "quote_text", encodeStringFilter |> Encode.optional input____.quote_text ), ( "quote_author", encodeStringFilter |> Encode.optional input____.quote_author ), ( "user_id", encodeUUIDFilter |> Encode.optional input____.user_id ), ( "created_at", encodeDatetimeFilter |> Encode.optional input____.created_at ), ( "quote_reference", encodeStringFilter |> Encode.optional input____.quote_reference ), ( "posted_by", encodeStringFilter |> Encode.optional input____.posted_by ), ( "nodeId", encodeIDFilter |> Encode.optional input____.nodeId ) ]
 
 
 buildQuotesInsertInput :
@@ -655,9 +657,9 @@ buildQuotesInsertInput fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { id = Absent, quote_text = Absent, quote_author = Absent, user_id = Absent, created_at = Absent, quote_reference = Absent }
+                { id = Absent, quote_text = Absent, quote_author = Absent, user_id = Absent, created_at = Absent, quote_reference = Absent, posted_by = Absent }
     in
-    { id = optionals____.id, quote_text = optionals____.quote_text, quote_author = optionals____.quote_author, user_id = optionals____.user_id, created_at = optionals____.created_at, quote_reference = optionals____.quote_reference }
+    { id = optionals____.id, quote_text = optionals____.quote_text, quote_author = optionals____.quote_author, user_id = optionals____.user_id, created_at = optionals____.created_at, quote_reference = optionals____.quote_reference, posted_by = optionals____.posted_by }
 
 
 type alias QuotesInsertInputOptionalFields =
@@ -667,6 +669,7 @@ type alias QuotesInsertInputOptionalFields =
     , user_id : OptionalArgument ScalarCodecs.Uuid
     , created_at : OptionalArgument ScalarCodecs.Datetime
     , quote_reference : OptionalArgument String
+    , posted_by : OptionalArgument String
     }
 
 
@@ -679,6 +682,7 @@ type alias QuotesInsertInput =
     , user_id : OptionalArgument ScalarCodecs.Uuid
     , created_at : OptionalArgument ScalarCodecs.Datetime
     , quote_reference : OptionalArgument String
+    , posted_by : OptionalArgument String
     }
 
 
@@ -687,7 +691,7 @@ type alias QuotesInsertInput =
 encodeQuotesInsertInput : QuotesInsertInput -> Value
 encodeQuotesInsertInput input____ =
     Encode.maybeObject
-        [ ( "id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ), ( "quote_text", Encode.string |> Encode.optional input____.quote_text ), ( "quote_author", Encode.string |> Encode.optional input____.quote_author ), ( "user_id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.user_id ), ( "created_at", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.created_at ), ( "quote_reference", Encode.string |> Encode.optional input____.quote_reference ) ]
+        [ ( "id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ), ( "quote_text", Encode.string |> Encode.optional input____.quote_text ), ( "quote_author", Encode.string |> Encode.optional input____.quote_author ), ( "user_id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.user_id ), ( "created_at", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.created_at ), ( "quote_reference", Encode.string |> Encode.optional input____.quote_reference ), ( "posted_by", Encode.string |> Encode.optional input____.posted_by ) ]
 
 
 buildQuotesOrderBy :
@@ -697,9 +701,9 @@ buildQuotesOrderBy fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { id = Absent, quote_text = Absent, quote_author = Absent, user_id = Absent, created_at = Absent, quote_reference = Absent }
+                { id = Absent, quote_text = Absent, quote_author = Absent, user_id = Absent, created_at = Absent, quote_reference = Absent, posted_by = Absent }
     in
-    { id = optionals____.id, quote_text = optionals____.quote_text, quote_author = optionals____.quote_author, user_id = optionals____.user_id, created_at = optionals____.created_at, quote_reference = optionals____.quote_reference }
+    { id = optionals____.id, quote_text = optionals____.quote_text, quote_author = optionals____.quote_author, user_id = optionals____.user_id, created_at = optionals____.created_at, quote_reference = optionals____.quote_reference, posted_by = optionals____.posted_by }
 
 
 type alias QuotesOrderByOptionalFields =
@@ -709,6 +713,7 @@ type alias QuotesOrderByOptionalFields =
     , user_id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     , created_at : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     , quote_reference : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , posted_by : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     }
 
 
@@ -721,6 +726,7 @@ type alias QuotesOrderBy =
     , user_id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     , created_at : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     , quote_reference : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
+    , posted_by : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     }
 
 
@@ -729,7 +735,7 @@ type alias QuotesOrderBy =
 encodeQuotesOrderBy : QuotesOrderBy -> Value
 encodeQuotesOrderBy input____ =
     Encode.maybeObject
-        [ ( "id", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.id ), ( "quote_text", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.quote_text ), ( "quote_author", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.quote_author ), ( "user_id", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.user_id ), ( "created_at", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.created_at ), ( "quote_reference", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.quote_reference ) ]
+        [ ( "id", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.id ), ( "quote_text", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.quote_text ), ( "quote_author", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.quote_author ), ( "user_id", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.user_id ), ( "created_at", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.created_at ), ( "quote_reference", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.quote_reference ), ( "posted_by", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.posted_by ) ]
 
 
 buildQuotesUpdateInput :
@@ -739,9 +745,9 @@ buildQuotesUpdateInput fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { id = Absent, quote_text = Absent, quote_author = Absent, user_id = Absent, created_at = Absent, quote_reference = Absent }
+                { id = Absent, quote_text = Absent, quote_author = Absent, user_id = Absent, created_at = Absent, quote_reference = Absent, posted_by = Absent }
     in
-    { id = optionals____.id, quote_text = optionals____.quote_text, quote_author = optionals____.quote_author, user_id = optionals____.user_id, created_at = optionals____.created_at, quote_reference = optionals____.quote_reference }
+    { id = optionals____.id, quote_text = optionals____.quote_text, quote_author = optionals____.quote_author, user_id = optionals____.user_id, created_at = optionals____.created_at, quote_reference = optionals____.quote_reference, posted_by = optionals____.posted_by }
 
 
 type alias QuotesUpdateInputOptionalFields =
@@ -751,6 +757,7 @@ type alias QuotesUpdateInputOptionalFields =
     , user_id : OptionalArgument ScalarCodecs.Uuid
     , created_at : OptionalArgument ScalarCodecs.Datetime
     , quote_reference : OptionalArgument String
+    , posted_by : OptionalArgument String
     }
 
 
@@ -763,6 +770,7 @@ type alias QuotesUpdateInput =
     , user_id : OptionalArgument ScalarCodecs.Uuid
     , created_at : OptionalArgument ScalarCodecs.Datetime
     , quote_reference : OptionalArgument String
+    , posted_by : OptionalArgument String
     }
 
 
@@ -771,7 +779,7 @@ type alias QuotesUpdateInput =
 encodeQuotesUpdateInput : QuotesUpdateInput -> Value
 encodeQuotesUpdateInput input____ =
     Encode.maybeObject
-        [ ( "id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ), ( "quote_text", Encode.string |> Encode.optional input____.quote_text ), ( "quote_author", Encode.string |> Encode.optional input____.quote_author ), ( "user_id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.user_id ), ( "created_at", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.created_at ), ( "quote_reference", Encode.string |> Encode.optional input____.quote_reference ) ]
+        [ ( "id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ), ( "quote_text", Encode.string |> Encode.optional input____.quote_text ), ( "quote_author", Encode.string |> Encode.optional input____.quote_author ), ( "user_id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.user_id ), ( "created_at", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.created_at ), ( "quote_reference", Encode.string |> Encode.optional input____.quote_reference ), ( "posted_by", Encode.string |> Encode.optional input____.posted_by ) ]
 
 
 buildStringFilter :

@@ -189,6 +189,7 @@ update shared msg model =
                             , author = validForm.author
                             , reference = validForm.reference
                             , userId = Maybe.withDefault "" (User.userId shared.user)
+                            , username = User.username shared.user
                             }
                     in
                     ( { model | validated = validatedForm, modalIsLoading = True, quotes = RemoteData.Loading }
@@ -500,34 +501,34 @@ viewQuote shared quote =
         quoteTags =
             List.map (\tag -> viewQuoteTag tag.text) quote.tags
 
-        reference =
-            Maybe.withDefault "" quote.reference
-
-        viewQuoteReference =
-            if String.isEmpty reference then
-                HE.nothing
-
-            else
-                a [ href <| reference, class "text-gray-600 text-sm cursor-pointer hover:text-black", target "_blank" ] [ text "Quote reference" ]
+        quoteReference =
+            HE.viewMaybe
+                (\reference ->
+                    a
+                        [ href <| reference
+                        , class "text-gray-600 text-sm cursor-pointer hover:text-black"
+                        , target "_blank"
+                        ]
+                        [ text "Quote reference" ]
+                )
+                quote.reference
     in
     div
         [ class "flex flex-col h-fit border rounded-lg p-6 shadow-sm hover:bg-gray-100/30 transition ease-in-out hover:-translate-y-px duration-300"
         , tabindex 0
         ]
         [ p [ class "text-lg text-gray-800" ] [ text quote.quote ]
-        , p [ class "mt-1 text-gray-600 text-md font-light" ] [ text <| "by " ++ quote.author ]
+        , p [ class "mt-1 text-gray-600 text-md font-light" ] [ text ("by " ++ quote.author) ]
         , hr [ class "bg-gray-600 my-2" ] []
         , div [ class "flex flex-col" ]
             [ div [ class "flex space-x-2 my-2" ] quoteTags
-            , viewQuoteReference
+            , quoteReference
             ]
         , viewEditAndDeleteIconButtons shared quote
-        , p [ class "text-gray-600 text-sm cursor-pointer mt-2" ]
-            [ text <| "Posted by "
-            , span [ class "hover:text-black" ] [ text <| User.username shared.user ]
+        , a [ class "text-gray-600 text-sm cursor-pointer mt-2", href ("profile/" ++ User.id shared.user) ]
+            [ text "Posted by "
+            , span [ class "hover:text-black" ] [ text quote.postedBy ]
             ]
-
-        -- This will become a tag once profile table/page setup
         ]
 
 

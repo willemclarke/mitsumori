@@ -51,7 +51,7 @@ view (Dropdown ({ user, options, isOpen } as config)) =
         ]
         [ div []
             [ button
-                [ class "flex items-center py-2 px-4 bg-white text-black border border-gray-300 hover:border-gray-500 hover:bg-gray-100/90 shadow hover:shadow-md focus:ring focus:ring-slate-300 rounded-md"
+                [ class "flex items-center py-2 px-4 bg-white text-black border border-gray-300 hover:border-gray-500 hover:bg-gray-100/90 shadow hover:shadow-md focus:outline-none focus:ring focus:ring-slate-300 rounded-md"
                 , type_ "button"
                 , id "menu-button"
                 , ariaExpanded ariaExpanded_
@@ -71,7 +71,7 @@ view (Dropdown ({ user, options, isOpen } as config)) =
                 , tabindex -1
                 ]
                 [ div
-                    [ class "flex flex-col p-1 text-gray-700 text-sm"
+                    [ class "flex flex-col text-gray-700 text-sm"
                     , role "none"
                     ]
                     -- header

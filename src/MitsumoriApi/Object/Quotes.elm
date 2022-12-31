@@ -56,6 +56,11 @@ quote_reference =
     Object.selectionForField "(Maybe String)" "quote_reference" [] (Decode.string |> Decode.nullable)
 
 
+posted_by : SelectionSet String MitsumoriApi.Object.Quotes
+posted_by =
+    Object.selectionForField "String" "posted_by" [] Decode.string
+
+
 type alias QuoteTagsCollectionOptionalArguments =
     { first : OptionalArgument Int
     , last : OptionalArgument Int

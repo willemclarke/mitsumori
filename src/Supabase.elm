@@ -42,6 +42,7 @@ type alias Quote =
     , author : String
     , createdAt : Time.Posix
     , userId : String
+    , postedBy : String
     , reference : Maybe String
     , tags : List Tag
     }
@@ -58,6 +59,7 @@ type alias InsertQuoteDto =
     { quote : String
     , author : String
     , userId : String
+    , username : String -- for postedBy
     , reference : Maybe String
     }
 
@@ -138,6 +140,7 @@ insertQuoteMutation quote =
               , quote_author = Present quote.author
               , user_id = Present quote.userId
               , created_at = Absent
+              , posted_by = Present quote.username
               , quote_reference = OptionalArgument.fromMaybe quote.reference
               }
             ]
@@ -171,6 +174,7 @@ deleteQuoteMutation quoteId =
                         , quote_author = Absent
                         , user_id = Absent
                         , created_at = Absent
+                        , posted_by = Absent
                         , quote_reference = Absent
                         , nodeId = Absent
                         }
@@ -192,6 +196,7 @@ editQuoteMutation quote =
                         , quote_author = Absent
                         , user_id = Absent
                         , created_at = Absent
+                        , posted_by = Absent
                         , quote_reference = Absent
                         , nodeId = Absent
                         }
@@ -203,6 +208,7 @@ editQuoteMutation quote =
             , quote_author = Present quote.author
             , user_id = Absent
             , created_at = Absent
+            , posted_by = Absent
             , quote_reference = OptionalArgument.fromMaybe quote.reference
             }
         , atMost = 1
@@ -222,6 +228,7 @@ quotesQuery =
                           , id = Absent
                           , quote_text = Absent
                           , quote_author = Absent
+                          , posted_by = Absent
                           , quote_reference = Absent
                           , user_id = Absent
                           }
@@ -250,12 +257,13 @@ quotesEdges =
 
 quoteNode : SelectionSet Quote MitsumoriApi.Object.Quotes
 quoteNode =
-    SelectionSet.map7 Quote
+    SelectionSet.map8 Quote
         Quotes.id
         Quotes.quote_text
         Quotes.quote_author
         Quotes.created_at
         Quotes.user_id
+        Quotes.posted_by
         Quotes.quote_reference
         quoteTagsCollection
 
@@ -266,12 +274,13 @@ quoteNode =
 
 quoteNodeForMutation : String -> SelectionSet Quote MitsumoriApi.Object.Quotes
 quoteNodeForMutation quoteId =
-    SelectionSet.map7 Quote
+    SelectionSet.map8 Quote
         Quotes.id
         Quotes.quote_text
         Quotes.quote_author
         Quotes.created_at
         Quotes.user_id
+        Quotes.posted_by
         Quotes.quote_reference
         (quoteTagsCollectionFromId quoteId)
 

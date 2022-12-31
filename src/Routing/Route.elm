@@ -11,6 +11,7 @@ import User exposing (User, UserType(..))
 
 type Route
     = Home Filter
+    | Profile String
     | Signup
     | Signin
     | NotFound
@@ -30,6 +31,7 @@ parser : Parser.Parser (Route -> a) a
 parser =
     Parser.oneOf
         [ Parser.map Home (Parser.top <?> filterQueryParams)
+        , Parser.map Profile (Parser.s "profile" </> Parser.string)
         , Parser.map Signup (Parser.s "signup")
         , Parser.map Signin (Parser.s "signin")
         ]
@@ -82,6 +84,25 @@ replaceUrl key route =
     Nav.replaceUrl key (toString route)
 
 
+toString : Route -> String
+toString route =
+    case route of
+        Home _ ->
+            "/"
+
+        Profile id ->
+            "/profile/" ++ id
+
+        Signup ->
+            "signup"
+
+        Signin ->
+            "signin"
+
+        _ ->
+            ""
+
+
 checkNav : User -> Maybe Route -> Maybe Route
 checkNav user route =
     let
@@ -93,6 +114,12 @@ checkNav user route =
             Just (Home filter)
 
         ( Unauthenticated, Just (Home _) ) ->
+            Just Signin
+
+        ( Authenticated _, Just (Profile id) ) ->
+            Just (Profile id)
+
+        ( Unauthenticated, Just (Profile _) ) ->
             Just Signin
 
         ( Unauthenticated, Just Signin ) ->
@@ -111,27 +138,14 @@ checkNav user route =
             Just NotFound
 
 
-toString : Route -> String
-toString route =
-    case route of
-        Home _ ->
-            "/"
-
-        Signup ->
-            "signup"
-
-        Signin ->
-            "signin"
-
-        _ ->
-            ""
-
-
 toTitleString : Route -> String
 toTitleString route =
     case route of
         Home _ ->
             "Home"
+
+        Profile _ ->
+            "Profile"
 
         Signup ->
             "Signup"

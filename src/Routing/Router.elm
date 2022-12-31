@@ -4,7 +4,6 @@ import Browser
 import Browser.Navigation
 import Components.Button as Button
 import Components.Dropdown as Dropdown
-import Components.Icons as Icons
 import Components.Toast as Toast
 import Heroicons.Outline as HeroIcons
 import Html exposing (Html, a, div, text)
@@ -12,6 +11,7 @@ import Html.Attributes exposing (class, href)
 import Json.Decode as JD
 import Json.Encode as JE
 import Pages.Home as Home
+import Pages.Profile as Profile
 import Pages.Signin as SignIn
 import Pages.Signup as SignUp
 import Process
@@ -28,6 +28,7 @@ import Uuid
 
 type alias Model =
     { homeModel : Home.Model
+    , profileModel : Profile.Model
     , signUpModel : SignUp.Model
     , signInModel : SignIn.Model
     , route : Maybe Route
@@ -45,6 +46,7 @@ type Msg
     = UrlChanged Url.Url
     | NavigateTo Route
     | HomeMsg Home.Msg
+    | ProfileMsg Profile.Msg
     | SignUpMsg SignUp.Msg
     | SignInMsg SignIn.Msg
     | SignOut
@@ -62,6 +64,9 @@ init shared url =
         ( homeModel, homeCmd ) =
             Home.init shared
 
+        ( profileModel, _ ) =
+            Profile.init ()
+
         ( signUpModel, _ ) =
             SignUp.init ()
 
@@ -69,6 +74,7 @@ init shared url =
             SignIn.init ()
     in
     ( { homeModel = homeModel
+      , profileModel = profileModel
       , signUpModel = signUpModel
       , signInModel = signInModel
       , route = Route.fromUrl url
@@ -92,22 +98,16 @@ update : Shared -> Msg -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
 update shared msg model =
     case msg of
         UrlChanged url ->
-            let
-                cmd =
-                    case Route.fromUrl url of
-                        Just (Route.Home _) ->
-                            Browser.Navigation.reload
-
-                        _ ->
-                            Cmd.none
-            in
-            ( { model | route = Route.fromUrl url }, cmd, Shared.NoUpdate )
+            ( { model | route = Route.fromUrl url }, Cmd.none, Shared.NoUpdate )
 
         NavigateTo route ->
             ( model, Route.pushUrl shared.key route, Shared.NoUpdate )
 
         HomeMsg homeMsg ->
             updateHome shared model homeMsg
+
+        ProfileMsg profileMsg ->
+            updateProfile shared model profileMsg
 
         SignUpMsg signUpMsg ->
             updateSignUp shared model signUpMsg
@@ -125,7 +125,7 @@ update shared msg model =
             in
             case signOutResponse of
                 SignoutSuccess _ ->
-                    ( model, Route.pushUrl shared.key Route.Signin, Shared.UpdateUser <| User.unauthenticated )
+                    ( model, Route.pushUrl shared.key Route.Signin, Shared.UpdateUser User.unauthenticated )
 
                 {- TODO, proper error handling, need some view to show to users -}
                 SignoutError _ ->
@@ -170,6 +170,15 @@ updateHome shared model homeMsg =
     ( { model | homeModel = nextHomeModel }, Cmd.map HomeMsg homeCmd, sharedUpdate )
 
 
+updateProfile : Shared -> Model -> Profile.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )
+updateProfile shared model profileMsg =
+    let
+        ( nextProfileModel, profileCmd, sharedUpdate ) =
+            Profile.update shared profileMsg model.profileModel
+    in
+    ( { model | profileModel = nextProfileModel }, Cmd.map ProfileMsg profileCmd, sharedUpdate )
+
+
 updateSignUp : Shared -> Model -> SignUp.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )
 updateSignUp shared model signUpMsg =
     let
@@ -203,7 +212,9 @@ view msgMapper shared model =
             div [ class "flex flex-col h-full w-full" ]
                 [ viewNav { isDropdownOpen = model.isDropdownOpen } shared
                 , div [ class "flex flex-col items-center justify-center h-full w-full" ]
-                    [ pageView shared model, Toast.region toasts ]
+                    [ pageView shared model
+                    , Toast.region toasts
+                    ]
                 ]
     in
     { title = title ++ " - Mitsumori"
@@ -212,11 +223,15 @@ view msgMapper shared model =
 
 
 pageView : Shared -> Model -> Html Msg
-pageView ({ user } as shared) model =
-    case Route.checkNav user model.route of
+pageView shared model =
+    case Route.checkNav shared.user model.route of
         Just (Route.Home _) ->
             Home.view shared model.homeModel
                 |> Html.map HomeMsg
+
+        Just (Route.Profile _) ->
+            Profile.view shared model.profileModel
+                |> Html.map ProfileMsg
 
         Just Route.Signup ->
             SignUp.view model.signUpModel
@@ -234,10 +249,10 @@ pageView ({ user } as shared) model =
 
 
 viewNav : { isDropdownOpen : Bool } -> Shared -> Html Msg
-viewNav { isDropdownOpen } { user } =
+viewNav { isDropdownOpen } shared =
     let
         href_ =
-            if User.isAuthenticated user then
+            if User.isAuthenticated shared.user then
                 Route.toString (Route.Home Route.emptyFilter)
 
             else
@@ -246,15 +261,15 @@ viewNav { isDropdownOpen } { user } =
     div [ class "flex mt-4 mx-6 justify-between items-end font-serif" ]
         [ a [ href href_, class "text-3xl transition ease-in-out hover:-translate-y-0.5 duration-300" ] [ text "mitsumori" ]
         , div [ class "flex" ]
-            [ if User.isAuthenticated user then
+            [ if User.isAuthenticated shared.user then
                 Dropdown.create
-                    { user = User.user user
+                    { user = User.user shared.user
                     , onClick = OnDropdownClicked
                     , onBlur = OnDropdownBlurred
                     , isOpen = isDropdownOpen
                     , options =
                         [ { label = "Profile"
-                          , onClick = NoOp
+                          , onClick = NavigateTo (Route.Profile (User.id shared.user))
                           , icon = Just (HeroIcons.userCircle [ SvgAttr.class "w-5 h-5" ])
                           }
                         , { label = "Signout"

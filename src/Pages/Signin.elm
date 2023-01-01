@@ -126,7 +126,10 @@ update shared msg model =
             in
             case signinResponse of
                 UserOk user ->
-                    ( { model | form = emptyForm, isLoading = False }, Route.replaceUrl shared.key (Route.Home Route.emptyFilter), Shared.UpdateUser user )
+                    ( { model | form = emptyForm, isLoading = False }
+                    , Route.replaceUrl shared.key (Route.Home Route.emptyFilter)
+                    , Shared.UpdateUser user
+                    )
 
                 SignupError error ->
                     ( { model | isLoading = False, serverError = Just error }, Cmd.none, Shared.NoUpdate )

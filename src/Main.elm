@@ -196,7 +196,7 @@ view : Model -> Browser.Document Msg
 view model =
     case model.appState of
         Initialising _ ->
-            { title = "Loading"
+            { title = "Mitsumori"
             , body = [ viewPageLoading ]
             }
 

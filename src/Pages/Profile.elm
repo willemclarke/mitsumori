@@ -18,22 +18,35 @@ type alias Model =
     }
 
 
-init : Shared -> Url.Url -> ( Model, Cmd Msg )
-init shared url =
+
+-- 7b746f5f-642c-4b4e-8dfa-df80c83ba092
+
+
+init : Shared -> ( Model, Cmd Msg )
+init shared =
     let
         x =
-            Debug.log "init has been called"
+            Debug.log "Profile.elm init has been called" shared
     in
-    case userIdFromRoute url of
-        Just userId ->
-            ( { profile = RemoteData.Loading }, Supabase.getProfile GotProfileResponse userId shared )
-
-        Nothing ->
-            ( { profile = RemoteData.NotAsked }, Cmd.none )
+    ( { profile = RemoteData.Loading }, Supabase.getProfile GotProfileResponse "7b746f5f-642c-4b4e-8dfa-df80c83ba092" shared )
 
 
-userIdFromRoute : Url.Url -> Maybe String
-userIdFromRoute url =
+
+-- init : Shared -> Url.Url -> ( Model, Cmd Msg )
+-- init shared url =
+--     let
+--         x =
+--             Debug.log "Profile.elm init has been called" url
+--     in
+--     case pickUserIdFromUrl url of
+--         Just userId ->
+--             ( { profile = RemoteData.Loading }, Supabase.getProfile GotProfileResponse userId shared )
+--         Nothing ->
+--             ( { profile = RemoteData.NotAsked }, Cmd.none )
+
+
+pickUserIdFromUrl : Url.Url -> Maybe String
+pickUserIdFromUrl url =
     case Route.fromUrl url of
         Just (Route.Profile id) ->
             Just id

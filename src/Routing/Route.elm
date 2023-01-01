@@ -122,6 +122,12 @@ checkNav user route =
         ( Unauthenticated, Just (Profile _) ) ->
             Just Signin
 
+        ( Authenticated _, Just Signin ) ->
+            Just (Home emptyFilter)
+
+        ( Authenticated _, Just Signup ) ->
+            Just (Home emptyFilter)
+
         ( Unauthenticated, Just Signin ) ->
             Just Signin
 

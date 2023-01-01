@@ -61,17 +61,27 @@ type Msg
 init : Shared -> Url.Url -> ( Model, Cmd Msg )
 init shared url =
     let
+        x =
+            Debug.log "Router.init called" url
+
         ( homeModel, homeCmd ) =
             Home.init shared
 
         ( profileModel, _ ) =
-            Profile.init shared url
+            Profile.init shared
 
         ( signUpModel, _ ) =
             SignUp.init ()
 
-        ( signInModel, _ ) =
+        ( signInModel, signinCmd ) =
             SignIn.init ()
+
+        cmd =
+            if User.isAuthenticated shared.user then
+                Cmd.map HomeMsg homeCmd
+
+            else
+                Cmd.map SignInMsg signinCmd
     in
     ( { homeModel = homeModel
       , profileModel = profileModel
@@ -80,7 +90,7 @@ init shared url =
       , route = Route.fromUrl url
       , isDropdownOpen = False
       }
-    , Cmd.map HomeMsg homeCmd
+    , cmd
     )
 
 
@@ -107,7 +117,10 @@ update shared msg model =
                         _ ->
                             Cmd.none
             in
-            ( { model | route = Route.fromUrl url }, cmd, Shared.NoUpdate )
+            ( { model | route = Route.fromUrl url }
+            , Cmd.none
+            , Shared.NoUpdate
+            )
 
         NavigateTo route ->
             ( model, Route.replaceUrl shared.key route, Shared.NoUpdate )
@@ -134,7 +147,7 @@ update shared msg model =
             in
             case signOutResponse of
                 SignoutSuccess _ ->
-                    ( model, Route.pushUrl shared.key Route.Signin, Shared.UpdateUser User.unauthenticated )
+                    ( model, Route.replaceUrl shared.key Route.Signin, Shared.UpdateUser User.unauthenticated )
 
                 {- TODO, proper error handling, need some view to show to users -}
                 SignoutError _ ->

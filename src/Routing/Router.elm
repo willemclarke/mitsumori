@@ -1,7 +1,6 @@
 module Routing.Router exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Browser
-import Browser.Navigation
 import Components.Button as Button
 import Components.Dropdown as Dropdown
 import Components.Toast as Toast
@@ -105,33 +104,7 @@ update : Shared -> Msg -> Model -> ( Model, Cmd Msg, Shared.SharedUpdate )
 update shared msg model =
     case msg of
         UrlChanged url ->
-            let
-                route =
-                    Route.fromUrl url
-            in
-            case route of
-                Just (Route.Home _) ->
-                    let
-                        ( homeModel, homeCmd ) =
-                            Home.init shared
-                    in
-                    ( { model | route = route, homeModel = homeModel }
-                    , Cmd.map HomeMsg homeCmd
-                    , Shared.NoUpdate
-                    )
-
-                Just (Route.Profile id) ->
-                    let
-                        ( profileModel, profileCmd ) =
-                            Profile.init shared id
-                    in
-                    ( { model | route = route, profileModel = profileModel }
-                    , Cmd.map ProfileMsg profileCmd
-                    , Shared.NoUpdate
-                    )
-
-                _ ->
-                    ( { model | route = route }, Cmd.none, Shared.NoUpdate )
+            updateUrl url model shared
 
         NavigateTo route ->
             ( model, Route.replaceUrl shared.key route, Shared.NoUpdate )
@@ -194,6 +167,47 @@ after time msg =
     Task.perform (always msg) <| Process.sleep time
 
 
+
+{- This function is to handle running each pages init when the url changes, so if we click a quote, it takes us to
+   the users profile, and fires the init
+-}
+
+
+updateUrl : Url.Url -> Model -> Shared -> ( Model, Cmd Msg, Shared.SharedUpdate )
+updateUrl url model shared =
+    let
+        route =
+            Route.fromUrl url
+    in
+    case Route.fromUrl url of
+        Just (Route.Home _) ->
+            Home.init shared
+                |> toHome model route
+
+        Just (Route.Profile id) ->
+            Profile.init shared id
+                |> toProfile model route
+
+        Just Route.Signin ->
+            SignIn.init ()
+                |> toSignIn model route
+
+        Just Route.Signup ->
+            SignUp.init ()
+                |> toSignUp model route
+
+        Just Route.NotFound ->
+            ( model, Cmd.none, Shared.NoUpdate )
+
+        Nothing ->
+            ( model, Cmd.none, Shared.NoUpdate )
+
+
+toHome : Model -> Maybe Route -> ( Home.Model, Cmd Home.Msg ) -> ( Model, Cmd Msg, Shared.SharedUpdate )
+toHome model route ( homeModel, homeCmd ) =
+    ( { model | homeModel = homeModel, route = route }, Cmd.map HomeMsg homeCmd, Shared.NoUpdate )
+
+
 updateHome : Shared -> Model -> Home.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )
 updateHome shared model homeMsg =
     let
@@ -201,6 +215,11 @@ updateHome shared model homeMsg =
             Home.update shared homeMsg model.homeModel
     in
     ( { model | homeModel = nextHomeModel }, Cmd.map HomeMsg homeCmd, sharedUpdate )
+
+
+toProfile : Model -> Maybe Route -> ( Profile.Model, Cmd Profile.Msg ) -> ( Model, Cmd Msg, Shared.SharedUpdate )
+toProfile model route ( profileModel, profileCmd ) =
+    ( { model | profileModel = profileModel, route = route }, Cmd.map ProfileMsg profileCmd, Shared.NoUpdate )
 
 
 updateProfile : Shared -> Model -> Profile.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )
@@ -212,6 +231,11 @@ updateProfile shared model profileMsg =
     ( { model | profileModel = nextProfileModel }, Cmd.map ProfileMsg profileCmd, sharedUpdate )
 
 
+toSignUp : Model -> Maybe Route -> ( SignUp.Model, Cmd SignUp.Msg ) -> ( Model, Cmd Msg, Shared.SharedUpdate )
+toSignUp model route ( signUpModel, signUpCmd ) =
+    ( { model | signUpModel = signUpModel, route = route }, Cmd.map SignUpMsg signUpCmd, Shared.NoUpdate )
+
+
 updateSignUp : Shared -> Model -> SignUp.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )
 updateSignUp shared model signUpMsg =
     let
@@ -219,6 +243,11 @@ updateSignUp shared model signUpMsg =
             SignUp.update shared signUpMsg model.signUpModel
     in
     ( { model | signUpModel = nextSignUpModel }, Cmd.map SignUpMsg signUpCmd, sharedUpdate )
+
+
+toSignIn : Model -> Maybe Route -> ( SignIn.Model, Cmd SignIn.Msg ) -> ( Model, Cmd Msg, Shared.SharedUpdate )
+toSignIn model route ( signInModel, signInCmd ) =
+    ( { model | signInModel = signInModel, route = route }, Cmd.map SignInMsg signInCmd, Shared.NoUpdate )
 
 
 updateSignIn : Shared -> Model -> SignIn.Msg -> ( Model, Cmd Msg, Shared.SharedUpdate )

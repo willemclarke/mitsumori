@@ -525,7 +525,7 @@ viewQuote shared quote =
             , quoteReference
             ]
         , viewEditAndDeleteIconButtons shared quote
-        , a [ class "text-gray-600 text-sm cursor-pointer mt-2", href ("profile/" ++ User.id shared.user) ]
+        , a [ class "text-gray-600 text-sm cursor-pointer mt-2", href ("profile/" ++ quote.userId) ]
             [ text "Posted by "
             , span [ class "hover:text-black" ] [ text quote.postedBy ]
             ]

@@ -12,7 +12,7 @@
     "serve": "vite preview",
     "lint": "elm-review",
     "test": "elm-test-rs",
-    "tailwind:run": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch"
+    "tailwind:run": "npx tailwindcss -i ./src/tailwind.css -o ./dist/output.css --watch"
   },
   "devDependencies": {
     "@dillonkearns/elm-graphql": "^4.3.0",

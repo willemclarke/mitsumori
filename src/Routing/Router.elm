@@ -122,7 +122,7 @@ update shared msg model =
             updateSignIn shared model signInMsg
 
         SignOut ->
-            ( model, Supabase.signOut (), Shared.NoUpdate )
+            ( { model | route = Just Route.Signin }, Supabase.signOut (), Shared.NoUpdate )
 
         GotSignOutResponse json ->
             let
@@ -354,11 +354,18 @@ viewNav { isDropdownOpen } shared =
         ]
 
 
-viewNotFoundPage : Html msg
+viewNotFoundPage : Html Msg
 viewNotFoundPage =
     div [ class "flex justify-center h-full w-full mt-52 font-serif" ]
-        [ div [ class "flex-col text-center justify-center" ]
-            [ div [ class "text-3xl mt-8" ] [ text "Page not found :(" ]
+        [ div [ class "flex flex-col text-center" ]
+            [ div [ class "flex flex-col text-3xl mt-8" ]
+                [ text "Page not found :("
+                , a
+                    [ class "text-lg mt-2"
+                    , href <| Route.toString (Route.Home Route.emptyFilter)
+                    ]
+                    [ text "Click to go home" ]
+                ]
             ]
         ]
 

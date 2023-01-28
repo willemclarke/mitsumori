@@ -1,7 +1,6 @@
 module Routing.Route exposing (Filter, Route(..), appendFilterParams, checkNav, emptyFilter, extractFilterParams, filterQueryParams, fromUrl, pushUrl, replaceUrl, toString, toTitleString)
 
 import Browser.Navigation as Nav
-import Html exposing (a)
 import Maybe.Extra as ME
 import Url
 import Url.Builder as Builder
@@ -32,7 +31,7 @@ parser : Parser.Parser (Route -> a) a
 parser =
     Parser.oneOf
         [ Parser.map Home (Parser.top <?> filterQueryParams)
-        , Parser.map Profile (Parser.s "profile" </> profileIdParser)
+        , Parser.map Profile (Parser.s "profile" </> Parser.string)
         , Parser.map Signup (Parser.s "signup")
         , Parser.map Signin (Parser.s "signin")
         ]

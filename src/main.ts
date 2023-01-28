@@ -65,7 +65,6 @@ const onAuthChange = () => {
   return supabase.supabaseClient.auth.onAuthStateChange((event, session) => {
     switch (event) {
       case 'TOKEN_REFRESHED': {
-        console.log('inside token refreshed');
         console.log('Refreshing user session/token');
         return app.ports.sessionResponse.send(session);
       }

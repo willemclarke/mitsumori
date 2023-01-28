@@ -6,10 +6,8 @@ import Html exposing (Html, div, text)
 import Html.Attributes exposing (class)
 import Html.Extra as HE
 import RemoteData exposing (RemoteData(..))
-import Routing.Route as Route
 import Shared exposing (Shared)
 import Supabase
-import Url
 
 
 type alias Model =
@@ -19,35 +17,7 @@ type alias Model =
 
 init : Shared -> String -> ( Model, Cmd Msg )
 init shared userId =
-    let
-        x =
-            Debug.log "userId" userId
-    in
     ( { profile = RemoteData.Loading }, Supabase.getProfile GotProfileResponse userId shared )
-
-
-
--- init : Shared -> Url.Url -> ( Model, Cmd Msg )
--- init shared url =
---     let
---         x =
---             Debug.log "Profile.elm init has been called" url
---     in
---     case pickUserIdFromUrl url of
---         Just userId ->
---             ( { profile = RemoteData.Loading }, Supabase.getProfile GotProfileResponse userId shared )
---         Nothing ->
---             ( { profile = RemoteData.NotAsked }, Cmd.none )
-
-
-pickUserIdFromUrl : Url.Url -> Maybe String
-pickUserIdFromUrl url =
-    case Route.fromUrl url of
-        Just (Route.Profile id) ->
-            Just id
-
-        _ ->
-            Nothing
 
 
 type Msg

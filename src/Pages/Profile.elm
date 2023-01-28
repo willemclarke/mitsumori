@@ -4,7 +4,6 @@ import Components.Spinner as Spinner
 import Graphql.Http
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class)
-import Html.Events
 import Html.Extra as HE
 import RemoteData exposing (RemoteData(..))
 import Routing.Route as Route
@@ -18,17 +17,13 @@ type alias Model =
     }
 
 
-
--- 7b746f5f-642c-4b4e-8dfa-df80c83ba092
-
-
-init : Shared -> ( Model, Cmd Msg )
-init shared =
+init : Shared -> String -> ( Model, Cmd Msg )
+init shared userId =
     let
         x =
-            Debug.log "Profile.elm init has been called" shared
+            Debug.log "userId" userId
     in
-    ( { profile = RemoteData.Loading }, Supabase.getProfile GotProfileResponse "7b746f5f-642c-4b4e-8dfa-df80c83ba092" shared )
+    ( { profile = RemoteData.Loading }, Supabase.getProfile GotProfileResponse userId shared )
 
 
 

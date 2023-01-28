@@ -61,14 +61,11 @@ type Msg
 init : Shared -> Url.Url -> ( Model, Cmd Msg )
 init shared url =
     let
-        x =
-            Debug.log "Router.init called" url
-
         ( homeModel, homeCmd ) =
             Home.init shared
 
         ( profileModel, _ ) =
-            Profile.init shared
+            Profile.init shared ""
 
         ( signUpModel, _ ) =
             SignUp.init ()
@@ -109,18 +106,32 @@ update shared msg model =
     case msg of
         UrlChanged url ->
             let
-                cmd =
-                    case Route.fromUrl url of
-                        Just (Route.Home _) ->
-                            Browser.Navigation.reload
-
-                        _ ->
-                            Cmd.none
+                route =
+                    Route.fromUrl url
             in
-            ( { model | route = Route.fromUrl url }
-            , Cmd.none
-            , Shared.NoUpdate
-            )
+            case route of
+                Just (Route.Home _) ->
+                    let
+                        ( homeModel, homeCmd ) =
+                            Home.init shared
+                    in
+                    ( { model | route = route, homeModel = homeModel }
+                    , Cmd.map HomeMsg homeCmd
+                    , Shared.NoUpdate
+                    )
+
+                Just (Route.Profile id) ->
+                    let
+                        ( profileModel, profileCmd ) =
+                            Profile.init shared id
+                    in
+                    ( { model | route = route, profileModel = profileModel }
+                    , Cmd.map ProfileMsg profileCmd
+                    , Shared.NoUpdate
+                    )
+
+                _ ->
+                    ( { model | route = route }, Cmd.none, Shared.NoUpdate )
 
         NavigateTo route ->
             ( model, Route.replaceUrl shared.key route, Shared.NoUpdate )

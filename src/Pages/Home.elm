@@ -80,10 +80,6 @@ type Field
 
 init : Shared -> ( Model, Cmd Msg )
 init shared =
-    let
-        x =
-            Debug.log "Home.init caled" shared
-    in
     ( { quotes = RemoteData.Loading
       , modalForm = { quote = "", author = "", reference = Nothing, tags = "" }
       , modalFormProblems = []

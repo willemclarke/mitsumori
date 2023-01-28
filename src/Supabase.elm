@@ -268,8 +268,7 @@ profileQuery userId =
     Query.profileCollection
         (\optionals ->
             { optionals
-                | first = Present 1
-                , filter =
+                | filter =
                     Present
                         { id = Present { eq = Present userId, in_ = Absent, neq = Absent }
                         , created_at = Absent

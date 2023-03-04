@@ -9,9 +9,9 @@ import Json.Encode as JE
 import MitsumoriApi.Enum.OrderByDirection exposing (OrderByDirection(..))
 import MitsumoriApi.Mutation as Mutation
 import MitsumoriApi.Object
-import MitsumoriApi.Object.Profile as Profile
-import MitsumoriApi.Object.ProfileConnection as ProfileConnection
-import MitsumoriApi.Object.ProfileEdge as ProfileEdge
+import MitsumoriApi.Object.Profiles as Profiles
+import MitsumoriApi.Object.ProfilesConnection as ProfilesConnection
+import MitsumoriApi.Object.ProfilesEdge as ProfilesEdge
 import MitsumoriApi.Object.Quote_tags as QuoteTags
 import MitsumoriApi.Object.Quote_tagsConnection as QuoteTagsConnection
 import MitsumoriApi.Object.Quote_tagsEdge as QuoteTagsEdge
@@ -192,7 +192,7 @@ deleteQuoteMutation quoteId =
             { optionals
                 | filter =
                     Present
-                        { id = Present { eq = Present quoteId, in_ = Absent, neq = Absent }
+                        { id = Present { eq = Present quoteId, is = Absent, in_ = Absent, neq = Absent }
                         , quote_text = Absent
                         , quote_author = Absent
                         , user_id = Absent
@@ -214,7 +214,7 @@ editQuoteMutation quote =
             { optionals
                 | filter =
                     Present
-                        { id = Present { eq = Present quote.id, in_ = Absent, neq = Absent }
+                        { id = Present { eq = Present quote.id, is = Absent, in_ = Absent, neq = Absent }
                         , quote_text = Absent
                         , quote_author = Absent
                         , user_id = Absent
@@ -265,12 +265,12 @@ quotesQuery =
 
 profileQuery : String -> SelectionSet Profiles RootQuery
 profileQuery userId =
-    Query.profileCollection
+    Query.profilesCollection
         (\optionals ->
             { optionals
                 | filter =
                     Present
-                        { id = Present { eq = Present userId, in_ = Absent, neq = Absent }
+                        { id = Present { eq = Present userId, is = Absent, in_ = Absent, neq = Absent }
                         , created_at = Absent
                         , username = Absent
                         , nodeId = Absent
@@ -281,23 +281,23 @@ profileQuery userId =
         |> SelectionSet.nonNullOrFail
 
 
-profileCollection : SelectionSet Profiles MitsumoriApi.Object.ProfileConnection
+profileCollection : SelectionSet Profiles MitsumoriApi.Object.ProfilesConnection
 profileCollection =
     SelectionSet.succeed Profiles
         |> SelectionSet.with profileEdge
 
 
-profileEdge : SelectionSet (List Profile) MitsumoriApi.Object.ProfileConnection
+profileEdge : SelectionSet (List Profile) MitsumoriApi.Object.ProfilesConnection
 profileEdge =
-    ProfileConnection.edges (ProfileEdge.node profileNode)
+    ProfilesConnection.edges (ProfilesEdge.node profileNode)
 
 
-profileNode : SelectionSet Profile MitsumoriApi.Object.Profile
+profileNode : SelectionSet Profile MitsumoriApi.Object.Profiles
 profileNode =
     SelectionSet.map3 Profile
-        Profile.id
-        Profile.username
-        Profile.created_at
+        Profiles.id
+        Profiles.username
+        Profiles.created_at
 
 
 quotesCollection : SelectionSet Quotes MitsumoriApi.Object.QuotesConnection
@@ -360,7 +360,7 @@ quoteTagsCollectionFromId quoteId =
                     Present
                         { quote_id =
                             Present
-                                { eq = Present quoteId, in_ = Absent, neq = Absent }
+                                { eq = Present quoteId, is = Absent, in_ = Absent, neq = Absent }
                         , text = Absent
                         , id = Absent
                         , nodeId = Absent

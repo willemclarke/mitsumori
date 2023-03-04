@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module MitsumoriApi.Object.Profile exposing (..)
+module MitsumoriApi.Object.Profiles exposing (..)
 
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -21,21 +21,21 @@ import ScalarCodecs
 
 {-| Globally Unique Record Identifier
 -}
-nodeId : SelectionSet ScalarCodecs.Id MitsumoriApi.Object.Profile
+nodeId : SelectionSet ScalarCodecs.Id MitsumoriApi.Object.Profiles
 nodeId =
     Object.selectionForField "ScalarCodecs.Id" "nodeId" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecId |> .decoder)
 
 
-id : SelectionSet ScalarCodecs.Uuid MitsumoriApi.Object.Profile
+id : SelectionSet ScalarCodecs.Uuid MitsumoriApi.Object.Profiles
 id =
     Object.selectionForField "ScalarCodecs.Uuid" "id" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
 
 
-created_at : SelectionSet ScalarCodecs.Datetime MitsumoriApi.Object.Profile
+created_at : SelectionSet ScalarCodecs.Datetime MitsumoriApi.Object.Profiles
 created_at =
     Object.selectionForField "ScalarCodecs.Datetime" "created_at" [] (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapCodecs |> .codecDatetime |> .decoder)
 
 
-username : SelectionSet String MitsumoriApi.Object.Profile
+username : SelectionSet String MitsumoriApi.Object.Profiles
 username =
     Object.selectionForField "String" "username" [] Decode.string

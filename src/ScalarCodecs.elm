@@ -10,7 +10,7 @@ import Uuid exposing (Uuid)
 
 
 {- This module is responsible for mapping certain custom scalars (timestamptz, uuid), which are modelled as string
-   to their respective elm types (timestamptz == Time, uuid = Uuid)
+   to their respective elm types (timestamptz == Time, uuid = String)
 -}
 
 

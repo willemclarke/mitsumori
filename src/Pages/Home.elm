@@ -387,9 +387,17 @@ validateForm form =
             , Validator.String.maxLength (InvalidEntry Quote_ "Quote can't exceed 250 chars") 250
             ]
             trimmedForm.quote
-        |> Validator.Named.validate (fieldToString Author) (Validator.String.notEmpty (InvalidEntry Author "Author can't be blank")) trimmedForm.author
-        |> Validator.Named.validate (fieldToString Reference) (Validator.Maybe.notRequired (Validator.String.isUrl (InvalidEntry Reference "Must be a valid URL, e.g. (www.google.com)"))) trimmedForm.reference
-        |> Validator.Named.validate (fieldToString Tags) (validateTags (InvalidEntry Tags "Tags must be separated by commas")) trimmedForm.tags
+        |> Validator.Named.validate (fieldToString Author)
+            (Validator.String.notEmpty (InvalidEntry Author "Author can't be blank"))
+            trimmedForm.author
+        |> Validator.Named.validate
+            (fieldToString Reference)
+            (Validator.Maybe.notRequired (Validator.String.isUrl (InvalidEntry Reference "Must be a valid URL, e.g. (www.google.com)")))
+            trimmedForm.reference
+        |> Validator.Named.validate
+            (fieldToString Tags)
+            (validateTags (InvalidEntry Tags "Tags must be separated by commas"))
+            trimmedForm.tags
 
 
 

@@ -36,17 +36,17 @@ node requiredArgs____ object____ =
     Object.selectionForCompositeField "node" [ Argument.required "nodeId" requiredArgs____.nodeId (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecId) ] object____ (Basics.identity >> Decode.nullable)
 
 
-type alias ProfileCollectionOptionalArguments =
+type alias ProfilesCollectionOptionalArguments =
     { first : OptionalArgument Int
     , last : OptionalArgument Int
     , before : OptionalArgument ScalarCodecs.Cursor
     , after : OptionalArgument ScalarCodecs.Cursor
-    , filter : OptionalArgument MitsumoriApi.InputObject.ProfileFilter
-    , orderBy : OptionalArgument (List MitsumoriApi.InputObject.ProfileOrderBy)
+    , filter : OptionalArgument MitsumoriApi.InputObject.ProfilesFilter
+    , orderBy : OptionalArgument (List MitsumoriApi.InputObject.ProfilesOrderBy)
     }
 
 
-{-| A pagable collection of type `profile`
+{-| A pagable collection of type `profiles`
 
   - first - Query the first `n` records in the collection
   - last - Query the last `n` records in the collection
@@ -56,20 +56,20 @@ type alias ProfileCollectionOptionalArguments =
   - orderBy - Sort order to apply to the collection
 
 -}
-profileCollection :
-    (ProfileCollectionOptionalArguments -> ProfileCollectionOptionalArguments)
-    -> SelectionSet decodesTo MitsumoriApi.Object.ProfileConnection
+profilesCollection :
+    (ProfilesCollectionOptionalArguments -> ProfilesCollectionOptionalArguments)
+    -> SelectionSet decodesTo MitsumoriApi.Object.ProfilesConnection
     -> SelectionSet (Maybe decodesTo) RootQuery
-profileCollection fillInOptionals____ object____ =
+profilesCollection fillInOptionals____ object____ =
     let
         filledInOptionals____ =
             fillInOptionals____ { first = Absent, last = Absent, before = Absent, after = Absent, filter = Absent, orderBy = Absent }
 
         optionalArgs____ =
-            [ Argument.optional "first" filledInOptionals____.first Encode.int, Argument.optional "last" filledInOptionals____.last Encode.int, Argument.optional "before" filledInOptionals____.before (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "after" filledInOptionals____.after (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "filter" filledInOptionals____.filter MitsumoriApi.InputObject.encodeProfileFilter, Argument.optional "orderBy" filledInOptionals____.orderBy (MitsumoriApi.InputObject.encodeProfileOrderBy |> Encode.list) ]
+            [ Argument.optional "first" filledInOptionals____.first Encode.int, Argument.optional "last" filledInOptionals____.last Encode.int, Argument.optional "before" filledInOptionals____.before (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "after" filledInOptionals____.after (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecCursor), Argument.optional "filter" filledInOptionals____.filter MitsumoriApi.InputObject.encodeProfilesFilter, Argument.optional "orderBy" filledInOptionals____.orderBy (MitsumoriApi.InputObject.encodeProfilesOrderBy |> Encode.list) ]
                 |> List.filterMap Basics.identity
     in
-    Object.selectionForCompositeField "profileCollection" optionalArgs____ object____ (Basics.identity >> Decode.nullable)
+    Object.selectionForCompositeField "profilesCollection" optionalArgs____ object____ (Basics.identity >> Decode.nullable)
 
 
 type alias QuoteTagsCollectionOptionalArguments =

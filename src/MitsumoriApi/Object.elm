@@ -9,28 +9,28 @@ type PageInfo
     = PageInfo
 
 
-type Profile
-    = Profile
+type Profiles
+    = Profiles
 
 
-type ProfileConnection
-    = ProfileConnection
+type ProfilesConnection
+    = ProfilesConnection
 
 
-type ProfileDeleteResponse
-    = ProfileDeleteResponse
+type ProfilesDeleteResponse
+    = ProfilesDeleteResponse
 
 
-type ProfileEdge
-    = ProfileEdge
+type ProfilesEdge
+    = ProfilesEdge
 
 
-type ProfileInsertResponse
-    = ProfileInsertResponse
+type ProfilesInsertResponse
+    = ProfilesInsertResponse
 
 
-type ProfileUpdateResponse
-    = ProfileUpdateResponse
+type ProfilesUpdateResponse
+    = ProfilesUpdateResponse
 
 
 type Quote_tags

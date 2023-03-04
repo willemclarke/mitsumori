@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module MitsumoriApi.Object.ProfileUpdateResponse exposing (..)
+module MitsumoriApi.Object.ProfilesUpdateResponse exposing (..)
 
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -21,7 +21,7 @@ import ScalarCodecs
 
 {-| Count of the records impacted by the mutation
 -}
-affectedCount : SelectionSet Int MitsumoriApi.Object.ProfileUpdateResponse
+affectedCount : SelectionSet Int MitsumoriApi.Object.ProfilesUpdateResponse
 affectedCount =
     Object.selectionForField "Int" "affectedCount" [] Decode.int
 
@@ -29,7 +29,7 @@ affectedCount =
 {-| Array of records impacted by the mutation
 -}
 records :
-    SelectionSet decodesTo MitsumoriApi.Object.Profile
-    -> SelectionSet (List decodesTo) MitsumoriApi.Object.ProfileUpdateResponse
+    SelectionSet decodesTo MitsumoriApi.Object.Profiles
+    -> SelectionSet (List decodesTo) MitsumoriApi.Object.ProfilesUpdateResponse
 records object____ =
     Object.selectionForCompositeField "records" [] object____ (Basics.identity >> Decode.list)

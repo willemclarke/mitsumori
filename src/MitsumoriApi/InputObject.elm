@@ -10,6 +10,7 @@ import Graphql.Internal.Encode as Encode exposing (Value)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
+import MitsumoriApi.Enum.FilterIs
 import MitsumoriApi.Enum.OrderByDirection
 import MitsumoriApi.Interface
 import MitsumoriApi.Object
@@ -25,9 +26,9 @@ buildBigIntFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, lt = Absent, lte = Absent, neq = Absent }
+                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, is = Absent, lt = Absent, lte = Absent, neq = Absent }
     in
-    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
+    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, is = optionals____.is, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
 
 
 type alias BigIntFilterOptionalFields =
@@ -35,6 +36,7 @@ type alias BigIntFilterOptionalFields =
     , gt : OptionalArgument ScalarCodecs.BigInt
     , gte : OptionalArgument ScalarCodecs.BigInt
     , in_ : OptionalArgument (List ScalarCodecs.BigInt)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument ScalarCodecs.BigInt
     , lte : OptionalArgument ScalarCodecs.BigInt
     , neq : OptionalArgument ScalarCodecs.BigInt
@@ -48,6 +50,7 @@ type alias BigIntFilter =
     , gt : OptionalArgument ScalarCodecs.BigInt
     , gte : OptionalArgument ScalarCodecs.BigInt
     , in_ : OptionalArgument (List ScalarCodecs.BigInt)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument ScalarCodecs.BigInt
     , lte : OptionalArgument ScalarCodecs.BigInt
     , neq : OptionalArgument ScalarCodecs.BigInt
@@ -59,7 +62,7 @@ type alias BigIntFilter =
 encodeBigIntFilter : BigIntFilter -> Value
 encodeBigIntFilter input____ =
     Encode.maybeObject
-        [ ( "eq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.eq ), ( "gt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.gt ), ( "gte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.gte ), ( "in", ((ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.lt ), ( "lte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.lte ), ( "neq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.neq ) ]
+        [ ( "eq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.eq ), ( "gt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.gt ), ( "gte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.gte ), ( "in", ((ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.list) |> Encode.optional input____.in_ ), ( "is", Encode.enum MitsumoriApi.Enum.FilterIs.toString |> Encode.optional input____.is ), ( "lt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.lt ), ( "lte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.lte ), ( "neq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecBigInt) |> Encode.optional input____.neq ) ]
 
 
 buildBooleanFilter :
@@ -69,9 +72,9 @@ buildBooleanFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, lt = Absent, lte = Absent, neq = Absent }
+                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, is = Absent, lt = Absent, lte = Absent, neq = Absent }
     in
-    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
+    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, is = optionals____.is, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
 
 
 type alias BooleanFilterOptionalFields =
@@ -79,6 +82,7 @@ type alias BooleanFilterOptionalFields =
     , gt : OptionalArgument Bool
     , gte : OptionalArgument Bool
     , in_ : OptionalArgument (List Bool)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument Bool
     , lte : OptionalArgument Bool
     , neq : OptionalArgument Bool
@@ -92,6 +96,7 @@ type alias BooleanFilter =
     , gt : OptionalArgument Bool
     , gte : OptionalArgument Bool
     , in_ : OptionalArgument (List Bool)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument Bool
     , lte : OptionalArgument Bool
     , neq : OptionalArgument Bool
@@ -103,7 +108,7 @@ type alias BooleanFilter =
 encodeBooleanFilter : BooleanFilter -> Value
 encodeBooleanFilter input____ =
     Encode.maybeObject
-        [ ( "eq", Encode.bool |> Encode.optional input____.eq ), ( "gt", Encode.bool |> Encode.optional input____.gt ), ( "gte", Encode.bool |> Encode.optional input____.gte ), ( "in", (Encode.bool |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", Encode.bool |> Encode.optional input____.lt ), ( "lte", Encode.bool |> Encode.optional input____.lte ), ( "neq", Encode.bool |> Encode.optional input____.neq ) ]
+        [ ( "eq", Encode.bool |> Encode.optional input____.eq ), ( "gt", Encode.bool |> Encode.optional input____.gt ), ( "gte", Encode.bool |> Encode.optional input____.gte ), ( "in", (Encode.bool |> Encode.list) |> Encode.optional input____.in_ ), ( "is", Encode.enum MitsumoriApi.Enum.FilterIs.toString |> Encode.optional input____.is ), ( "lt", Encode.bool |> Encode.optional input____.lt ), ( "lte", Encode.bool |> Encode.optional input____.lte ), ( "neq", Encode.bool |> Encode.optional input____.neq ) ]
 
 
 buildDateFilter :
@@ -113,9 +118,9 @@ buildDateFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, lt = Absent, lte = Absent, neq = Absent }
+                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, is = Absent, lt = Absent, lte = Absent, neq = Absent }
     in
-    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
+    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, is = optionals____.is, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
 
 
 type alias DateFilterOptionalFields =
@@ -123,6 +128,7 @@ type alias DateFilterOptionalFields =
     , gt : OptionalArgument ScalarCodecs.Date
     , gte : OptionalArgument ScalarCodecs.Date
     , in_ : OptionalArgument (List ScalarCodecs.Date)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument ScalarCodecs.Date
     , lte : OptionalArgument ScalarCodecs.Date
     , neq : OptionalArgument ScalarCodecs.Date
@@ -136,6 +142,7 @@ type alias DateFilter =
     , gt : OptionalArgument ScalarCodecs.Date
     , gte : OptionalArgument ScalarCodecs.Date
     , in_ : OptionalArgument (List ScalarCodecs.Date)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument ScalarCodecs.Date
     , lte : OptionalArgument ScalarCodecs.Date
     , neq : OptionalArgument ScalarCodecs.Date
@@ -147,7 +154,7 @@ type alias DateFilter =
 encodeDateFilter : DateFilter -> Value
 encodeDateFilter input____ =
     Encode.maybeObject
-        [ ( "eq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.eq ), ( "gt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.gt ), ( "gte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.gte ), ( "in", ((ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.lt ), ( "lte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.lte ), ( "neq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.neq ) ]
+        [ ( "eq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.eq ), ( "gt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.gt ), ( "gte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.gte ), ( "in", ((ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.list) |> Encode.optional input____.in_ ), ( "is", Encode.enum MitsumoriApi.Enum.FilterIs.toString |> Encode.optional input____.is ), ( "lt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.lt ), ( "lte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.lte ), ( "neq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDate) |> Encode.optional input____.neq ) ]
 
 
 buildDatetimeFilter :
@@ -157,9 +164,9 @@ buildDatetimeFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, lt = Absent, lte = Absent, neq = Absent }
+                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, is = Absent, lt = Absent, lte = Absent, neq = Absent }
     in
-    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
+    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, is = optionals____.is, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
 
 
 type alias DatetimeFilterOptionalFields =
@@ -167,6 +174,7 @@ type alias DatetimeFilterOptionalFields =
     , gt : OptionalArgument ScalarCodecs.Datetime
     , gte : OptionalArgument ScalarCodecs.Datetime
     , in_ : OptionalArgument (List ScalarCodecs.Datetime)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument ScalarCodecs.Datetime
     , lte : OptionalArgument ScalarCodecs.Datetime
     , neq : OptionalArgument ScalarCodecs.Datetime
@@ -180,6 +188,7 @@ type alias DatetimeFilter =
     , gt : OptionalArgument ScalarCodecs.Datetime
     , gte : OptionalArgument ScalarCodecs.Datetime
     , in_ : OptionalArgument (List ScalarCodecs.Datetime)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument ScalarCodecs.Datetime
     , lte : OptionalArgument ScalarCodecs.Datetime
     , neq : OptionalArgument ScalarCodecs.Datetime
@@ -191,7 +200,7 @@ type alias DatetimeFilter =
 encodeDatetimeFilter : DatetimeFilter -> Value
 encodeDatetimeFilter input____ =
     Encode.maybeObject
-        [ ( "eq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.eq ), ( "gt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.gt ), ( "gte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.gte ), ( "in", ((ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.lt ), ( "lte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.lte ), ( "neq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.neq ) ]
+        [ ( "eq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.eq ), ( "gt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.gt ), ( "gte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.gte ), ( "in", ((ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.list) |> Encode.optional input____.in_ ), ( "is", Encode.enum MitsumoriApi.Enum.FilterIs.toString |> Encode.optional input____.is ), ( "lt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.lt ), ( "lte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.lte ), ( "neq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.neq ) ]
 
 
 buildFloatFilter :
@@ -201,9 +210,9 @@ buildFloatFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, lt = Absent, lte = Absent, neq = Absent }
+                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, is = Absent, lt = Absent, lte = Absent, neq = Absent }
     in
-    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
+    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, is = optionals____.is, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
 
 
 type alias FloatFilterOptionalFields =
@@ -211,6 +220,7 @@ type alias FloatFilterOptionalFields =
     , gt : OptionalArgument Float
     , gte : OptionalArgument Float
     , in_ : OptionalArgument (List Float)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument Float
     , lte : OptionalArgument Float
     , neq : OptionalArgument Float
@@ -224,6 +234,7 @@ type alias FloatFilter =
     , gt : OptionalArgument Float
     , gte : OptionalArgument Float
     , in_ : OptionalArgument (List Float)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument Float
     , lte : OptionalArgument Float
     , neq : OptionalArgument Float
@@ -235,7 +246,7 @@ type alias FloatFilter =
 encodeFloatFilter : FloatFilter -> Value
 encodeFloatFilter input____ =
     Encode.maybeObject
-        [ ( "eq", Encode.float |> Encode.optional input____.eq ), ( "gt", Encode.float |> Encode.optional input____.gt ), ( "gte", Encode.float |> Encode.optional input____.gte ), ( "in", (Encode.float |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", Encode.float |> Encode.optional input____.lt ), ( "lte", Encode.float |> Encode.optional input____.lte ), ( "neq", Encode.float |> Encode.optional input____.neq ) ]
+        [ ( "eq", Encode.float |> Encode.optional input____.eq ), ( "gt", Encode.float |> Encode.optional input____.gt ), ( "gte", Encode.float |> Encode.optional input____.gte ), ( "in", (Encode.float |> Encode.list) |> Encode.optional input____.in_ ), ( "is", Encode.enum MitsumoriApi.Enum.FilterIs.toString |> Encode.optional input____.is ), ( "lt", Encode.float |> Encode.optional input____.lt ), ( "lte", Encode.float |> Encode.optional input____.lte ), ( "neq", Encode.float |> Encode.optional input____.neq ) ]
 
 
 buildIDFilter :
@@ -275,9 +286,9 @@ buildIntFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, lt = Absent, lte = Absent, neq = Absent }
+                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, is = Absent, lt = Absent, lte = Absent, neq = Absent }
     in
-    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
+    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, is = optionals____.is, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
 
 
 type alias IntFilterOptionalFields =
@@ -285,6 +296,7 @@ type alias IntFilterOptionalFields =
     , gt : OptionalArgument Int
     , gte : OptionalArgument Int
     , in_ : OptionalArgument (List Int)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument Int
     , lte : OptionalArgument Int
     , neq : OptionalArgument Int
@@ -298,6 +310,7 @@ type alias IntFilter =
     , gt : OptionalArgument Int
     , gte : OptionalArgument Int
     , in_ : OptionalArgument (List Int)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument Int
     , lte : OptionalArgument Int
     , neq : OptionalArgument Int
@@ -309,13 +322,13 @@ type alias IntFilter =
 encodeIntFilter : IntFilter -> Value
 encodeIntFilter input____ =
     Encode.maybeObject
-        [ ( "eq", Encode.int |> Encode.optional input____.eq ), ( "gt", Encode.int |> Encode.optional input____.gt ), ( "gte", Encode.int |> Encode.optional input____.gte ), ( "in", (Encode.int |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", Encode.int |> Encode.optional input____.lt ), ( "lte", Encode.int |> Encode.optional input____.lte ), ( "neq", Encode.int |> Encode.optional input____.neq ) ]
+        [ ( "eq", Encode.int |> Encode.optional input____.eq ), ( "gt", Encode.int |> Encode.optional input____.gt ), ( "gte", Encode.int |> Encode.optional input____.gte ), ( "in", (Encode.int |> Encode.list) |> Encode.optional input____.in_ ), ( "is", Encode.enum MitsumoriApi.Enum.FilterIs.toString |> Encode.optional input____.is ), ( "lt", Encode.int |> Encode.optional input____.lt ), ( "lte", Encode.int |> Encode.optional input____.lte ), ( "neq", Encode.int |> Encode.optional input____.neq ) ]
 
 
-buildProfileFilter :
-    (ProfileFilterOptionalFields -> ProfileFilterOptionalFields)
-    -> ProfileFilter
-buildProfileFilter fillOptionals____ =
+buildProfilesFilter :
+    (ProfilesFilterOptionalFields -> ProfilesFilterOptionalFields)
+    -> ProfilesFilter
+buildProfilesFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
@@ -324,7 +337,7 @@ buildProfileFilter fillOptionals____ =
     { id = optionals____.id, created_at = optionals____.created_at, username = optionals____.username, nodeId = optionals____.nodeId }
 
 
-type alias ProfileFilterOptionalFields =
+type alias ProfilesFilterOptionalFields =
     { id : OptionalArgument UUIDFilter
     , created_at : OptionalArgument DatetimeFilter
     , username : OptionalArgument StringFilter
@@ -332,9 +345,9 @@ type alias ProfileFilterOptionalFields =
     }
 
 
-{-| Type for the ProfileFilter input object.
+{-| Type for the ProfilesFilter input object.
 -}
-type alias ProfileFilter =
+type alias ProfilesFilter =
     { id : OptionalArgument UUIDFilter
     , created_at : OptionalArgument DatetimeFilter
     , username : OptionalArgument StringFilter
@@ -342,18 +355,18 @@ type alias ProfileFilter =
     }
 
 
-{-| Encode a ProfileFilter into a value that can be used as an argument.
+{-| Encode a ProfilesFilter into a value that can be used as an argument.
 -}
-encodeProfileFilter : ProfileFilter -> Value
-encodeProfileFilter input____ =
+encodeProfilesFilter : ProfilesFilter -> Value
+encodeProfilesFilter input____ =
     Encode.maybeObject
         [ ( "id", encodeUUIDFilter |> Encode.optional input____.id ), ( "created_at", encodeDatetimeFilter |> Encode.optional input____.created_at ), ( "username", encodeStringFilter |> Encode.optional input____.username ), ( "nodeId", encodeIDFilter |> Encode.optional input____.nodeId ) ]
 
 
-buildProfileInsertInput :
-    (ProfileInsertInputOptionalFields -> ProfileInsertInputOptionalFields)
-    -> ProfileInsertInput
-buildProfileInsertInput fillOptionals____ =
+buildProfilesInsertInput :
+    (ProfilesInsertInputOptionalFields -> ProfilesInsertInputOptionalFields)
+    -> ProfilesInsertInput
+buildProfilesInsertInput fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
@@ -362,34 +375,34 @@ buildProfileInsertInput fillOptionals____ =
     { id = optionals____.id, created_at = optionals____.created_at, username = optionals____.username }
 
 
-type alias ProfileInsertInputOptionalFields =
+type alias ProfilesInsertInputOptionalFields =
     { id : OptionalArgument ScalarCodecs.Uuid
     , created_at : OptionalArgument ScalarCodecs.Datetime
     , username : OptionalArgument String
     }
 
 
-{-| Type for the ProfileInsertInput input object.
+{-| Type for the ProfilesInsertInput input object.
 -}
-type alias ProfileInsertInput =
+type alias ProfilesInsertInput =
     { id : OptionalArgument ScalarCodecs.Uuid
     , created_at : OptionalArgument ScalarCodecs.Datetime
     , username : OptionalArgument String
     }
 
 
-{-| Encode a ProfileInsertInput into a value that can be used as an argument.
+{-| Encode a ProfilesInsertInput into a value that can be used as an argument.
 -}
-encodeProfileInsertInput : ProfileInsertInput -> Value
-encodeProfileInsertInput input____ =
+encodeProfilesInsertInput : ProfilesInsertInput -> Value
+encodeProfilesInsertInput input____ =
     Encode.maybeObject
         [ ( "id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ), ( "created_at", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.created_at ), ( "username", Encode.string |> Encode.optional input____.username ) ]
 
 
-buildProfileOrderBy :
-    (ProfileOrderByOptionalFields -> ProfileOrderByOptionalFields)
-    -> ProfileOrderBy
-buildProfileOrderBy fillOptionals____ =
+buildProfilesOrderBy :
+    (ProfilesOrderByOptionalFields -> ProfilesOrderByOptionalFields)
+    -> ProfilesOrderBy
+buildProfilesOrderBy fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
@@ -398,34 +411,34 @@ buildProfileOrderBy fillOptionals____ =
     { id = optionals____.id, created_at = optionals____.created_at, username = optionals____.username }
 
 
-type alias ProfileOrderByOptionalFields =
+type alias ProfilesOrderByOptionalFields =
     { id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     , created_at : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     , username : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     }
 
 
-{-| Type for the ProfileOrderBy input object.
+{-| Type for the ProfilesOrderBy input object.
 -}
-type alias ProfileOrderBy =
+type alias ProfilesOrderBy =
     { id : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     , created_at : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     , username : OptionalArgument MitsumoriApi.Enum.OrderByDirection.OrderByDirection
     }
 
 
-{-| Encode a ProfileOrderBy into a value that can be used as an argument.
+{-| Encode a ProfilesOrderBy into a value that can be used as an argument.
 -}
-encodeProfileOrderBy : ProfileOrderBy -> Value
-encodeProfileOrderBy input____ =
+encodeProfilesOrderBy : ProfilesOrderBy -> Value
+encodeProfilesOrderBy input____ =
     Encode.maybeObject
         [ ( "id", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.id ), ( "created_at", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.created_at ), ( "username", Encode.enum MitsumoriApi.Enum.OrderByDirection.toString |> Encode.optional input____.username ) ]
 
 
-buildProfileUpdateInput :
-    (ProfileUpdateInputOptionalFields -> ProfileUpdateInputOptionalFields)
-    -> ProfileUpdateInput
-buildProfileUpdateInput fillOptionals____ =
+buildProfilesUpdateInput :
+    (ProfilesUpdateInputOptionalFields -> ProfilesUpdateInputOptionalFields)
+    -> ProfilesUpdateInput
+buildProfilesUpdateInput fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
@@ -434,26 +447,26 @@ buildProfileUpdateInput fillOptionals____ =
     { id = optionals____.id, created_at = optionals____.created_at, username = optionals____.username }
 
 
-type alias ProfileUpdateInputOptionalFields =
+type alias ProfilesUpdateInputOptionalFields =
     { id : OptionalArgument ScalarCodecs.Uuid
     , created_at : OptionalArgument ScalarCodecs.Datetime
     , username : OptionalArgument String
     }
 
 
-{-| Type for the ProfileUpdateInput input object.
+{-| Type for the ProfilesUpdateInput input object.
 -}
-type alias ProfileUpdateInput =
+type alias ProfilesUpdateInput =
     { id : OptionalArgument ScalarCodecs.Uuid
     , created_at : OptionalArgument ScalarCodecs.Datetime
     , username : OptionalArgument String
     }
 
 
-{-| Encode a ProfileUpdateInput into a value that can be used as an argument.
+{-| Encode a ProfilesUpdateInput into a value that can be used as an argument.
 -}
-encodeProfileUpdateInput : ProfileUpdateInput -> Value
-encodeProfileUpdateInput input____ =
+encodeProfilesUpdateInput : ProfilesUpdateInput -> Value
+encodeProfilesUpdateInput input____ =
     Encode.maybeObject
         [ ( "id", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.id ), ( "created_at", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecDatetime) |> Encode.optional input____.created_at ), ( "username", Encode.string |> Encode.optional input____.username ) ]
 
@@ -789,9 +802,9 @@ buildStringFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, lt = Absent, lte = Absent, neq = Absent }
+                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, is = Absent, lt = Absent, lte = Absent, neq = Absent }
     in
-    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
+    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, is = optionals____.is, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
 
 
 type alias StringFilterOptionalFields =
@@ -799,6 +812,7 @@ type alias StringFilterOptionalFields =
     , gt : OptionalArgument String
     , gte : OptionalArgument String
     , in_ : OptionalArgument (List String)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument String
     , lte : OptionalArgument String
     , neq : OptionalArgument String
@@ -812,6 +826,7 @@ type alias StringFilter =
     , gt : OptionalArgument String
     , gte : OptionalArgument String
     , in_ : OptionalArgument (List String)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument String
     , lte : OptionalArgument String
     , neq : OptionalArgument String
@@ -823,7 +838,7 @@ type alias StringFilter =
 encodeStringFilter : StringFilter -> Value
 encodeStringFilter input____ =
     Encode.maybeObject
-        [ ( "eq", Encode.string |> Encode.optional input____.eq ), ( "gt", Encode.string |> Encode.optional input____.gt ), ( "gte", Encode.string |> Encode.optional input____.gte ), ( "in", (Encode.string |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", Encode.string |> Encode.optional input____.lt ), ( "lte", Encode.string |> Encode.optional input____.lte ), ( "neq", Encode.string |> Encode.optional input____.neq ) ]
+        [ ( "eq", Encode.string |> Encode.optional input____.eq ), ( "gt", Encode.string |> Encode.optional input____.gt ), ( "gte", Encode.string |> Encode.optional input____.gte ), ( "in", (Encode.string |> Encode.list) |> Encode.optional input____.in_ ), ( "is", Encode.enum MitsumoriApi.Enum.FilterIs.toString |> Encode.optional input____.is ), ( "lt", Encode.string |> Encode.optional input____.lt ), ( "lte", Encode.string |> Encode.optional input____.lte ), ( "neq", Encode.string |> Encode.optional input____.neq ) ]
 
 
 buildTimeFilter :
@@ -833,9 +848,9 @@ buildTimeFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, lt = Absent, lte = Absent, neq = Absent }
+                { eq = Absent, gt = Absent, gte = Absent, in_ = Absent, is = Absent, lt = Absent, lte = Absent, neq = Absent }
     in
-    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
+    { eq = optionals____.eq, gt = optionals____.gt, gte = optionals____.gte, in_ = optionals____.in_, is = optionals____.is, lt = optionals____.lt, lte = optionals____.lte, neq = optionals____.neq }
 
 
 type alias TimeFilterOptionalFields =
@@ -843,6 +858,7 @@ type alias TimeFilterOptionalFields =
     , gt : OptionalArgument ScalarCodecs.Time
     , gte : OptionalArgument ScalarCodecs.Time
     , in_ : OptionalArgument (List ScalarCodecs.Time)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument ScalarCodecs.Time
     , lte : OptionalArgument ScalarCodecs.Time
     , neq : OptionalArgument ScalarCodecs.Time
@@ -856,6 +872,7 @@ type alias TimeFilter =
     , gt : OptionalArgument ScalarCodecs.Time
     , gte : OptionalArgument ScalarCodecs.Time
     , in_ : OptionalArgument (List ScalarCodecs.Time)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , lt : OptionalArgument ScalarCodecs.Time
     , lte : OptionalArgument ScalarCodecs.Time
     , neq : OptionalArgument ScalarCodecs.Time
@@ -867,7 +884,7 @@ type alias TimeFilter =
 encodeTimeFilter : TimeFilter -> Value
 encodeTimeFilter input____ =
     Encode.maybeObject
-        [ ( "eq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.eq ), ( "gt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.gt ), ( "gte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.gte ), ( "in", ((ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.list) |> Encode.optional input____.in_ ), ( "lt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.lt ), ( "lte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.lte ), ( "neq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.neq ) ]
+        [ ( "eq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.eq ), ( "gt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.gt ), ( "gte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.gte ), ( "in", ((ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.list) |> Encode.optional input____.in_ ), ( "is", Encode.enum MitsumoriApi.Enum.FilterIs.toString |> Encode.optional input____.is ), ( "lt", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.lt ), ( "lte", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.lte ), ( "neq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecTime) |> Encode.optional input____.neq ) ]
 
 
 buildUUIDFilter :
@@ -877,14 +894,15 @@ buildUUIDFilter fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { eq = Absent, in_ = Absent, neq = Absent }
+                { eq = Absent, in_ = Absent, is = Absent, neq = Absent }
     in
-    { eq = optionals____.eq, in_ = optionals____.in_, neq = optionals____.neq }
+    { eq = optionals____.eq, in_ = optionals____.in_, is = optionals____.is, neq = optionals____.neq }
 
 
 type alias UUIDFilterOptionalFields =
     { eq : OptionalArgument ScalarCodecs.Uuid
     , in_ : OptionalArgument (List ScalarCodecs.Uuid)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , neq : OptionalArgument ScalarCodecs.Uuid
     }
 
@@ -894,6 +912,7 @@ type alias UUIDFilterOptionalFields =
 type alias UUIDFilter =
     { eq : OptionalArgument ScalarCodecs.Uuid
     , in_ : OptionalArgument (List ScalarCodecs.Uuid)
+    , is : OptionalArgument MitsumoriApi.Enum.FilterIs.FilterIs
     , neq : OptionalArgument ScalarCodecs.Uuid
     }
 
@@ -903,4 +922,4 @@ type alias UUIDFilter =
 encodeUUIDFilter : UUIDFilter -> Value
 encodeUUIDFilter input____ =
     Encode.maybeObject
-        [ ( "eq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.eq ), ( "in", ((ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.list) |> Encode.optional input____.in_ ), ( "neq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.neq ) ]
+        [ ( "eq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.eq ), ( "in", ((ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.list) |> Encode.optional input____.in_ ), ( "is", Encode.enum MitsumoriApi.Enum.FilterIs.toString |> Encode.optional input____.is ), ( "neq", (ScalarCodecs.codecs |> MitsumoriApi.Scalar.unwrapEncoder .codecUuid) |> Encode.optional input____.neq ) ]

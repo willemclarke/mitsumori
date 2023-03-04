@@ -20,7 +20,7 @@ import ScalarCodecs
 
 
 type alias Fragments decodesTo =
-    { onProfile : SelectionSet decodesTo MitsumoriApi.Object.Profile
+    { onProfiles : SelectionSet decodesTo MitsumoriApi.Object.Profiles
     , onQuote_tags : SelectionSet decodesTo MitsumoriApi.Object.Quote_tags
     , onQuotes : SelectionSet decodesTo MitsumoriApi.Object.Quotes
     }
@@ -33,7 +33,7 @@ fragments :
     -> SelectionSet decodesTo MitsumoriApi.Interface.Node
 fragments selections____ =
     Object.exhaustiveFragmentSelection
-        [ Object.buildFragment "profile" selections____.onProfile
+        [ Object.buildFragment "profiles" selections____.onProfiles
         , Object.buildFragment "quote_tags" selections____.onQuote_tags
         , Object.buildFragment "quotes" selections____.onQuotes
         ]
@@ -44,7 +44,7 @@ update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
 maybeFragments =
-    { onProfile = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    { onProfiles = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onQuote_tags = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onQuotes = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     }

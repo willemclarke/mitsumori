@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module MitsumoriApi.Object.ProfileDeleteResponse exposing (..)
+module MitsumoriApi.Object.ProfilesEdge exposing (..)
 
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -19,17 +19,13 @@ import MitsumoriApi.Union
 import ScalarCodecs
 
 
-{-| Count of the records impacted by the mutation
--}
-affectedCount : SelectionSet Int MitsumoriApi.Object.ProfileDeleteResponse
-affectedCount =
-    Object.selectionForField "Int" "affectedCount" [] Decode.int
+cursor : SelectionSet String MitsumoriApi.Object.ProfilesEdge
+cursor =
+    Object.selectionForField "String" "cursor" [] Decode.string
 
 
-{-| Array of records impacted by the mutation
--}
-records :
-    SelectionSet decodesTo MitsumoriApi.Object.Profile
-    -> SelectionSet (List decodesTo) MitsumoriApi.Object.ProfileDeleteResponse
-records object____ =
-    Object.selectionForCompositeField "records" [] object____ (Basics.identity >> Decode.list)
+node :
+    SelectionSet decodesTo MitsumoriApi.Object.Profiles
+    -> SelectionSet decodesTo MitsumoriApi.Object.ProfilesEdge
+node object____ =
+    Object.selectionForCompositeField "node" [] object____ Basics.identity

@@ -6,7 +6,9 @@
 	"license": "MIT",
 	"scripts": {
 		"postinstall": "elm-tooling install",
-		"dev": "vite && tailwind:run",
+		"client:dev": "vite",
+		"docker:run": "docker-compose -f docker-compose.yml up",
+		"pgcli": "pgcli postgresql://postgres:pass@localhost:5432/mitsumori",
 		"prebuild": "elm-tooling install",
 		"build": "vite build",
 		"serve": "vite preview",

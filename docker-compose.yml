@@ -1,0 +1,14 @@
+version: "3.7"
+services:
+  pg:
+    image: "postgres:15.2-alpine"
+    container_name: "mitsumori-db"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: mitsumori
+      NODE_ENV: dev
+    ports:
+      - "5433:5432"
+    #volumes:
+    #- ./src/server/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql

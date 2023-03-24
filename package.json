@@ -1,34 +1,34 @@
 {
-  "name": "vite-elm-template",
-  "author": "Lindsay Wardell",
-  "description": "A staring template for building Elm apps with Vite",
-  "version": "1.5.0",
-  "license": "MIT",
-  "scripts": {
-    "postinstall": "elm-tooling install",
-    "dev": "vite && tailwind:run",
-    "prebuild": "elm-tooling install",
-    "build": "vite build",
-    "serve": "vite preview",
-    "lint": "elm-review",
-    "test": "elm-test-rs",
-    "tailwind:run": "npx tailwindcss -i ./src/tailwind.css -o ./dist/output.css --watch"
-  },
-  "devDependencies": {
-    "@dillonkearns/elm-graphql": "^4.3.0",
-    "elm-review": "^2.7.4",
-    "elm-tooling": "^1.8.0",
-    "tailwindcss": "^3.1.8",
-    "tailwindcss-animate": "^1.0.5",
-    "typescript": "^4.8.2",
-    "vite": "^3.0.9",
-    "vite-plugin-elm": "^2.7.2"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^1.35.7",
-    "devcert": "^1.2.2",
-    "dotenv": "^16.0.3",
-    "dotenv-cli": "^6.0.0",
-    "elm-debug-transformer": "^1.1.2"
-  }
+	"name": "vite-elm-template",
+	"author": "Willem Clarke",
+	"description": "",
+	"version": "1.5.0",
+	"license": "MIT",
+	"scripts": {
+		"postinstall": "elm-tooling install",
+		"dev": "vite && tailwind:run",
+		"prebuild": "elm-tooling install",
+		"build": "vite build",
+		"serve": "vite preview",
+		"lint": "elm-review",
+		"test": "elm-test-rs",
+		"tailwind:run": "npx tailwindcss -i ./client/src/tailwind.css -o ./client/dist/output.css --watch"
+	},
+	"devDependencies": {
+		"@dillonkearns/elm-graphql": "^4.3.0",
+		"elm-review": "^2.7.4",
+		"elm-tooling": "^1.8.0",
+		"tailwindcss": "^3.1.8",
+		"tailwindcss-animate": "^1.0.5",
+		"typescript": "^4.8.2",
+		"vite": "^3.0.9",
+		"vite-plugin-elm": "^2.7.2"
+	},
+	"dependencies": {
+		"@supabase/supabase-js": "^1.35.7",
+		"devcert": "^1.2.2",
+		"dotenv": "^16.0.3",
+		"dotenv-cli": "^6.0.0",
+		"elm-debug-transformer": "^1.1.2"
+	}
 }
